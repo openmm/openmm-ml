@@ -33,12 +33,25 @@ from openmmml.mlpotential import MLPotential, MLPotentialImpl, MLPotentialImplFa
 import openmm
 
 class ANIPotentialImplFactory(MLPotentialImplFactory):
+    """This is the factory that creates ANIPotentialImpl objects."""
 
     def createImpl(self, name: str, **args) -> MLPotentialImpl:
         return ANIPotentialImpl(name)
 
 
 class ANIPotentialImpl(MLPotentialImpl):
+    """This is the MLPotentialImpl implementing the ANI potential.
+
+    The potential is implemented using TorchANI to build a PyTorch model.  A
+    TorchForce is used to add it to the OpenMM System.  The ANI1ccx and ANI2x
+    versions are currently supported.
+
+    TorchForce requires the model to be saved to disk in a separate file.  By default
+    it writes a file called 'animodel.pt' in the current working directory.  You can
+    use the filename argument to specify a different name.  For example,
+
+    >>> system = potential.createSystem(topology, filename='mymodel.pt')
+    """
 
     def __init__(self, name):
         self.name = name
