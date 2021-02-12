@@ -51,7 +51,7 @@ class MLPotential(object):
     _implFactories: Dict[str, MLPotentialImplFactory] = {}
     
     def __init__(self, name: str, **args):
-        self._impl = _implFactories[name].createImpl(name, **args)
+        self._impl = MLPotential._implFactories[name].createImpl(name, **args)
     
     def createSystem(self, topology: openmm.app.Topology, **args) -> openmm.System:
         system = openmm.System()
@@ -60,7 +60,8 @@ class MLPotential(object):
                 system.addParticle(0)
             else:
                 system.addParticle(atom.element.mass)
-        return self._impl.addForces(topology, system, **args)
+        self._impl.addForces(topology, system, **args)
+        return system
 
     @staticmethod
     def registerImplFactory(name: str, factory: MLPotentialImplFactory):

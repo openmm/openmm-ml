@@ -43,8 +43,63 @@ class ANIPotentialImpl(MLPotentialImpl):
     def __init__(self, name):
         self.name = name
 
-    def addForces(self, topology: openmm.app.Topology, system: openmm.System, **args):
-        pass
+    def addForces(self, topology: openmm.app.Topology, system: openmm.System, filename='animodel.pt', **args):
+        # Create the TorchANI model.
+
+        import torchani
+        import torch
+        import openmmtorch
+        if self.name == 'ani1ccx':
+            model = torchani.models.ANI1ccx()
+        elif self.name == 'ani2x':
+            model = torchani.models.ANI2x()
+        else:
+            raise ValueError('Unsupported ANI model: '+self.name)
+
+        # Create the PyTorch model that will be invoked by OpenMM.
+
+        elements = ''.join([atom.element.symbol for atom in topology.atoms()])
+        species = model.species_to_tensor(elements).unsqueeze(0)
+
+        class ANIForce(torch.nn.Module):
+
+            def __init__(self, model, species):
+                super(ANIForce, self).__init__()
+                self.model = model
+                self.species = species
+
+            def forward(self, positions):
+                _, energy = self.model((self.species, 10.0*positions.unsqueeze(0)))
+                return 2625.5000885335317*energy
+
+        class ANIForcePeriodic(torch.nn.Module):
+
+            def __init__(self, model, species):
+                super(ANIForcePeriodic, self).__init__()
+                self.model = model
+                self.species = species
+                self.pbc = torch.tensor([True, True, True], dtype=torch.bool)
+
+            def forward(self, positions, boxvectors):
+                _, energy = self.model((self.species, 10.0*positions.unsqueeze(0)), cell=10.0*boxvectors, pbc=self.pbc)
+                return 2625.5000885335317*energy
+
+        if topology.getPeriodicBoxVectors() is None:
+            force = ANIForce(model, species)
+        else:
+            force = ANIForcePeriodic(model, species)
+
+        # Convert it to TorchScript and save it.
+
+        module = torch.jit.script(force)
+        module.save(filename)
+
+        # Create the TorchForce and add it to the System.
+
+        force = openmmtorch.TorchForce(filename)
+        if topology.getPeriodicBoxVectors() is not None:
+            force.setUsesPeriodicBoundaryConditions(True)
+        system.addForce(force)
 
 MLPotential.registerImplFactory('ani1ccx', ANIPotentialImplFactory())
 MLPotential.registerImplFactory('ani2x', ANIPotentialImplFactory())
