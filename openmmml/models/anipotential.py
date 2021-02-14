@@ -31,6 +31,7 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 from openmmml.mlpotential import MLPotential, MLPotentialImpl, MLPotentialImplFactory
 import openmm
+from typing import Iterable, Optional
 
 class ANIPotentialImplFactory(MLPotentialImplFactory):
     """This is the factory that creates ANIPotentialImpl objects."""
@@ -56,7 +57,7 @@ class ANIPotentialImpl(MLPotentialImpl):
     def __init__(self, name):
         self.name = name
 
-    def addForces(self, topology: openmm.app.Topology, system: openmm.System, filename='animodel.pt', **args):
+    def addForces(self, topology: openmm.app.Topology, system: openmm.System, atoms: Optional[Iterable[int]], filename='animodel.pt', **args):
         # Create the TorchANI model.
 
         import torchani
@@ -76,31 +77,30 @@ class ANIPotentialImpl(MLPotentialImpl):
 
         class ANIForce(torch.nn.Module):
 
-            def __init__(self, model, species):
+            def __init__(self, model, species, atoms, periodic):
                 super(ANIForce, self).__init__()
                 self.model = model
                 self.species = species
+                self.energyScale = torchani.units.hartree2kjoulemol(1)
+                if atoms is None:
+                    self.indices = None
+                else:
+                    self.indices = torch.tensor(sorted(atoms), dtype=torch.int64)
+                if periodic:
+                    self.pbc = torch.tensor([True, True, True], dtype=torch.bool)
+                else:
+                    self.pbc = None
 
-            def forward(self, positions):
-                _, energy = self.model((self.species, 10.0*positions.unsqueeze(0)))
-                return 2625.5000885335317*energy
+            def forward(self, positions, boxvectors: Optional[torch.Tensor] = None):
+                if self.indices is not None:
+                    positions = positions[self.indices]
+                if boxvectors is None:
+                    _, energy = self.model((self.species, 10.0*positions.unsqueeze(0)))
+                else:
+                    _, energy = self.model((self.species, 10.0*positions.unsqueeze(0)), cell=10.0*boxvectors, pbc=self.pbc)
+                return self.energyScale*energy
 
-        class ANIForcePeriodic(torch.nn.Module):
-
-            def __init__(self, model, species):
-                super(ANIForcePeriodic, self).__init__()
-                self.model = model
-                self.species = species
-                self.pbc = torch.tensor([True, True, True], dtype=torch.bool)
-
-            def forward(self, positions, boxvectors):
-                _, energy = self.model((self.species, 10.0*positions.unsqueeze(0)), cell=10.0*boxvectors, pbc=self.pbc)
-                return 2625.5000885335317*energy
-
-        if topology.getPeriodicBoxVectors() is None:
-            force = ANIForce(model, species)
-        else:
-            force = ANIForcePeriodic(model, species)
+        force = ANIForce(model, species, atoms, topology.getPeriodicBoxVectors() is not None)
 
         # Convert it to TorchScript and save it.
 

@@ -31,7 +31,7 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 import openmm
 import openmm.app
-from typing import Dict
+from typing import Dict, Iterable, Optional
 
 
 class MLPotentialImplFactory(object):
@@ -75,7 +75,7 @@ class MLPotentialImpl(object):
     MLPotentialImpl of the appropriate subclass.
     """
     
-    def addForces(self, topology: openmm.app.Topology, system: openmm.System, **args):
+    def addForces(self, topology: openmm.app.Topology, system: openmm.System, atoms: Optional[Iterable[int]], **args):
         """Add Force objects to a System to implement the potential function.
 
         This is invoked by MLPotential.createSystem().  Subclasses must implement
@@ -146,8 +146,67 @@ class MLPotential(object):
                 system.addParticle(0)
             else:
                 system.addParticle(atom.element.mass)
-        self._impl.addForces(topology, system, **args)
+        self._impl.addForces(topology, system, None, **args)
         return system
+
+    def createMixedSystem(self, topology: openmm.app.Topology, system: openmm.System, atoms: Iterable[int], removeConstraints: bool = True, **args) -> openmm.System:
+        # Create an XML representation of the System.
+
+        import xml.etree.ElementTree as ET
+        xml = openmm.XmlSerializer.serialize(system)
+        root = ET.fromstring(xml)
+
+        # Remove bonds, angles, and torsions.
+
+        atomSet = set(atoms)
+        for bonds in root.findall('./Forces/Force/Bonds'):
+            for bond in bonds.findall('Bond'):
+                bondAtoms = [int(bond.attrib[p]) for p in ('p1', 'p2')]
+                if all(a in atomSet for a in bondAtoms):
+                    bonds.remove(bond)
+        for angles in root.findall('./Forces/Force/Angles'):
+            for angle in angles.findall('Angle'):
+                angleAtoms = [int(angle.attrib[p]) for p in ('p1', 'p2', 'p3')]
+                if all(a in atomSet for a in angleAtoms):
+                    angles.remove(angle)
+        for torsions in root.findall('./Forces/Force/Torsions'):
+            for torsion in torsions.findall('Torsion'):
+                torsionAtoms = [int(torsion.attrib[p]) for p in ('p1', 'p2', 'p3', 'p4')]
+                if all(a in atomSet for a in torsionAtoms):
+                    torsions.remove(torsion)
+
+        # Optionally remove constraints.
+
+        if removeConstraints:
+            for constraints in root.findall('./Constraints'):
+                for constraint in constraints.findall('Constraint'):
+                    constraintAtoms = [int(constraint.attrib[p]) for p in ('p1', 'p2')]
+                    if all(a in atomSet for a in constraintAtoms):
+                        constraints.remove(constraint)
+
+        # Create a new System from it.
+
+        newSystem = openmm.XmlSerializer.deserialize(ET.tostring(root, encoding='unicode'))
+
+        # Add nonbonded exceptions and exclusions.
+
+        atomList = list(atoms)
+        for force in newSystem.getForces():
+            if isinstance(force, openmm.NonbondedForce):
+                for i in range(len(atomList)):
+                    for j in range(i):
+                        force.addException(i, j, 0, 1, 0, True)
+            elif isinstance(force, openmm.CustomNonbondedForce):
+                existing = set(tuple(force.getExclusionParticles(i)) for i in range(force.getNumExclusions()))
+                for i in range(len(atomList)):
+                    for j in range(i):
+                        if (i, j) not in existing and (j, i) not in existing:
+                            force.addExclusion(i, j, True)
+
+        # Add the ML potential.
+
+        self._impl.addForces(topology, newSystem, atomList, **args)
+        return newSystem
 
     @staticmethod
     def registerImplFactory(name: str, factory: MLPotentialImplFactory):
