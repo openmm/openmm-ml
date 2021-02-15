@@ -104,6 +104,21 @@ class MLPotential(object):
 
     >>> potential = MLPotential('ani2x')
     >>> system = potential.createSystem(topology)
+
+    Alternatively, you can use createMixedSystem() to create a System where part is
+    modeled with this potential and the rest is modeled with a conventional force
+    field.  As an example, support the Topology contains three chains.  Chain 0 is
+    a protein, chain 1 is a ligand, and chain 2 is solvent.  The following code
+    creates a System in which the internal energy of the ligand is computed with
+    ANI2x, while everything else (including interactions between the ligand and the
+    rest of the System) is computed with Amber14.
+
+    >>> forcefield = ForceField('amber14-all.xml', 'amber14/tip3pfb.xml')
+    >>> mm_system = forcefield.createSystem(topology)
+    >>> chains = list(topology.chains())
+    >>> ml_atoms = [atom.index for atom in chains[1].atoms()]
+    >>> potential = MLPotential('ani2x')
+    >>> ml_system = potential.createMixedSystem(topology, mm_system, ml_atoms)
     """
 
     _implFactories: Dict[str, MLPotentialImplFactory] = {}
@@ -150,6 +165,43 @@ class MLPotential(object):
         return system
 
     def createMixedSystem(self, topology: openmm.app.Topology, system: openmm.System, atoms: Iterable[int], removeConstraints: bool = True, **args) -> openmm.System:
+        """Create a System that is partly modeled with this potential and partly
+        with a conventional force field.
+
+        To use this method, first create a System that is entirely modeled with the
+        conventional force.  Pass it to this method, along with the indices of the
+        atoms to model with this potential (the "ML subset").  It returns a new System
+        that is identical to the original one except for the following changes.
+
+        1. Removing all bonds, angles, and torsions for which *all* atoms are in the
+           ML subset.
+        2. For every NonbondedForce and CustomNonbondedForce, adding exceptions/exclusions
+           to prevent atoms in the ML subset from interacting with each other.
+        3. (Optional) Removing constraints between atoms that are both in the ML subset.
+        4. Adding Forces as necessary to compute the internal energy of the ML subset
+           with this potential.
+
+        Parameters
+        ----------
+        topology: Topology
+            the Topology for which to create a System
+        system: System
+            a System that models the Topology with a conventional force field
+        atoms: Iterable[int]
+            the indices of all atoms whose interactions should be computed with
+            this potential
+        removeConstraints: bool
+            if True, remove constraints between pairs of atoms whose interaction
+            will be computed with this potential
+        args:
+            particular potential functions may define additional arguments that can
+            be used to customize them.  See the documentation on the specific
+            potential functions for more information.
+
+        Returns
+        -------
+        a newly created System object that uses this potential function to model the Topology
+        """
         # Create an XML representation of the System.
 
         import xml.etree.ElementTree as ET

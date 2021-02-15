@@ -72,7 +72,10 @@ class ANIPotentialImpl(MLPotentialImpl):
 
         # Create the PyTorch model that will be invoked by OpenMM.
 
-        elements = ''.join([atom.element.symbol for atom in topology.atoms()])
+        includedAtoms = list(topology.atoms())
+        if atoms is not None:
+            includedAtoms = [includedAtoms[i] for i in atoms]
+        elements = ''.join([atom.element.symbol for atom in includedAtoms])
         species = model.species_to_tensor(elements).unsqueeze(0)
 
         class ANIForce(torch.nn.Module):
