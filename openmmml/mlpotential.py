@@ -75,7 +75,12 @@ class MLPotentialImpl(object):
     MLPotentialImpl of the appropriate subclass.
     """
     
-    def addForces(self, topology: openmm.app.Topology, system: openmm.System, atoms: Optional[Iterable[int]], **args):
+    def addForces(self,
+                  topology: openmm.app.Topology,
+                  system: openmm.System,
+                  atoms: Optional[Iterable[int]],
+                  forceGroup: int,
+                  **args):
         """Add Force objects to a System to implement the potential function.
 
         This is invoked by MLPotential.createSystem().  Subclasses must implement
@@ -87,6 +92,11 @@ class MLPotentialImpl(object):
             the Topology from which the System is being created
         system: System
             the System that is being created
+        atoms: Optional[Iterable[int]]
+            the indices of atoms the potential should be applied to, or None if
+            it should be applied to the entire System
+        forceGroup: int
+            the force group that any newly added Forces should be in
         args:
             any additional keyword arguments that were provided to createSystem()
             are passed to this method.  This allows subclasses to customize their
@@ -107,7 +117,7 @@ class MLPotential(object):
 
     Alternatively, you can use createMixedSystem() to create a System where part is
     modeled with this potential and the rest is modeled with a conventional force
-    field.  As an example, support the Topology contains three chains.  Chain 0 is
+    field.  As an example, suppose the Topology contains three chains.  Chain 0 is
     a protein, chain 1 is a ligand, and chain 2 is solvent.  The following code
     creates a System in which the internal energy of the ligand is computed with
     ANI2x, while everything else (including interactions between the ligand and the
@@ -161,10 +171,16 @@ class MLPotential(object):
                 system.addParticle(0)
             else:
                 system.addParticle(atom.element.mass)
-        self._impl.addForces(topology, system, None, **args)
+        self._impl.addForces(topology, system, None, 0, **args)
         return system
 
-    def createMixedSystem(self, topology: openmm.app.Topology, system: openmm.System, atoms: Iterable[int], removeConstraints: bool = True, **args) -> openmm.System:
+    def createMixedSystem(self,
+                          topology: openmm.app.Topology,
+                          system: openmm.System,
+                          atoms: Iterable[int],
+                          removeConstraints: bool = True,
+                          forceGroup: int = 0,
+                          **args) -> openmm.System:
         """Create a System that is partly modeled with this potential and partly
         with a conventional force field.
 
@@ -193,6 +209,8 @@ class MLPotential(object):
         removeConstraints: bool
             if True, remove constraints between pairs of atoms whose interaction
             will be computed with this potential
+        forceGroup: int
+            the force group the ML potential's Forces should be placed in
         args:
             particular potential functions may define additional arguments that can
             be used to customize them.  See the documentation on the specific
@@ -257,7 +275,7 @@ class MLPotential(object):
 
         # Add the ML potential.
 
-        self._impl.addForces(topology, newSystem, atomList, **args)
+        self._impl.addForces(topology, newSystem, atomList, forceGroup, **args)
         return newSystem
 
     @staticmethod
