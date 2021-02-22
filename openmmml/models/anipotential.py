@@ -57,7 +57,13 @@ class ANIPotentialImpl(MLPotentialImpl):
     def __init__(self, name):
         self.name = name
 
-    def addForces(self, topology: openmm.app.Topology, system: openmm.System, atoms: Optional[Iterable[int]], filename='animodel.pt', **args):
+    def addForces(self,
+                  topology: openmm.app.Topology,
+                  system: openmm.System,
+                  atoms: Optional[Iterable[int]],
+                  forceGroup: int,
+                  filename: str = 'animodel.pt',
+                  **args):
         # Create the TorchANI model.
 
         import torchani
@@ -103,16 +109,17 @@ class ANIPotentialImpl(MLPotentialImpl):
                     _, energy = self.model((self.species, 10.0*positions.unsqueeze(0)), cell=10.0*boxvectors, pbc=self.pbc)
                 return self.energyScale*energy
 
-        force = ANIForce(model, species, atoms, topology.getPeriodicBoxVectors() is not None)
+        aniForce = ANIForce(model, species, atoms, topology.getPeriodicBoxVectors() is not None)
 
         # Convert it to TorchScript and save it.
 
-        module = torch.jit.script(force)
+        module = torch.jit.script(aniForce)
         module.save(filename)
 
         # Create the TorchForce and add it to the System.
 
         force = openmmtorch.TorchForce(filename)
+        force.setForceGroup(forceGroup)
         if topology.getPeriodicBoxVectors() is not None:
             force.setUsesPeriodicBoundaryConditions(True)
         system.addForce(force)
