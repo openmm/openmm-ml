@@ -101,11 +101,13 @@ class ANIPotentialImpl(MLPotentialImpl):
                     self.pbc = None
 
             def forward(self, positions, boxvectors: Optional[torch.Tensor] = None):
+                positions = positions.to(torch.float32)
                 if self.indices is not None:
                     positions = positions[self.indices]
                 if boxvectors is None:
                     _, energy = self.model((self.species, 10.0*positions.unsqueeze(0)))
                 else:
+                    boxvectors = boxvectors.to(torch.float32)
                     _, energy = self.model((self.species, 10.0*positions.unsqueeze(0)), cell=10.0*boxvectors, pbc=self.pbc)
                 return self.energyScale*energy
 
