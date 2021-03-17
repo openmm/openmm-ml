@@ -81,7 +81,7 @@ class ANIPotentialImpl(MLPotentialImpl):
         includedAtoms = list(topology.atoms())
         if atoms is not None:
             includedAtoms = [includedAtoms[i] for i in atoms]
-        elements = ''.join([atom.element.symbol for atom in includedAtoms])
+        elements = [atom.element.symbol for atom in includedAtoms]
         species = model.species_to_tensor(elements).unsqueeze(0)
 
         class ANIForce(torch.nn.Module):
