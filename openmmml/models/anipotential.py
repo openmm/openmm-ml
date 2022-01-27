@@ -95,18 +95,20 @@ class ANIPotentialImpl(MLPotentialImpl):
                     self.indices = None
                 else:
                     self.indices = torch.tensor(sorted(atoms), dtype=torch.int64)
-                if periodic:
-                    self.pbc = torch.tensor([True, True, True], dtype=torch.bool)
-                else:
-                    self.pbc = None
+                self.pbc = torch.tensor([True, True, True], dtype=torch.bool)
+                # comment the following lines if need to use CPU
+                if topology.getPeriodicBoxVectors() is None:
+                    self.model.aev_computer.use_cuda_extension = True
 
             def forward(self, positions, boxvectors: Optional[torch.Tensor] = None):
                 positions = positions.to(torch.float32)
+                self.species = self.species.to(positions.device)
                 if self.indices is not None:
                     positions = positions[self.indices]
                 if boxvectors is None:
                     _, energy = self.model((self.species, 10.0*positions.unsqueeze(0)))
                 else:
+                    self.pbc = self.pbc.to(positions.device)
                     boxvectors = boxvectors.to(torch.float32)
                     _, energy = self.model((self.species, 10.0*positions.unsqueeze(0)), cell=10.0*boxvectors, pbc=self.pbc)
                 return self.energyScale*energy
