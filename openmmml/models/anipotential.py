@@ -63,6 +63,7 @@ class ANIPotentialImpl(MLPotentialImpl):
                   atoms: Optional[Iterable[int]],
                   forceGroup: int,
                   filename: str = 'animodel.pt',
+                  use_OptimizedTorchANI : Optional[bool] = True, 
                   **args):
         # Create the TorchANI model.
 
@@ -70,20 +71,27 @@ class ANIPotentialImpl(MLPotentialImpl):
         import torch
         import openmmtorch
         if self.name == 'ani1ccx':
-            model = torchani.models.ANI1ccx()
+            model = torchani.models.ANI1ccx(periodic_table_index=True)
         elif self.name == 'ani2x':
-            model = torchani.models.ANI2x()
+            model = torchani.models.ANI2x(periodic_table_index=True)
         else:
             raise ValueError('Unsupported ANI model: '+self.name)
-
+        
         # Create the PyTorch model that will be invoked by OpenMM.
-
         includedAtoms = list(topology.atoms())
         if atoms is not None:
             includedAtoms = [includedAtoms[i] for i in atoms]
         elements = [atom.element.symbol for atom in includedAtoms]
         species = model.species_to_tensor(elements).unsqueeze(0)
-
+        
+        if use_OptimizedTorchANI: # ask to optimize torchani
+            try:
+                # from https://github.com/openmm/NNPOps#example
+                from NNPOps import OptimizedTorchANI
+                model = OptimizedTorchANI(model, species)
+            except Exception as e:
+                raise Exception(e)
+                
         class ANIForce(torch.nn.Module):
 
             def __init__(self, model, species, atoms, periodic):
