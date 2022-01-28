@@ -71,9 +71,9 @@ class ANIPotentialImpl(MLPotentialImpl):
         import torch
         import openmmtorch
         if self.name == 'ani1ccx':
-            model = torchani.models.ANI1ccx(periodic_table_index=True)
+            model = torchani.models.ANI1ccx()
         elif self.name == 'ani2x':
-            model = torchani.models.ANI2x(periodic_table_index=True)
+            model = torchani.models.ANI2x()
         else:
             raise ValueError('Unsupported ANI model: '+self.name)
         
