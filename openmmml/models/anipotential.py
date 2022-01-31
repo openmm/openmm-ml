@@ -31,6 +31,7 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 from openmmml.mlpotential import MLPotential, MLPotentialImpl, MLPotentialImplFactory
 import openmm
+from NNPOps import OptimizedTorchANI
 from typing import Iterable, Optional
 
 class ANIPotentialImplFactory(MLPotentialImplFactory):
@@ -83,6 +84,9 @@ class ANIPotentialImpl(MLPotentialImpl):
             includedAtoms = [includedAtoms[i] for i in atoms]
         elements = [atom.element.symbol for atom in includedAtoms]
         species = model.species_to_tensor(elements).unsqueeze(0)
+
+        device = torch.device('cuda')
+        model = OptimizedTorchANI(model, species).to(device)
 
         class ANIForce(torch.nn.Module):
 
