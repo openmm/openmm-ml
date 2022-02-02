@@ -71,9 +71,9 @@ class ANIPotentialImpl(MLPotentialImpl):
         import torch
         import openmmtorch
         if self.name == 'ani1ccx':
-            model = torchani.models.ANI1ccx()
+            model = torchani.models.ANI1ccx(periodic_table_index=True)
         elif self.name == 'ani2x':
-            model = torchani.models.ANI2x()
+            model = torchani.models.ANI2x(periodic_table_index=True)
         else:
             raise ValueError('Unsupported ANI model: '+self.name)
         
@@ -81,8 +81,8 @@ class ANIPotentialImpl(MLPotentialImpl):
         includedAtoms = list(topology.atoms())
         if atoms is not None:
             includedAtoms = [includedAtoms[i] for i in atoms]
-        elements = [atom.element.symbol for atom in includedAtoms]
-        species = model.species_to_tensor(elements).unsqueeze(0)
+        atomic_numbers = [atom.element.atomic_number for atom in includedAtoms]
+        species = torch.tensor(atomic_numbers).unsqueeze(0)
         
         if use_OptimizedTorchANI: # ask to optimize torchani
             try:
