@@ -63,7 +63,7 @@ class ANIPotentialImpl(MLPotentialImpl):
                   atoms: Optional[Iterable[int]],
                   forceGroup: int,
                   filename: str = 'animodel.pt',
-                  use_OptimizedTorchANI : Optional[bool] = True, 
+                  useOptimizedTorchANI : Optional[bool] = True, 
                   **args):
         # Create the TorchANI model.
 
@@ -84,7 +84,7 @@ class ANIPotentialImpl(MLPotentialImpl):
         atomic_numbers = [atom.element.atomic_number for atom in includedAtoms]
         species = torch.tensor(atomic_numbers).unsqueeze(0)
         
-        if use_OptimizedTorchANI: # ask to optimize torchani
+        if useOptimizedTorchANI: # ask to optimize torchani
             try:
                 # from https://github.com/openmm/NNPOps#example
                 from NNPOps import OptimizedTorchANI
