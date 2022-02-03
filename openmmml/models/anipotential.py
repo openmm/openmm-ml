@@ -29,7 +29,6 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 
-from turtle import pos, position
 from openmmml.mlpotential import MLPotential, MLPotentialImpl, MLPotentialImplFactory
 import openmm
 from typing import Iterable, Optional
@@ -100,10 +99,7 @@ class ANIPotentialImpl(MLPotentialImpl):
 
                 # Accelerate the model
                 self.model = OptimizedTorchANI(model, self.atomic_numbers)
-
                 self.pbc = torch.tensor([True, True, True], dtype=torch.bool)
-                if not periodic:
-                    self.model.aev_computer.use_cuda_extension = True
 
             def forward(self, positions, boxvectors: Optional[torch.Tensor] = None):
                 # Prepare the positions
