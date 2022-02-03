@@ -29,9 +29,9 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 
+from turtle import pos, position
 from openmmml.mlpotential import MLPotential, MLPotentialImpl, MLPotentialImplFactory
 import openmm
-from NNPOps import OptimizedTorchANI
 from typing import Iterable, Optional
 
 class ANIPotentialImplFactory(MLPotentialImplFactory):
@@ -66,58 +66,65 @@ class ANIPotentialImpl(MLPotentialImpl):
                   filename: str = 'animodel.pt',
                   **args):
         # Create the TorchANI model.
-
         import torchani
         import torch
         import openmmtorch
+        from NNPOps import OptimizedTorchANI
+
         if self.name == 'ani1ccx':
-            model = torchani.models.ANI1ccx()
+            model = torchani.models.ANI1ccx(periodic_table_index=True)
         elif self.name == 'ani2x':
-            model = torchani.models.ANI2x()
+            model = torchani.models.ANI2x(periodic_table_index=True)
         else:
             raise ValueError('Unsupported ANI model: '+self.name)
 
         # Create the PyTorch model that will be invoked by OpenMM.
-
         includedAtoms = list(topology.atoms())
         if atoms is not None:
             includedAtoms = [includedAtoms[i] for i in atoms]
-        elements = [atom.element.symbol for atom in includedAtoms]
-        species = model.species_to_tensor(elements).unsqueeze(0)
-
-        device = torch.device('cuda')
-        model = OptimizedTorchANI(model, species).to(device)
+        atomic_numbers = [atom.element.atomic_number for atom in includedAtoms]
 
         class ANIForce(torch.nn.Module):
 
-            def __init__(self, model, species, atoms, periodic):
-                super(ANIForce, self).__init__()
-                self.model = model
-                self.species = species
+            def __init__(self, model, atomic_numbers, atoms, periodic):
+                super().__init__()
+
+                # Store the atomic numbers
+                self.atomic_numbers = torch.tensor(atomic_numbers).unsqueeze(0)
                 self.energyScale = torchani.units.hartree2kjoulemol(1)
+
                 if atoms is None:
                     self.indices = None
                 else:
                     self.indices = torch.tensor(sorted(atoms), dtype=torch.int64)
+
+                # Accelerate the model
+                self.model = OptimizedTorchANI(model, self.atomic_numbers)
+
                 self.pbc = torch.tensor([True, True, True], dtype=torch.bool)
-                # comment the following lines if need to use CPU
-                if topology.getPeriodicBoxVectors() is None:
+                if not periodic:
                     self.model.aev_computer.use_cuda_extension = True
 
             def forward(self, positions, boxvectors: Optional[torch.Tensor] = None):
+                # Prepare the positions
                 positions = positions.to(torch.float32)
-                self.species = self.species.to(positions.device)
+
                 if self.indices is not None:
                     positions = positions[self.indices]
+                
+                positions = positions.unsqueeze(0) * 10.0 # nm --> Å
+                
+                # Run ANI to get the potential energy
                 if boxvectors is None:
-                    _, energy = self.model((self.species, 10.0*positions.unsqueeze(0)))
+                    _, energy = self.model((self.atomic_numbers, positions))
                 else:
                     self.pbc = self.pbc.to(positions.device)
                     boxvectors = boxvectors.to(torch.float32)
-                    _, energy = self.model((self.species, 10.0*positions.unsqueeze(0)), cell=10.0*boxvectors, pbc=self.pbc)
-                return self.energyScale*energy
+                    _, energy = self.model((self.atomic_numbers, positions), cell=10.0*boxvectors, pbc=self.pbc)
 
-        aniForce = ANIForce(model, species, atoms, topology.getPeriodicBoxVectors() is not None)
+                return energy * self.energyScale # Hartree --> kJ/mol
+
+        aniForce = ANIForce(model, atomic_numbers, atoms, topology.getPeriodicBoxVectors() is not None)
 
         # Convert it to TorchScript and save it.
 
