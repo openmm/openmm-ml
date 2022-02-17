@@ -31,6 +31,8 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 import openmm
 import openmm.app
+import openmm.unit as unit
+from copy import deepcopy
 from typing import Dict, Iterable, Optional
 
 
@@ -180,12 +182,13 @@ class MLPotential(object):
                           atoms: Iterable[int],
                           removeConstraints: bool = True,
                           forceGroup: int = 0,
+                          interpolate: bool = False,
                           **args) -> openmm.System:
         """Create a System that is partly modeled with this potential and partly
         with a conventional force field.
 
         To use this method, first create a System that is entirely modeled with the
-        conventional force.  Pass it to this method, along with the indices of the
+        conventional force field.  Pass it to this method, along with the indices of the
         atoms to model with this potential (the "ML subset").  It returns a new System
         that is identical to the original one except for the following changes.
 
@@ -196,6 +199,20 @@ class MLPotential(object):
         3. (Optional) Removing constraints between atoms that are both in the ML subset.
         4. Adding Forces as necessary to compute the internal energy of the ML subset
            with this potential.
+
+        Alternatively, the System can include Forces to compute the energy both with the
+        conventional force field and with this potential, and to smoothly interpolate
+        between them.  In that case, it creates a CustomCVForce containing the following.
+
+        1. The Forces to compute this potential.
+        2. Forces to compute the bonds, angles, and torsions that were removed above.
+        3. For every NonbondedForce, a corresponding CustomBondForce to compute the
+           nonbonded interactions within the ML subset.
+
+        The CustomCVForce defines a global parameter called "lambda" that interpolates
+        between the two potentials.  When lambda=0, the energy is computed entirely with
+        the conventional force field.  When lambda=1, the energy is computed entirely with
+        the ML potential.  You can set its value by calling setParameter() on the Context.
 
         Parameters
         ----------
@@ -211,6 +228,9 @@ class MLPotential(object):
             will be computed with this potential
         forceGroup: int
             the force group the ML potential's Forces should be placed in
+        interpolate: bool
+            if True, create a System that can smoothly interpolate between the conventional
+            and ML potentials
         args:
             particular potential functions may define additional arguments that can
             be used to customize them.  See the documentation on the specific
@@ -220,43 +240,9 @@ class MLPotential(object):
         -------
         a newly created System object that uses this potential function to model the Topology
         """
-        # Create an XML representation of the System.
+        # Create the new System, removing bonded interactions within the ML subset.
 
-        import xml.etree.ElementTree as ET
-        xml = openmm.XmlSerializer.serialize(system)
-        root = ET.fromstring(xml)
-
-        # Remove bonds, angles, and torsions.
-
-        atomSet = set(atoms)
-        for bonds in root.findall('./Forces/Force/Bonds'):
-            for bond in bonds.findall('Bond'):
-                bondAtoms = [int(bond.attrib[p]) for p in ('p1', 'p2')]
-                if all(a in atomSet for a in bondAtoms):
-                    bonds.remove(bond)
-        for angles in root.findall('./Forces/Force/Angles'):
-            for angle in angles.findall('Angle'):
-                angleAtoms = [int(angle.attrib[p]) for p in ('p1', 'p2', 'p3')]
-                if all(a in atomSet for a in angleAtoms):
-                    angles.remove(angle)
-        for torsions in root.findall('./Forces/Force/Torsions'):
-            for torsion in torsions.findall('Torsion'):
-                torsionAtoms = [int(torsion.attrib[p]) for p in ('p1', 'p2', 'p3', 'p4')]
-                if all(a in atomSet for a in torsionAtoms):
-                    torsions.remove(torsion)
-
-        # Optionally remove constraints.
-
-        if removeConstraints:
-            for constraints in root.findall('./Constraints'):
-                for constraint in constraints.findall('Constraint'):
-                    constraintAtoms = [int(constraint.attrib[p]) for p in ('p1', 'p2')]
-                    if all(a in atomSet for a in constraintAtoms):
-                        constraints.remove(constraint)
-
-        # Create a new System from it.
-
-        newSystem = openmm.XmlSerializer.deserialize(ET.tostring(root, encoding='unicode'))
+        newSystem = self._removeBonds(system, atoms, True, removeConstraints)
 
         # Add nonbonded exceptions and exclusions.
 
@@ -275,8 +261,144 @@ class MLPotential(object):
 
         # Add the ML potential.
 
-        self._impl.addForces(topology, newSystem, atomList, forceGroup, **args)
+        if not interpolate:
+            self._impl.addForces(topology, newSystem, atomList, forceGroup, **args)
+        else:
+            # Create a CustomCVForce and put the ML forces inside it.
+
+            cv = openmm.CustomCVForce('')
+            cv.addGlobalParameter('lambda', 1)
+            tempSystem = openmm.System()
+            self._impl.addForces(topology, tempSystem, atomList, forceGroup, **args)
+            mlVarNames = []
+            for i, force in enumerate(tempSystem.getForces()):
+                name = f'mlForce{i+1}'
+                cv.addCollectiveVariable(name, deepcopy(force))
+                mlVarNames.append(name)
+
+            # Create Forces for all the bonded interactions within the ML subset and add them to the CustomCVForce.
+
+            bondedSystem = self._removeBonds(system, atoms, False, removeConstraints)
+            bondedForces = []
+            for force in bondedSystem.getForces():
+                if hasattr(force, 'addBond') or hasattr(force, 'addAngle') or hasattr(force, 'addTorsion'):
+                    bondedForces.append(force)
+            mmVarNames = []
+            for i, force in enumerate(bondedForces):
+                name = f'mmForce{i+1}'
+                cv.addCollectiveVariable(name, deepcopy(force))
+                mmVarNames.append(name)
+
+            # Create a CustomBondForce that computes all nonbonded interactions within the ML subset.
+
+            for force in system.getForces():
+                if isinstance(force, openmm.NonbondedForce):
+                    internalNonbonded = openmm.CustomBondForce('138.935456*chargeProd/r + 4*epsilon*((sigma/r)^12-(sigma/r)^6)')
+                    internalNonbonded.addPerBondParameter('chargeProd')
+                    internalNonbonded.addPerBondParameter('sigma')
+                    internalNonbonded.addPerBondParameter('epsilon')
+                    numParticles = system.getNumParticles()
+                    atomCharge = [0]*numParticles
+                    atomSigma = [0]*numParticles
+                    atomEpsilon = [0]*numParticles
+                    for i in range(numParticles):
+                        charge, sigma, epsilon = force.getParticleParameters(i)
+                        atomCharge[i] = charge
+                        atomSigma[i] = sigma
+                        atomEpsilon[i] = epsilon
+                    exceptions = {}
+                    for i in range(force.getNumExceptions()):
+                        p1, p2, chargeProd, sigma, epsilon = force.getExceptionParameters(i)
+                        exceptions[(p1, p2)] = (chargeProd, sigma, epsilon)
+                    for p1 in atomList:
+                        for p2 in atomList:
+                            if p1 == p2:
+                                break
+                            if (p1, p2) in exceptions:
+                                chargeProd, sigma, epsilon = exceptions[(p1, p2)]
+                            elif (p2, p1) in exceptions:
+                                chargeProd, sigma, epsilon = exceptions[(p2, p1)]
+                            else:
+                                chargeProd = atomCharge[p1]*atomCharge[p2]
+                                sigma = 0.5*(atomSigma[p1]+atomSigma[p2])
+                                epsilon = unit.sqrt(atomEpsilon[p1]*atomEpsilon[p2])
+                            if chargeProd._value != 0 or epsilon._value != 0:
+                                internalNonbonded.addBond(p1, p2, [chargeProd, sigma, epsilon])
+                    if internalNonbonded.getNumBonds() > 0:
+                        name = f'mmForce{len(mmVarNames)+1}'
+                        cv.addCollectiveVariable(name, internalNonbonded)
+                        mmVarNames.append(name)
+
+            # Configure the CustomCVForce so lambda interpolates between the conventional and ML potentials.
+
+            mlSum = '+'.join(mlVarNames) if len(mlVarNames) > 0 else '0'
+            mmSum = '+'.join(mmVarNames) if len(mmVarNames) > 0 else '0'
+            cv.setEnergyFunction(f'lambda*({mlSum}) + (1-lambda)*({mmSum})')
+            newSystem.addForce(cv)
         return newSystem
+
+    def _removeBonds(self, system: openmm.System, atoms: Iterable[int], removeInSet: bool, removeConstraints: bool) -> openmm.System:
+        """Copy a System, removing all bonded interactions between atoms in (or not in) a particular set.
+
+        Parameters
+        ----------
+        system: System
+            the System to copy
+        atoms: Iterable[int]
+            a set of atom indices
+        removeInSet: bool
+            if True, any bonded term connecting atoms in the specified set is removed.  If False,
+            any term that does *not* connect atoms in the specified set is removed
+        removeConstraints: bool
+            if True, remove constraints between pairs of atoms in the set
+
+        Returns
+        -------
+        a newly created System object in which the specified bonded interactions have been removed
+        """
+        atomSet = set(atoms)
+
+        # Create an XML representation of the System.
+
+        import xml.etree.ElementTree as ET
+        xml = openmm.XmlSerializer.serialize(system)
+        root = ET.fromstring(xml)
+
+        # This function decides whether a bonded interaction should be removed.
+
+        def shouldRemove(termAtoms):
+            return all(a in atomSet for a in termAtoms) == removeInSet
+
+        # Remove bonds, angles, and torsions.
+
+        for bonds in root.findall('./Forces/Force/Bonds'):
+            for bond in bonds.findall('Bond'):
+                bondAtoms = [int(bond.attrib[p]) for p in ('p1', 'p2')]
+                if shouldRemove(bondAtoms):
+                    bonds.remove(bond)
+        for angles in root.findall('./Forces/Force/Angles'):
+            for angle in angles.findall('Angle'):
+                angleAtoms = [int(angle.attrib[p]) for p in ('p1', 'p2', 'p3')]
+                if shouldRemove(angleAtoms):
+                    angles.remove(angle)
+        for torsions in root.findall('./Forces/Force/Torsions'):
+            for torsion in torsions.findall('Torsion'):
+                torsionAtoms = [int(torsion.attrib[p]) for p in ('p1', 'p2', 'p3', 'p4')]
+                if shouldRemove(torsionAtoms):
+                    torsions.remove(torsion)
+
+        # Optionally remove constraints.
+
+        if removeConstraints:
+            for constraints in root.findall('./Constraints'):
+                for constraint in constraints.findall('Constraint'):
+                    constraintAtoms = [int(constraint.attrib[p]) for p in ('p1', 'p2')]
+                    if shouldRemove(constraintAtoms):
+                        constraints.remove(constraint)
+
+        # Create a new System from it.
+
+        return openmm.XmlSerializer.deserialize(ET.tostring(root, encoding='unicode'))
 
     @staticmethod
     def registerImplFactory(name: str, factory: MLPotentialImplFactory):
