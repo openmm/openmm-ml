@@ -66,10 +66,11 @@ class ANIPotentialImpl(MLPotentialImpl):
                   implementation: str = "nnpops",
                   **args):
         # Create the TorchANI model.
-
         import torchani
         import torch
         import openmmtorch
+        from NNPOps import OptimizedTorchANI
+
         if self.name == 'ani1ccx':
             model = torchani.models.ANI1ccx(periodic_table_index=True)
         elif self.name == 'ani2x':
@@ -78,7 +79,6 @@ class ANIPotentialImpl(MLPotentialImpl):
             raise ValueError('Unsupported ANI model: '+self.name)
 
         # Create the PyTorch model that will be invoked by OpenMM.
-
         includedAtoms = list(topology.atoms())
         if atoms is not None:
             includedAtoms = [includedAtoms[i] for i in atoms]
@@ -104,24 +104,34 @@ class ANIPotentialImpl(MLPotentialImpl):
                 self.model = model
                 self.species = species
                 self.energyScale = torchani.units.hartree2kjoulemol(1)
+
                 if atoms is None:
                     self.indices = None
                 else:
                     self.indices = torch.tensor(sorted(atoms), dtype=torch.int64)
+
+                # Accelerate the model
+                self.model = OptimizedTorchANI(model, self.atomic_numbers)
                 self.pbc = torch.tensor([True, True, True], dtype=torch.bool)
 
             def forward(self, positions, boxvectors: Optional[torch.Tensor] = None):
+                # Prepare the positions
                 positions = positions.to(torch.float32)
-                self.species = self.species.to(positions.device)
+
                 if self.indices is not None:
                     positions = positions[self.indices]
+                
+                positions = positions.unsqueeze(0) * 10.0 # nm --> Å
+                
+                # Run ANI to get the potential energy
                 if boxvectors is None:
-                    _, energy = self.model((self.species, 10.0*positions.unsqueeze(0)))
+                    _, energy = self.model((self.atomic_numbers, positions))
                 else:
                     self.pbc = self.pbc.to(positions.device)
                     boxvectors = boxvectors.to(torch.float32)
-                    _, energy = self.model((self.species, 10.0*positions.unsqueeze(0)), cell=10.0*boxvectors, pbc=self.pbc)
-                return self.energyScale*energy
+                    _, energy = self.model((self.atomic_numbers, positions), cell=10.0*boxvectors, pbc=self.pbc)
+
+                return energy * self.energyScale # Hartree --> kJ/mol
 
         aniForce = ANIForce(model, species, atoms)
 
