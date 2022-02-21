@@ -31,7 +31,6 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 from openmmml.mlpotential import MLPotential, MLPotentialImpl, MLPotentialImplFactory
 import openmm
-from NNPOps import OptimizedTorchANI
 from typing import Iterable, Optional
 
 class ANIPotentialImplFactory(MLPotentialImplFactory):
@@ -64,6 +63,7 @@ class ANIPotentialImpl(MLPotentialImpl):
                   atoms: Optional[Iterable[int]],
                   forceGroup: int,
                   filename: str = 'animodel.pt',
+                  implementation: str = "nnpops",
                   **args):
         # Create the TorchANI model.
 
@@ -71,9 +71,9 @@ class ANIPotentialImpl(MLPotentialImpl):
         import torch
         import openmmtorch
         if self.name == 'ani1ccx':
-            model = torchani.models.ANI1ccx()
+            model = torchani.models.ANI1ccx(periodic_table_index=True)
         elif self.name == 'ani2x':
-            model = torchani.models.ANI2x()
+            model = torchani.models.ANI2x(periodic_table_index=True)
         else:
             raise ValueError('Unsupported ANI model: '+self.name)
 
@@ -82,15 +82,24 @@ class ANIPotentialImpl(MLPotentialImpl):
         includedAtoms = list(topology.atoms())
         if atoms is not None:
             includedAtoms = [includedAtoms[i] for i in atoms]
-        elements = [atom.element.symbol for atom in includedAtoms]
-        species = model.species_to_tensor(elements).unsqueeze(0)
+        atomic_numbers = [atom.element.atomic_number for atom in includedAtoms]
+        species = torch.tensor(atomic_numbers).unsqueeze(0)
 
-        device = torch.device('cuda')
-        model = OptimizedTorchANI(model, species).to(device)
+        if implementation == "nnpops":
+            from NNPOps import OptimizedTorchANI
+            device = torch.device('cuda')
+            model = OptimizedTorchANI(model, species).to(device)
+        elif implementation == "cuaev":
+            self.model.aev_computer.use_cuda_extension = True
+        elif implementation == "torchani":
+            # nothing extra to do here
+            pass
+        else:
+            raise ValueError(f"Unsupported implementation: {implementation}")
 
         class ANIForce(torch.nn.Module):
 
-            def __init__(self, model, species, atoms, periodic):
+            def __init__(self, model, species, atoms):
                 super(ANIForce, self).__init__()
                 self.model = model
                 self.species = species
@@ -100,9 +109,6 @@ class ANIPotentialImpl(MLPotentialImpl):
                 else:
                     self.indices = torch.tensor(sorted(atoms), dtype=torch.int64)
                 self.pbc = torch.tensor([True, True, True], dtype=torch.bool)
-                # comment the following lines if need to use CPU
-                if topology.getPeriodicBoxVectors() is None:
-                    self.model.aev_computer.use_cuda_extension = True
 
             def forward(self, positions, boxvectors: Optional[torch.Tensor] = None):
                 positions = positions.to(torch.float32)
@@ -117,7 +123,7 @@ class ANIPotentialImpl(MLPotentialImpl):
                     _, energy = self.model((self.species, 10.0*positions.unsqueeze(0)), cell=10.0*boxvectors, pbc=self.pbc)
                 return self.energyScale*energy
 
-        aniForce = ANIForce(model, species, atoms, topology.getPeriodicBoxVectors() is not None)
+        aniForce = ANIForce(model, species, atoms)
 
         # Convert it to TorchScript and save it.
 
