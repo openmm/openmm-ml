@@ -69,7 +69,6 @@ class ANIPotentialImpl(MLPotentialImpl):
         import torchani
         import torch
         import openmmtorch
-        from NNPOps import OptimizedTorchANI
 
         if self.name == 'ani1ccx':
             model = torchani.models.ANI1ccx(periodic_table_index=True)
@@ -85,6 +84,7 @@ class ANIPotentialImpl(MLPotentialImpl):
         atomic_numbers = [atom.element.atomic_number for atom in includedAtoms]
         species = torch.tensor(atomic_numbers).unsqueeze(0)
 
+        # Accelerate the model
         if implementation == "nnpops":
             from NNPOps import OptimizedTorchANI
             device = torch.device('cuda')
@@ -109,9 +109,8 @@ class ANIPotentialImpl(MLPotentialImpl):
                     self.indices = None
                 else:
                     self.indices = torch.tensor(sorted(atoms), dtype=torch.int64)
-
-                # Accelerate the model
-                self.model = OptimizedTorchANI(model, self.atomic_numbers)
+                
+                self.model = model
                 self.pbc = torch.tensor([True, True, True], dtype=torch.bool)
 
             def forward(self, positions, boxvectors: Optional[torch.Tensor] = None):
@@ -125,11 +124,11 @@ class ANIPotentialImpl(MLPotentialImpl):
                 
                 # Run ANI to get the potential energy
                 if boxvectors is None:
-                    _, energy = self.model((self.atomic_numbers, positions))
+                    _, energy = self.model((self.indices, positions))
                 else:
                     self.pbc = self.pbc.to(positions.device)
                     boxvectors = boxvectors.to(torch.float32)
-                    _, energy = self.model((self.atomic_numbers, positions), cell=10.0*boxvectors, pbc=self.pbc)
+                    _, energy = self.model((self.indices, positions), cell=10.0*boxvectors, pbc=self.pbc)
 
                 return energy * self.energyScale # Hartree --> kJ/mol
 
