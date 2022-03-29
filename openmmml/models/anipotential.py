@@ -61,12 +61,12 @@ class ANIPotentialImpl(MLPotentialImpl):
                   topology: openmm.app.Topology,
                   system: openmm.System,
                   atoms: Optional[Iterable[int]],
-                  forceGroup: int,
-                  filename: str = 'animodel.pt',
-                  useOptimizedTorchANI : Optional[bool] = True, 
+                  forceGroup: Optional[int] = 0,
+                  filename: Optional[str] = 'animodel.pt',
+                  implementation : Optional[str] = 'nnpops', 
                   **args):
-        # Create the TorchANI model.
 
+        # Create the TorchANI model.
         import torchani
         import torch
         import openmmtorch
@@ -75,7 +75,7 @@ class ANIPotentialImpl(MLPotentialImpl):
         elif self.name == 'ani2x':
             model = torchani.models.ANI2x(periodic_table_index=True)
         else:
-            raise ValueError('Unsupported ANI model: '+self.name)
+            raise NotImplementedError(f"{self.name} is not a supported ANI model")
         
         # Create the PyTorch model that will be invoked by OpenMM.
         includedAtoms = list(topology.atoms())
@@ -83,18 +83,18 @@ class ANIPotentialImpl(MLPotentialImpl):
             includedAtoms = [includedAtoms[i] for i in atoms]
         atomic_numbers = [atom.element.atomic_number for atom in includedAtoms]
         species = torch.tensor(atomic_numbers).unsqueeze(0)
-        
-        if useOptimizedTorchANI: # ask to optimize torchani
-            try:
-                # from https://github.com/openmm/NNPOps#example
-                from NNPOps import OptimizedTorchANI
-                model = OptimizedTorchANI(model, species)
-            except Exception as e:
-                raise Exception(e)
-                
-        class ANIForce(torch.nn.Module):
 
-            def __init__(self, model, species, atoms, periodic):
+        if implementation == "nnpops":
+            from NNPOps import OptimizedTorchANI
+            device = torch.device('cuda')
+            model = OptimizedTorchANI(model, species).to(device)
+        elif implementation == "torchani":
+            pass # no modification to be made
+        else:
+            raise NotImplementedError(f"implementation {implementation} is not supported")
+               
+        class ANIForce(torch.nn.Module):
+            def __init__(self, model, species, atoms):
                 super(ANIForce, self).__init__()
                 self.model = model
                 self.species = species
@@ -102,27 +102,28 @@ class ANIPotentialImpl(MLPotentialImpl):
                 if atoms is None:
                     self.indices = None
                 else:
-                    self.indices = torch.tensor(sorted(atoms), dtype=torch.int64)
-                if periodic:
-                    self.pbc = torch.tensor([True, True, True], dtype=torch.bool)
-                else:
-                    self.pbc = None
+                    self.indices = torch.tensor(atoms, dtype=torch.int64)
+                
+                self.model = model
+                self.pbc = torch.tensor([True, True, True], dtype=torch.bool)
 
             def forward(self, positions, boxvectors: Optional[torch.Tensor] = None):
                 positions = positions.to(torch.float32)
                 if self.indices is not None:
                     positions = positions[self.indices]
-                if boxvectors is None:
-                    _, energy = self.model((self.species, 10.0*positions.unsqueeze(0)))
-                else:
-                    boxvectors = boxvectors.to(torch.float32)
-                    _, energy = self.model((self.species, 10.0*positions.unsqueeze(0)), cell=10.0*boxvectors, pbc=self.pbc)
-                return self.energyScale*energy
+                positions = positions.unsqueeze(0) * 10. # nm -> A
 
-        aniForce = ANIForce(model, species, atoms, topology.getPeriodicBoxVectors() is not None)
+                if boxvectors is None:
+                    _, energy = self.model((self.species))
+                else:
+                    pbc = self.pbc.to(positions.device)
+                    boxvectors = boxvectors.to(torch.float32)
+                    _, energy = self.model((self.species, positions), cell=10.0*boxvectors, pbc=pbc)
+                return self.energyScale * energy # Hartree -> kJ/mol
+
+        aniForce = ANIForce(model, species, atoms)
 
         # Convert it to TorchScript and save it.
-
         module = torch.jit.script(aniForce)
         module.save(filename)
 

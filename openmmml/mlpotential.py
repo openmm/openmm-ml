@@ -180,9 +180,9 @@ class MLPotential(object):
                           topology: openmm.app.Topology,
                           system: openmm.System,
                           atoms: Iterable[int],
-                          removeConstraints: bool = True,
-                          forceGroup: int = 0,
-                          interpolate: bool = False,
+                          removeConstraints: Optional[bool] = True,
+                          forceGroup: Optional[int] = 0,
+                          interpolate: Optional[bool] = False,
                           **args) -> openmm.System:
         """Create a System that is partly modeled with this potential and partly
         with a conventional force field.
