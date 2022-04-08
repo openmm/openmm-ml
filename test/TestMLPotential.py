@@ -2,22 +2,22 @@ import openmm as mm
 import openmm.app as app
 import openmm.unit as unit
 from openmmml import MLPotential
-import unittest
+import numpy as np
+import pytest
 rtol = 1e-5
 
-class TestMLPotential(unittest.TestCase):
+@pytest.mark.parametrize("implementation,platform_name", [
+        ('torchani', 'Reference'),
+        #('torchani', 'OpenCL'),
+        #('torchani', 'CPU'),
+        ('nnpops', 'CUDA'),
+        #('torchani', 'CUDA')
+        ]) 
+class TestMLPotential:
     """
     test the `MLPotential.py` functionality, specifically the `createMixedSystem` with interpolation to assert that the energies of interpolated
     systems are consistent with non-interpolated systems using various implementation methods.
     """
-
-    @parameterized.expand([
-        ['torchani', 'Reference'],
-        ['torchani', 'OpenCL'],
-        ['torchani', 'CPU'],
-        ['nnpops', 'CUDA'],
-        ['torchani', 'CUDA']
-        ])
     def testCreateMixedSystem(self, implementation, platform_name):
         pdb = app.PDBFile('alanine-dipeptide-explicit.pdb')
         ff = app.ForceField('amber14-all.xml', 'amber14/tip3pfb.xml')
@@ -38,10 +38,10 @@ class TestMLPotential(unittest.TestCase):
         interpEnergy1 = interpContext.getState(getEnergy=True).getPotentialEnergy().value_in_unit(unit.kilojoules_per_mole)
         interpContext.setParameter('lambda', 0)
         interpEnergy2 = interpContext.getState(getEnergy=True).getPotentialEnergy().value_in_unit(unit.kilojoules_per_mole)
-        self.assertAlmostEqual(mixedEnergy, interpEnergy1, delta=rtol*abs(mixedEnergy))
-        self.assertAlmostEqual(mmEnergy, interpEnergy2, delta=rtol*abs(mmEnergy))
+        assert np.isclose(mixedEnergy, interpEnergy1, rtol=rtol), f"mixedEnergy ({mixedEnergy}) does not match interpEnergy1 ({interpEnergy1})"
+        assert np.isclose(mmEnergy, interpEnergy2, rtol=rtol), f"mmEnergy ({mmEnergy} does not match interpEnergy2) ({interpEnergy2})"
 
 
-if __name__ == '__main__':
-    unittest.main()
+#if __name__ == '__main__':
+#    unittest.main()
 

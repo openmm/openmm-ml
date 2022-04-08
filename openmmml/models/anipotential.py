@@ -81,6 +81,8 @@ class ANIPotentialImpl(MLPotentialImpl):
         includedAtoms = list(topology.atoms())
         if atoms is not None:
             includedAtoms = [includedAtoms[i] for i in atoms]
+        indices = [atom.index for atom in includedAtoms]
+
         atomic_numbers = [atom.element.atomic_number for atom in includedAtoms]
         species = torch.tensor(atomic_numbers).unsqueeze(0)
 
@@ -94,34 +96,30 @@ class ANIPotentialImpl(MLPotentialImpl):
             raise NotImplementedError(f"implementation {implementation} is not supported")
                
         class ANIForce(torch.nn.Module):
-            def __init__(self, model, species, atoms):
+            def __init__(self, model, species, atom_indices):
                 super(ANIForce, self).__init__()
                 self.model = model
                 self.species = species
                 self.energyScale = torchani.units.hartree2kjoulemol(1)
-                if atoms is None:
-                    self.indices = None
-                else:
-                    self.indices = torch.tensor(atoms, dtype=torch.int64)
+                self.atom_indices = torch.tensor(atom_indices, dtype=torch.int64)
                 
                 self.model = model
                 self.pbc = torch.tensor([True, True, True], dtype=torch.bool)
 
             def forward(self, positions, boxvectors: Optional[torch.Tensor] = None):
                 positions = positions.to(torch.float32)
-                if self.indices is not None:
-                    positions = positions[self.indices]
+                positions = positions[self.atom_indices]
                 positions = positions.unsqueeze(0) * 10. # nm -> A
 
                 if boxvectors is None:
-                    _, energy = self.model((self.species))
+                    _, energy = self.model((self.species, positions))
                 else:
-                    pbc = self.pbc.to(positions.device)
+                    self.pbc = self.pbc.to(positions.device)
                     boxvectors = boxvectors.to(torch.float32)
-                    _, energy = self.model((self.species, positions), cell=10.0*boxvectors, pbc=pbc)
+                    _, energy = self.model((self.species, positions), cell=10.0*boxvectors, pbc=self.pbc)
                 return self.energyScale * energy # Hartree -> kJ/mol
 
-        aniForce = ANIForce(model, species, atoms)
+        aniForce = ANIForce(model, species, indices)
 
         # Convert it to TorchScript and save it.
         module = torch.jit.script(aniForce)
