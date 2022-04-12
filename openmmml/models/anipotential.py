@@ -106,7 +106,7 @@ class ANIPotentialImpl(MLPotentialImpl):
                 self.model = model
                 self.pbc = torch.tensor([True, True, True], dtype=torch.bool)
 
-            def forward(self, positions, boxvectors: Optional[torch.Tensor] = None):
+            def forward(self, positions, boxvectors: Optional[torch.Tensor] = None, scale : Optional[torch.Tensor] = None):
                 positions = positions.to(torch.float32)
                 positions = positions[self.atom_indices]
                 positions = positions.unsqueeze(0) * 10. # nm -> A
@@ -117,7 +117,13 @@ class ANIPotentialImpl(MLPotentialImpl):
                     self.pbc = self.pbc.to(positions.device)
                     boxvectors = boxvectors.to(torch.float32)
                     _, energy = self.model((self.species, positions), cell=10.0*boxvectors, pbc=self.pbc)
-                return self.energyScale * energy # Hartree -> kJ/mol
+
+                if scale is None:
+                    in_scale = torch.ones(1)
+                else:
+                    in_scale = scale
+
+                return self.energyScale * energy * in_scale # Hartree -> kJ/mol
 
         aniForce = ANIForce(model, species, indices)
 
@@ -129,8 +135,10 @@ class ANIPotentialImpl(MLPotentialImpl):
 
         force = openmmtorch.TorchForce(filename)
         force.setForceGroup(forceGroup)
-        if topology.getPeriodicBoxVectors() is not None:
+        if topology.getPeriodicBoxVectors() is not None or system.usesPeriodicBoundaryConditions():
             force.setUsesPeriodicBoundaryConditions(True)
+
+        force.addGlobalParameter('scale', 1.0)
         system.addForce(force)
 
 MLPotential.registerImplFactory('ani1ccx', ANIPotentialImplFactory())

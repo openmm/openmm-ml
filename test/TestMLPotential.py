@@ -8,10 +8,10 @@ rtol = 1e-5
 
 @pytest.mark.parametrize("implementation,platform_name", [
         ('torchani', 'Reference'),
-        #('torchani', 'OpenCL'),
-        #('torchani', 'CPU'),
+        ('torchani', 'OpenCL'),
+        ('torchani', 'CPU'),
         ('nnpops', 'CUDA'),
-        #('torchani', 'CUDA')
+        ('torchani', 'CUDA')
         ]) 
 class TestMLPotential:
     """
@@ -36,7 +36,7 @@ class TestMLPotential:
         mmEnergy = mmContext.getState(getEnergy=True).getPotentialEnergy().value_in_unit(unit.kilojoules_per_mole)
         mixedEnergy = mixedContext.getState(getEnergy=True).getPotentialEnergy().value_in_unit(unit.kilojoules_per_mole)
         interpEnergy1 = interpContext.getState(getEnergy=True).getPotentialEnergy().value_in_unit(unit.kilojoules_per_mole)
-        interpContext.setParameter('lambda', 0)
+        interpContext.setParameter('scale', 0.)
         interpEnergy2 = interpContext.getState(getEnergy=True).getPotentialEnergy().value_in_unit(unit.kilojoules_per_mole)
         assert np.isclose(mixedEnergy, interpEnergy1, rtol=rtol), f"mixedEnergy ({mixedEnergy}) does not match interpEnergy1 ({interpEnergy1})"
         assert np.isclose(mmEnergy, interpEnergy2, rtol=rtol), f"mmEnergy ({mmEnergy} does not match interpEnergy2) ({interpEnergy2})"
