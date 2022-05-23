@@ -89,14 +89,14 @@ class ANIPotentialImpl(MLPotentialImpl):
             def __init__(self, model, species, atoms, periodic):
                 super(ANIForce, self).__init__()
                 self.model = model
-                self.species = species
+                self.species = torch.nn.Parameter(species, requires_grad=False)
                 self.energyScale = torchani.units.hartree2kjoulemol(1)
                 if atoms is None:
                     self.indices = None
                 else:
                     self.indices = torch.tensor(sorted(atoms), dtype=torch.int64)
                 if periodic:
-                    self.pbc = torch.tensor([True, True, True], dtype=torch.bool)
+                    self.pbc = torch.nn.Parameter(torch.tensor([True, True, True], dtype=torch.bool), requires_grad=False)
                 else:
                     self.pbc = None
 
