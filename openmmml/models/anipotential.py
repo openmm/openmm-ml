@@ -96,25 +96,29 @@ class ANIPotentialImpl(MLPotentialImpl):
             raise NotImplementedError(f"implementation {implementation} is not supported")
                
         class ANIForce(torch.nn.Module):
-            def __init__(self, model, species, atom_indices):
+            def __init__(self, model, species, atoms, periodic):
                 super(ANIForce, self).__init__()
                 self.model = model
-                self.species = species
+                self.species = torch.nn.Parameter(species, requires_grad=False)
                 self.energyScale = torchani.units.hartree2kjoulemol(1)
-                self.atom_indices = torch.tensor(atom_indices, dtype=torch.int64)
-                
-                self.model = model
-                self.pbc = torch.tensor([True, True, True], dtype=torch.bool)
+                if atoms is None:
+                    self.indices = None
+                else:
+                    self.indices = torch.tensor(atoms, dtype=torch.int64)
+                if periodic:
+                    self.pbc = torch.nn.Parameter(torch.tensor([True, True, True], dtype=torch.bool), requires_grad=False)
+                else:
+                    self.pbc = None
 
             def forward(self, positions, boxvectors: Optional[torch.Tensor] = None, scale : Optional[torch.Tensor] = None):
                 positions = positions.to(torch.float32)
-                positions = positions[self.atom_indices]
+                if self.indices is not None:
+                    positions = positions[self.indices]
                 positions = positions.unsqueeze(0) * 10. # nm -> A
 
                 if boxvectors is None:
                     _, energy = self.model((self.species, positions))
                 else:
-                    self.pbc = self.pbc.to(positions.device)
                     boxvectors = boxvectors.to(torch.float32)
                     _, energy = self.model((self.species, positions), cell=10.0*boxvectors, pbc=self.pbc)
 
@@ -125,7 +129,9 @@ class ANIPotentialImpl(MLPotentialImpl):
 
                 return self.energyScale * energy * in_scale # Hartree -> kJ/mol
 
-        aniForce = ANIForce(model, species, indices)
+        # is_periodic...
+        is_periodic = topology.getPeriodicBoxVectors() is not None or system.usesPeriodicBoundaryConditions() 
+        aniForce = ANIForce(model, species, indices, is_periodic)
 
         # Convert it to TorchScript and save it.
         module = torch.jit.script(aniForce)
@@ -135,9 +141,7 @@ class ANIPotentialImpl(MLPotentialImpl):
 
         force = openmmtorch.TorchForce(filename)
         force.setForceGroup(forceGroup)
-        if topology.getPeriodicBoxVectors() is not None or system.usesPeriodicBoundaryConditions():
-            force.setUsesPeriodicBoundaryConditions(True)
-
+        force.setUsesPeriodicBoundaryConditions(is_periodic)
         force.addGlobalParameter('scale', 1.0)
         system.addForce(force)
 
