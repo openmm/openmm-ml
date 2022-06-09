@@ -12,8 +12,8 @@ class TestMLPotential(unittest.TestCase):
         mmSystem = ff.createSystem(pdb.topology, nonbondedMethod=app.PME)
         potential = MLPotential('ani2x')
         mlAtoms = [a.index for a in next(pdb.topology.chains()).atoms()]
-        mixedSystem = potential.createMixedSystem(pdb.topology, mmSystem, mlAtoms, interpolate=False, implementation='torchani')
-        interpSystem = potential.createMixedSystem(pdb.topology, mmSystem, mlAtoms, interpolate=True, implementation='torchani')
+        mixedSystem = potential.createMixedSystem(pdb.topology, mmSystem, mlAtoms, interpolate=False, implementation='nnpops')
+        interpSystem = potential.createMixedSystem(pdb.topology, mmSystem, mlAtoms, interpolate=True, implementation='nnpops')
         platform = mm.Platform.getPlatformByName('CUDA')
         mmContext = mm.Context(mmSystem, mm.VerletIntegrator(0.001), platform)
         mixedContext = mm.Context(mixedSystem, mm.VerletIntegrator(0.001), platform)
