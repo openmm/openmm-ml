@@ -180,9 +180,9 @@ class MLPotential(object):
                           topology: openmm.app.Topology,
                           system: openmm.System,
                           atoms: Iterable[int],
-                          removeConstraints: Optional[bool] = True,
-                          forceGroup: Optional[int] = 0,
-                          interpolate: Optional[bool] = False,
+                          removeConstraints: bool = True,
+                          forceGroup: int = 0,
+                          interpolate: bool = False,
                           **args) -> openmm.System:
         """Create a System that is partly modeled with this potential and partly
         with a conventional force field.
@@ -278,6 +278,7 @@ class MLPotential(object):
                 #mlVarNames.append(name)
 
             # Create Forces for all the bonded interactions within the ML subset and add them to the CustomCVForce.
+
             bondedSystem = self._removeBonds(system, atoms, False, removeConstraints)
             bondedForces = []
             for force in bondedSystem.getForces():
@@ -290,6 +291,7 @@ class MLPotential(object):
                 mmVarNames.append(name)
 
             # Create a CustomBondForce that computes all nonbonded interactions within the ML subset.
+
             for force in system.getForces():
                 if isinstance(force, openmm.NonbondedForce):
                     internalNonbonded = openmm.CustomBondForce('138.935456*chargeProd/r + 4*epsilon*((sigma/r)^12-(sigma/r)^6)')
@@ -330,10 +332,10 @@ class MLPotential(object):
 
             # Configure the CustomCVForce so scale interpolates between the conventional and ML potentials.
 
-            # mlSum = '+'.join(mlVarNames) if len(mlVarNames) > 0 else '0'
+            #mlSum = '+'.join(mlVarNames) if len(mlVarNames) > 0 else '0'
             mmSum = '+'.join(mmVarNames) if len(mmVarNames) > 0 else '0'
-            # cv.setEnergyFunction(f'lambda*({mlSum}) + (1-lambda)*({mmSum})')
-            cv.setEnergyFunction(f'(1-scale)*({mmSum})')
+            #cv.setEnergyFunction(f'lambda*({mlSum}) + (1-lambda)*({mmSum})')
+            cv.setEnergyFunction(f"(1-scale)*({mmSum})")
             newSystem.addForce(cv)
         return newSystem
 

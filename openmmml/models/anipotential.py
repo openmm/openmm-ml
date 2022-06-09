@@ -31,7 +31,7 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 from openmmml.mlpotential import MLPotential, MLPotentialImpl, MLPotentialImplFactory
 import openmm
-from typing import Iterable, Optional
+from typing import Iterable, Optional, Union
 
 class ANIPotentialImplFactory(MLPotentialImplFactory):
     """This is the factory that creates ANIPotentialImpl objects."""
@@ -57,45 +57,59 @@ class ANIPotentialImpl(MLPotentialImpl):
     def __init__(self, name):
         self.name = name
 
+
     def addForces(self,
                   topology: openmm.app.Topology,
                   system: openmm.System,
                   atoms: Optional[Iterable[int]],
-                  forceGroup: Optional[int] = 0,
-                  filename: Optional[str] = 'animodel.pt',
-                  implementation : Optional[str] = 'nnpops', 
+                  forceGroup: int,
+                  filename: str = 'animodel.pt',
+                  implementation : str = 'nnpops',
+                  overwrite_periodicity : Optional[bool]=False,
                   **args):
-
+        """
+        overwrite_periodicity : whether to overwrite the periodicity given by `topology` or `system` to its opposite; this is primarily for 
+            testing purposes
+        """
         # Create the TorchANI model.
+
         import torchani
         import torch
         import openmmtorch
+
+        # `nnpops` throws error if `periodic_table_index`=False if one passes `species` as `species_to_tensor` from `element`
+        _kwarg_dict = {'periodic_table_index': True} #if implementation == 'nnpops' else {}
         if self.name == 'ani1ccx':
-            model = torchani.models.ANI1ccx(periodic_table_index=True)
+            model = torchani.models.ANI1ccx(**_kwarg_dict)
         elif self.name == 'ani2x':
-            model = torchani.models.ANI2x(periodic_table_index=True)
+            model = torchani.models.ANI2x(**_kwarg_dict)
         else:
-            raise NotImplementedError(f"{self.name} is not a supported ANI model")
-        
+            raise ValueError('Unsupported ANI model: '+self.name)
+
         # Create the PyTorch model that will be invoked by OpenMM.
+
         includedAtoms = list(topology.atoms())
         if atoms is not None:
             includedAtoms = [includedAtoms[i] for i in atoms]
-        indices = [atom.index for atom in includedAtoms]
+        # elements = [atom.element.symbol for atom in includedAtoms]
+        #species = model.species_to_tensor(elements).unsqueeze(0)
+        species = torch.tensor([[atom.element.atomic_number for atom in includedAtoms]])
 
-        atomic_numbers = [atom.element.atomic_number for atom in includedAtoms]
-        species = torch.tensor(atomic_numbers).unsqueeze(0)
-
-        if implementation == "nnpops":
-            from NNPOps import OptimizedTorchANI
-            device = torch.device('cuda')
+        if implementation == 'nnpops':
+            try:
+                from NNPOps import OptimizedTorchANI
+                device = torch.device('cuda') # nnpops needs cuda
+            except Exception as e:
+                print(f"failed to import `nnpops` with error: {e}")
+            #species = torch.tensor([[atom.element.atomic_number for atom in includedAtoms]], device=device) # with nnpops, one needs `atomic_number`
             model = OptimizedTorchANI(model, species).to(device)
         elif implementation == "torchani":
-            pass # no modification to be made
+            pass # do nothing
         else:
             raise NotImplementedError(f"implementation {implementation} is not supported")
-               
+
         class ANIForce(torch.nn.Module):
+
             def __init__(self, model, species, atoms, periodic):
                 super(ANIForce, self).__init__()
                 self.model = model
@@ -104,7 +118,7 @@ class ANIPotentialImpl(MLPotentialImpl):
                 if atoms is None:
                     self.indices = None
                 else:
-                    self.indices = torch.tensor(atoms, dtype=torch.int64)
+                    self.indices = torch.tensor(sorted(atoms), dtype=torch.int64)
                 if periodic:
                     self.pbc = torch.nn.Parameter(torch.tensor([True, True, True], dtype=torch.bool), requires_grad=False)
                 else:
@@ -112,28 +126,29 @@ class ANIPotentialImpl(MLPotentialImpl):
 
             def forward(self, positions, boxvectors: Optional[torch.Tensor] = None, scale : Optional[torch.Tensor] = None):
                 positions = positions.to(torch.float32)
+                #print(f"(boxvectors, scale): {boxvectors, scale}")
                 if self.indices is not None:
                     positions = positions[self.indices]
-                positions = positions.unsqueeze(0) * 10. # nm -> A
-
-                if boxvectors is None:
-                    _, energy = self.model((self.species, positions))
+                if boxvectors is None or self.pbc is None:
+                    _, energy = self.model((self.species, 10.0*positions.unsqueeze(0)))
                 else:
                     boxvectors = boxvectors.to(torch.float32)
-                    _, energy = self.model((self.species, positions), cell=10.0*boxvectors, pbc=self.pbc)
+                    _, energy = self.model((self.species, 10.0*positions.unsqueeze(0)), cell=10.0*boxvectors, pbc=self.pbc)
 
                 if scale is None:
-                    in_scale = torch.ones(1)
+                    in_scale = torch.ones(1).to(positions.device) # place on appropriate device
                 else:
                     in_scale = scale
-
-                return self.energyScale * energy * in_scale # Hartree -> kJ/mol
+                return self.energyScale*energy*in_scale
 
         # is_periodic...
-        is_periodic = topology.getPeriodicBoxVectors() is not None or system.usesPeriodicBoundaryConditions() 
-        aniForce = ANIForce(model, species, indices, is_periodic)
+        is_periodic = (topology.getPeriodicBoxVectors() is not None) or system.usesPeriodicBoundaryConditions()
+        if overwrite_periodicity: # flip the periodicity bool
+            is_periodic = not is_periodic
+        aniForce = ANIForce(model, species, atoms, is_periodic)
 
         # Convert it to TorchScript and save it.
+
         module = torch.jit.script(aniForce)
         module.save(filename)
 
@@ -142,7 +157,11 @@ class ANIPotentialImpl(MLPotentialImpl):
         force = openmmtorch.TorchForce(filename)
         force.setForceGroup(forceGroup)
         force.setUsesPeriodicBoundaryConditions(is_periodic)
-        force.addGlobalParameter('scale', 1.0)
+        if is_periodic:
+            print(f"using pbcs...")
+        else:
+            print(f"omitting pbcs since the querying the topology and system gave is_periodic={is_periodic}")
+        force.addGlobalParameter('scale', 1.)
         system.addForce(force)
 
 MLPotential.registerImplFactory('ani1ccx', ANIPotentialImplFactory())
