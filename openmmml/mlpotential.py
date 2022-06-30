@@ -168,6 +168,8 @@ class MLPotential(object):
         a newly created System object that uses this potential function to model the Topology
         """
         system = openmm.System()
+        if topology.getPeriodicBoxVectors() is not None:
+            system.setDefaultPeriodicBoxVectors(*topology.getPeriodicBoxVectors())
         for atom in topology.atoms():
             if atom.element is None:
                 system.addParticle(0)
