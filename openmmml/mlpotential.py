@@ -211,9 +211,9 @@ class MLPotential(object):
         3. For every NonbondedForce, a corresponding CustomBondForce to compute the
            nonbonded interactions within the ML subset.
 
-        The CustomCVForce defines a global parameter called "scale" that interpolates
-        between the two potentials.  When scale=0, the energy is computed entirely with
-        the conventional force field.  When scale=1, the energy is computed entirely with
+        The CustomCVForce defines a global parameter called "lambda_interpolate" that interpolates
+        between the two potentials.  When lambda_interpolate=0, the energy is computed entirely with
+        the conventional force field.  When lambda_interpolate=1, the energy is computed entirely with
         the ML potential.  You can set its value by calling setParameter() on the Context.
 
         Parameters
@@ -269,15 +269,14 @@ class MLPotential(object):
             # Create a CustomCVForce and put the ML forces inside it.
 
             cv = openmm.CustomCVForce('')
-            cv.addGlobalParameter('scale', 1)
+            cv.addGlobalParameter('lambda_interpolate', 1)
             tempSystem = openmm.System()
             self._impl.addForces(topology, tempSystem, atomList, forceGroup, **args)
             mlVarNames = []
             for i, force in enumerate(tempSystem.getForces()):
-                newSystem.addForce(deepcopy(force))
-                #name = f'mlForce{i+1}'
-                #cv.addCollectiveVariable(name, deepcopy(force))
-                #mlVarNames.append(name)
+                name = f'mlForce{i+1}'
+                cv.addCollectiveVariable(name, deepcopy(force))
+                mlVarNames.append(name)
 
             # Create Forces for all the bonded interactions within the ML subset and add them to the CustomCVForce.
 
@@ -332,12 +331,11 @@ class MLPotential(object):
                         cv.addCollectiveVariable(name, internalNonbonded)
                         mmVarNames.append(name)
 
-            # Configure the CustomCVForce so scale interpolates between the conventional and ML potentials.
+            # Configure the CustomCVForce so lambda_interpolate interpolates between the conventional and ML potentials.
 
-            #mlSum = '+'.join(mlVarNames) if len(mlVarNames) > 0 else '0'
+            mlSum = '+'.join(mlVarNames) if len(mlVarNames) > 0 else '0'
             mmSum = '+'.join(mmVarNames) if len(mmVarNames) > 0 else '0'
-            #cv.setEnergyFunction(f'lambda*({mlSum}) + (1-lambda)*({mmSum})')
-            cv.setEnergyFunction(f"(1-scale)*({mmSum})")
+            cv.setEnergyFunction(f'lambda_interpolate*({mlSum}) + (1-lambda_interpolate)*({mmSum})')
             newSystem.addForce(cv)
         return newSystem
 

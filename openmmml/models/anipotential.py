@@ -98,10 +98,15 @@ class ANIPotentialImpl(MLPotentialImpl):
         if implementation == 'nnpops':
             try:
                 from NNPOps import OptimizedTorchANI
-                device = torch.device('cuda') # nnpops needs cuda
+                #device = torch.device('cuda') # nnpops doesn't need cuda necessarily
             except Exception as e:
                 print(f"failed to import `nnpops` with error: {e}")
-            #species = torch.tensor([[atom.element.atomic_number for atom in includedAtoms]], device=device) # with nnpops, one needs `atomic_number`
+            # species = torch.tensor([[atom.element.atomic_number for atom in includedAtoms]], device=device) # with nnpops, one needs `atomic_number`
+            try:
+                device = torch.device('cuda') # nnpops doesn't need cuda necessarily
+            except Exception as e:
+                print(f"cannot equip `model` to `cuda` as `cuda` is not a visible device; using `cpu`")
+                device = torch.device('cpu')
             model = OptimizedTorchANI(model, species).to(device)
         elif implementation == "torchani":
             pass # do nothing
@@ -124,22 +129,18 @@ class ANIPotentialImpl(MLPotentialImpl):
                 else:
                     self.pbc = None
 
-            def forward(self, positions, boxvectors: Optional[torch.Tensor] = None, scale : Optional[torch.Tensor] = None):
+            def forward(self, positions, boxvectors: Optional[torch.Tensor] = None):
                 positions = positions.to(torch.float32)
                 #print(f"(boxvectors, scale): {boxvectors, scale}")
                 if self.indices is not None:
                     positions = positions[self.indices]
-                if boxvectors is None or self.pbc is None:
+                if boxvectors is None:
                     _, energy = self.model((self.species, 10.0*positions.unsqueeze(0)))
                 else:
                     boxvectors = boxvectors.to(torch.float32)
                     _, energy = self.model((self.species, 10.0*positions.unsqueeze(0)), cell=10.0*boxvectors, pbc=self.pbc)
 
-                if scale is None:
-                    in_scale = torch.ones(1).to(positions.device) # place on appropriate device
-                else:
-                    in_scale = scale
-                return self.energyScale*energy*in_scale
+                return self.energyScale*energy
 
         # is_periodic...
         is_periodic = (topology.getPeriodicBoxVectors() is not None) or system.usesPeriodicBoundaryConditions()
@@ -157,11 +158,6 @@ class ANIPotentialImpl(MLPotentialImpl):
         force = openmmtorch.TorchForce(filename)
         force.setForceGroup(forceGroup)
         force.setUsesPeriodicBoundaryConditions(is_periodic)
-        if is_periodic:
-            print(f"using pbcs...")
-        else:
-            print(f"omitting pbcs since the querying the topology and system gave is_periodic={is_periodic}")
-        force.addGlobalParameter('scale', 1.)
         system.addForce(force)
 
 MLPotential.registerImplFactory('ani1ccx', ANIPotentialImplFactory())
