@@ -82,25 +82,16 @@ class ANIPotentialImpl(MLPotentialImpl):
             raise ValueError('Unsupported ANI model: '+self.name)
 
         # Create the PyTorch model that will be invoked by OpenMM.
-
         includedAtoms = list(topology.atoms())
         if atoms is not None:
             includedAtoms = [includedAtoms[i] for i in atoms]
         species = torch.tensor([[atom.element.atomic_number for atom in includedAtoms]])
-
         if implementation == 'nnpops':
             try:
                 from NNPOps import OptimizedTorchANI
+                model = OptimizedTorchANI(model, species)
             except Exception as e:
-                print(f"failed to import `nnpops` with error: {e}")
-            
-            try:
-                device = torch.device('cuda') # nnpops doesn't need cuda necessarily
-            except Exception as e:
-                print(f"cannot equip `model` to `cuda` as `cuda` is not a visible device; using `cpu`")
-                device = torch.device('cpu')
-            model = OptimizedTorchANI(model, species).to(device)
-            
+                print(f"failed to equip `nnpops` with error: {e}")
         elif implementation == "torchani":
             pass # do nothing
         else:
