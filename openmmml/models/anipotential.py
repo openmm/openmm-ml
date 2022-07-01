@@ -31,7 +31,7 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 from openmmml.mlpotential import MLPotential, MLPotentialImpl, MLPotentialImplFactory
 import openmm
-from typing import Iterable, Optional
+from typing import Iterable, Optional, Union
 
 class ANIPotentialImplFactory(MLPotentialImplFactory):
     """This is the factory that creates ANIPotentialImpl objects."""
@@ -57,32 +57,45 @@ class ANIPotentialImpl(MLPotentialImpl):
     def __init__(self, name):
         self.name = name
 
+
     def addForces(self,
                   topology: openmm.app.Topology,
                   system: openmm.System,
                   atoms: Optional[Iterable[int]],
                   forceGroup: int,
                   filename: str = 'animodel.pt',
+                  implementation : str = 'nnpops',
                   **args):
         # Create the TorchANI model.
 
         import torchani
         import torch
         import openmmtorch
+
+        # `nnpops` throws error if `periodic_table_index`=False if one passes `species` as `species_to_tensor` from `element`
+        _kwarg_dict = {'periodic_table_index': True}
         if self.name == 'ani1ccx':
-            model = torchani.models.ANI1ccx()
+            model = torchani.models.ANI1ccx(**_kwarg_dict)
         elif self.name == 'ani2x':
-            model = torchani.models.ANI2x()
+            model = torchani.models.ANI2x(**_kwarg_dict)
         else:
             raise ValueError('Unsupported ANI model: '+self.name)
 
         # Create the PyTorch model that will be invoked by OpenMM.
-
         includedAtoms = list(topology.atoms())
         if atoms is not None:
             includedAtoms = [includedAtoms[i] for i in atoms]
-        elements = [atom.element.symbol for atom in includedAtoms]
-        species = model.species_to_tensor(elements).unsqueeze(0)
+        species = torch.tensor([[atom.element.atomic_number for atom in includedAtoms]])
+        if implementation == 'nnpops':
+            try:
+                from NNPOps import OptimizedTorchANI
+                model = OptimizedTorchANI(model, species)
+            except Exception as e:
+                print(f"failed to equip `nnpops` with error: {e}")
+        elif implementation == "torchani":
+            pass # do nothing
+        else:
+            raise NotImplementedError(f"implementation {implementation} is not supported")
 
         class ANIForce(torch.nn.Module):
 
@@ -102,6 +115,7 @@ class ANIPotentialImpl(MLPotentialImpl):
 
             def forward(self, positions, boxvectors: Optional[torch.Tensor] = None):
                 positions = positions.to(torch.float32)
+                #print(f"(boxvectors, scale): {boxvectors, scale}")
                 if self.indices is not None:
                     positions = positions[self.indices]
                 if boxvectors is None:
@@ -109,9 +123,12 @@ class ANIPotentialImpl(MLPotentialImpl):
                 else:
                     boxvectors = boxvectors.to(torch.float32)
                     _, energy = self.model((self.species, 10.0*positions.unsqueeze(0)), cell=10.0*boxvectors, pbc=self.pbc)
+
                 return self.energyScale*energy
 
-        aniForce = ANIForce(model, species, atoms, topology.getPeriodicBoxVectors() is not None)
+        # is_periodic...
+        is_periodic = (topology.getPeriodicBoxVectors() is not None) or system.usesPeriodicBoundaryConditions()
+        aniForce = ANIForce(model, species, atoms, is_periodic)
 
         # Convert it to TorchScript and save it.
 
@@ -122,8 +139,7 @@ class ANIPotentialImpl(MLPotentialImpl):
 
         force = openmmtorch.TorchForce(filename)
         force.setForceGroup(forceGroup)
-        if topology.getPeriodicBoxVectors() is not None:
-            force.setUsesPeriodicBoundaryConditions(True)
+        force.setUsesPeriodicBoundaryConditions(is_periodic)
         system.addForce(force)
 
 MLPotential.registerImplFactory('ani1ccx', ANIPotentialImplFactory())
