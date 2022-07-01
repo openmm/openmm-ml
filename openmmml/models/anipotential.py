@@ -65,12 +65,7 @@ class ANIPotentialImpl(MLPotentialImpl):
                   forceGroup: int,
                   filename: str = 'animodel.pt',
                   implementation : str = 'nnpops',
-                  overwrite_periodicity : Optional[bool]=False,
                   **args):
-        """
-        overwrite_periodicity : whether to overwrite the periodicity given by `topology` or `system` to its opposite; this is primarily for 
-            testing purposes
-        """
         # Create the TorchANI model.
 
         import torchani
@@ -78,7 +73,7 @@ class ANIPotentialImpl(MLPotentialImpl):
         import openmmtorch
 
         # `nnpops` throws error if `periodic_table_index`=False if one passes `species` as `species_to_tensor` from `element`
-        _kwarg_dict = {'periodic_table_index': True} #if implementation == 'nnpops' else {}
+        _kwarg_dict = {'periodic_table_index': True}
         if self.name == 'ani1ccx':
             model = torchani.models.ANI1ccx(**_kwarg_dict)
         elif self.name == 'ani2x':
@@ -91,23 +86,21 @@ class ANIPotentialImpl(MLPotentialImpl):
         includedAtoms = list(topology.atoms())
         if atoms is not None:
             includedAtoms = [includedAtoms[i] for i in atoms]
-        # elements = [atom.element.symbol for atom in includedAtoms]
-        #species = model.species_to_tensor(elements).unsqueeze(0)
         species = torch.tensor([[atom.element.atomic_number for atom in includedAtoms]])
 
         if implementation == 'nnpops':
             try:
                 from NNPOps import OptimizedTorchANI
-                #device = torch.device('cuda') # nnpops doesn't need cuda necessarily
             except Exception as e:
                 print(f"failed to import `nnpops` with error: {e}")
-            # species = torch.tensor([[atom.element.atomic_number for atom in includedAtoms]], device=device) # with nnpops, one needs `atomic_number`
+            
             try:
                 device = torch.device('cuda') # nnpops doesn't need cuda necessarily
             except Exception as e:
                 print(f"cannot equip `model` to `cuda` as `cuda` is not a visible device; using `cpu`")
                 device = torch.device('cpu')
             model = OptimizedTorchANI(model, species).to(device)
+            
         elif implementation == "torchani":
             pass # do nothing
         else:
@@ -144,8 +137,6 @@ class ANIPotentialImpl(MLPotentialImpl):
 
         # is_periodic...
         is_periodic = (topology.getPeriodicBoxVectors() is not None) or system.usesPeriodicBoundaryConditions()
-        if overwrite_periodicity: # flip the periodicity bool
-            is_periodic = not is_periodic
         aniForce = ANIForce(model, species, atoms, is_periodic)
 
         # Convert it to TorchScript and save it.
