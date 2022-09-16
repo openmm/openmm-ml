@@ -1,0 +1,16 @@
+name: test-openmm-ml
+
+channels:
+  - conda-forge
+  - conda-forge/label/openmm_rc
+  - conda-forge/label/openmm_dev
+
+dependencies:
+  # core
+  - numpy
+  - openmm
+  - nnpops
+  - openmm-torch
+  # testing
+  - pytest
+  - pytest-cov
