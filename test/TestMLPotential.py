@@ -9,7 +9,7 @@ rtol=1e-5
 platform_ints = range(mm.Platform.getNumPlatforms())
 
 
-@pytest.mark.parametrize("implementation,platform_name", list(itertools.product(['nnpops', 'torchani'], list(platform_ints))))
+@pytest.mark.parametrize("implementation,platform_int", list(itertools.product(['nnpops', 'torchani'], list(platform_ints))))
 class TestMLPotential:
 
     def testCreateMixedSystem(self, implementation, platform_int):
