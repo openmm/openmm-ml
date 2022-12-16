@@ -7,6 +7,14 @@ The current version is an early release.  The only supported potential functions
 suitable for small molecules involving a limited set of elements and no charges.  Future releases will add new potential
 functions that support a much wider range of molecules.
 
+### Install
+
+Install with [`mamba`](https://mamba.readthedocs.io/en/latest/user_guide/mamba.html), a faster CLI tool to manage `conda` environments.
+
+```bash
+$ mamba install -c conda-forge/label/openmm_rc -c conda-forge/label/openmm-torch_rc openmm-ml
+```
+
 ### Usage
 
 To use this package, create a MLPotential object, specifying the name of the potential function to use.  You can then
