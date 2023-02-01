@@ -3,9 +3,19 @@
 This is a high level API for using machine learning models in OpenMM simulations.  With just a few lines of code, you
 can set up a simulation that uses a standard, pretrained model to represent some or all of the interactions in a system.
 
-The current version is an early release.  The only supported potential functions are ANI-1ccx and ANI-2x.  They are
+In the current release, the only supported potential functions are ANI-1ccx and ANI-2x.  They are
 suitable for small molecules involving a limited set of elements and no charges.  Future releases will add new potential
 functions that support a much wider range of molecules.
+
+### Installation
+
+OpenMM-ML can be installed with conda or mamba.
+
+```
+mamba install -c conda-forge openmm-ml
+```
+
+We recommend using mamba, since it is faster and less buggy than conda.
 
 ### Usage
 
