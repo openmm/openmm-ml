@@ -3,9 +3,20 @@
 This is a high level API for using machine learning models in OpenMM simulations.  With just a few lines of code, you
 can set up a simulation that uses a standard, pretrained model to represent some or all of the interactions in a system.
 
-The current version is an early release.  The only supported potential functions are ANI-1ccx and ANI-2x.  They are
+In the current release, the only supported potential functions are [ANI-1ccx](https://www.nature.com/articles/s41467-019-10827-4)
+and [ANI-2x](https://pubs.acs.org/doi/full/10.1021/acs.jctc.0c00121), using the implementations in [TorchANI](https://github.com/aiqm/torchani).  They are
 suitable for small molecules involving a limited set of elements and no charges.  Future releases will add new potential
 functions that support a much wider range of molecules.
+
+### Installation
+
+OpenMM-ML can be installed with conda or mamba.
+
+```bash
+mamba install -c conda-forge openmm-ml
+```
+
+We recommend using mamba, since it is faster and less buggy than conda.
 
 ### Usage
 
