@@ -36,8 +36,8 @@ from typing import Iterable, Optional, Union
 class NequIPPotentialImplFactory(MLPotentialImplFactory):
     """This is the factory that creates NequipPotentialImpl objects."""
 
-    def createImpl(self, name: str, model_path: str, atom_type_to_atomic_number: dict, **args) -> MLPotentialImpl:
-        return NequIPPotentialImpl(name, model_path, atom_type_to_atomic_number)
+    def createImpl(self, name: str, model_path: str, distance_to_nm: float, energy_to_kJ_per_mol: float, atom_types: Optional[Iterable[int]]=None, **args) -> MLPotentialImpl:
+        return NequIPPotentialImpl(name, model_path, distance_to_nm, energy_to_kJ_per_mol, atom_types)
 
 class NequIPPotentialImpl(MLPotentialImpl):
     """This is the MLPotentialImpl implementing the NequIP potential.
@@ -52,11 +52,12 @@ class NequIPPotentialImpl(MLPotentialImpl):
     >>> system = potential.createSystem(topology, filename='mymodel.pt')
     """
 
-    def __init__(self, name, model_path, atom_type_to_atomic_number):
+    def __init__(self, name, model_path, distance_to_nm, energy_to_kJ_per_mol, atom_types):
         self.name = name
         self.model_path = model_path
-        self.atom_type_to_atomic_number = atom_type_to_atomic_number
-
+        self.atom_types = atom_types
+        self.distance_to_nm = distance_to_nm
+        self.energy_to_kJ_per_mol = energy_to_kJ_per_mol
 
     def addForces(self,
                   topology: openmm.app.Topology,
@@ -65,76 +66,107 @@ class NequIPPotentialImpl(MLPotentialImpl):
                   forceGroup: int,
                   filename: str = 'nequipmodel.pt',
                   implementation : str = None,
+                  device: str = None,
+                  example_positions=None,
                   **args):
         
 
-        
         import torch
         import openmmtorch
         from torch_nl import compute_neighborlist_n2
-
+        import nequip.scripts.deploy
 
 
         # Create the PyTorch model that will be invoked by OpenMM.
+
         includedAtoms = list(topology.atoms())
         if atoms is not None:
             includedAtoms = [includedAtoms[i] for i in atoms]
-        atomic_numbers = [atom.element.atomic_number for atom in includedAtoms]
-
+        
 
         class NequIPForce(torch.nn.Module):
 
-            def __init__(self, model_path, atomic_numbers, atom_type_to_atomic_number):
+            def __init__(self, model_path, atoms, periodic, distance_to_nm, energy_to_kJ_per_mol, atom_types=None, device=None):
                 super(NequIPForce, self).__init__()
 
-                # conversion constants
-                self.register_buffer('nm_to_A',    torch.tensor(10.0))
-                self.register_buffer('A_to_nm',    torch.tensor(0.1))
-                self.register_buffer('kcal_to_kJ', torch.tensor(4.184))
+                if device is None: # use cuda if available
+                    self.device=torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
-                # TODO: using "nequip.scripts.deploy.load_deployed_model()" method gives torch errors
-                # self.model, metadata = nequip.scripts.deploy.load_deployed_model("deplot.pth")
+                else: # unless user has specified the device 
+                    self.device=torch.device(device)
+
+                # TODO: model could be in float64
+                torch.set_default_dtype(torch.float32)
+                self.default_dtype = torch.get_default_dtype()
+                
+
+                # conversion constants 
+                self.nm_to_distance = 1.0/distance_to_nm
+                self.distance_to_nm = distance_to_nm
+                self.energy_to_kJ = energy_to_kJ_per_mol
+
+                self.model, metadata = nequip.scripts.deploy.load_deployed_model(model_path, device=self.device, freeze=False)
 
                 # instead load model directly using torch.jit.load and get the metadata we need
-                metadata = {k: "" for k in ["r_max","n_species","type_names"]}
-                self.model = torch.jit.load(model_path, _extra_files=metadata)
-                self.model.eval()
-
+                #metadata = {k: "" for k in ["r_max","n_species","type_names"]}
+                #self.model = torch.jit.load(model_path, _extra_files=metadata).to(device)
+                #self.model.eval()
                 # decode metadata
-                metadata = {k: v.decode("ascii") for k, v in metadata.items()}
+                #metadata = {k: v.decode("ascii") for k, v in metadata.items()}
 
-                self.r_max = torch.tensor(float(metadata["r_max"]))
+                self.r_max = torch.tensor(float(metadata["r_max"]), device=self.device)
                 
-                # check the type names in the model metadata match the type names given to the NNP from OpenMM
-                type_names = str(metadata["type_names"]).split(" ")
-                #print(type_names)
-                assert(type_names == list(atom_type_to_atomic_number.keys()))
-                type_name_to_type_index={ type_name : i for i,type_name in enumerate(type_names)}
-            
-                self.atomic_number_to_type_index = { atom_type_to_atomic_number[type_name] : type_name_to_type_index[type_name] for type_name in type_names }
-                #print(self.atomic_number_to_type_index)
+                
+                if atom_types is not None: # use user set explicit atom types
+                    # TODO: checks
+                    
+                    nequip_types = atom_types
+                
+                else: # use openmm atomic symbols
+                    # TODO: checks
 
-                self.atomic_numbers = torch.tensor(atomic_numbers,dtype=torch.long)
-                self.N = len(atomic_numbers)
-                self.atom_types = torch.tensor([self.atomic_number_to_type_index[x] for x in atomic_numbers],dtype=torch.long)
+                    type_names = str(metadata["type_names"]).split(" ")
+
+                    type_name_to_type_index={ type_name : i for i,type_name in enumerate(type_names)}
+
+                    nequip_types = [ type_name_to_type_index[atom.element.symbol] for atom in atoms]
+                
+                atomic_numbers = [atom.element.atomic_number for atom in atoms]
+
+                self.atomic_numbers = torch.tensor(atomic_numbers,dtype=torch.long,device=self.device)
+                self.N = len(atoms)
+                self.atom_types = torch.tensor(nequip_types,dtype=torch.long,device=self.device)
+
+                if periodic:
+                    self.pbc=torch.tensor([True, True, True], device=self.device)
+                else:
+                    self.pbc=torch.tensor([False, False, False], device=self.device)
+
 
 
             def forward(self, positions, boxvectors: Optional[torch.Tensor] = None):
+              
                 # setup positions
-                positions = positions.to(dtype=torch.float32) * self.nm_to_A
+                positions = positions.to(dtype=self.default_dtype)
+                positions = positions * self.nm_to_distance
 
-                # create the input dict
                 input_dict={}
-                batch = torch.zeros(self.N,dtype=torch.long)
-                input_dict["cell"]=torch.ones((3,3))
+                batch = torch.zeros(self.N,dtype=torch.long, device=self.device)
+
+                if boxvectors is not None:
+                    input_dict["cell"]=boxvectors.to(dtype=self.default_dtype) * self.nm_to_distance
+
+                else:
+                    input_dict["cell"]=torch.eye(3, device=self.device)
+
+            
                 self_interaction=False
-                input_dict["pbc"]=torch.tensor([False, False, False])
+                input_dict["pbc"]=self.pbc
                 input_dict["atomic_numbers"] = self.atomic_numbers
                 input_dict["atom_types"] = self.atom_types
                 input_dict["pos"] = positions
 
                 # compute edges
-                # TODO: PBCs
                 mapping, _ , shiftx_idx = compute_neighborlist_n2(cutoff=self.r_max, 
                                                                             pos=input_dict["pos"], 
                                                                             cell=input_dict["cell"], 
@@ -147,32 +179,26 @@ class NequIPPotentialImpl(MLPotentialImpl):
                 input_dict["edge_index"] = edge_index
                 input_dict["edge_cell_shift"] = shiftx_idx
 
-                # predict
                 out = self.model(input_dict)
 
                 # return energy and forces
-                energy = out["total_energy"]*self.kcal_to_kJ
-                forces = out["forces"]*self.kcal_to_kJ/self.A_to_nm
+                energy = out["total_energy"]*self.energy_to_kJ
+                forces = out["forces"]*self.energy_to_kJ/self.distance_to_nm
 
                 return (energy, forces)
 
-        # TODO: is_periodic...
-        #is_periodic = (topology.getPeriodicBoxVectors() is not None) or system.usesPeriodicBoundaryConditions()
-        #aniForce = ANIForce(model, species, atoms, is_periodic)
-        
+        is_periodic = (topology.getPeriodicBoxVectors() is not None) or system.usesPeriodicBoundaryConditions()
 
-        nequipforce = NequIPForce(self.model_path, atomic_numbers, self.atom_type_to_atomic_number)
-        
+        nequipforce = NequIPForce(self.model_path, includedAtoms, is_periodic, self.distance_to_nm, self.energy_to_kJ_per_mol, self.atom_types, device)
         
         # Convert it to TorchScript and save it.
         module = torch.jit.script(nequipforce)
         module.save(filename)
 
         # Create the TorchForce and add it to the System.
-
         force = openmmtorch.TorchForce(filename)
         force.setForceGroup(forceGroup)
-        force.setUsesPeriodicBoundaryConditions(False)
+        force.setUsesPeriodicBoundaryConditions(is_periodic)
         force.setOutputsForces(True)
         system.addForce(force)
 
