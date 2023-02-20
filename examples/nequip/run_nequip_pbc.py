@@ -7,7 +7,7 @@ from sys import stdout
 
 
 """
-Uses a deployed trained NequiP model, toy model with PBC:
+Uses a deployed trained NequIP model, toy model with PBC:
 nequip-train configs/minimal_toy_emt.yaml
 nequip-deploy build --train-dir path/to/training/session/ deployed_model.pth
 """

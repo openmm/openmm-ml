@@ -5,7 +5,7 @@ from openmmml import MLPotential
 from sys import stdout
 
 """
-Uses a deployed trained NequiP model, toluene example:
+Uses a deployed trained NequIP model, toluene example:
 nequip-train configs/example.yaml
 nequip-deploy build --train-dir path/to/training/session/ example_model_deployed.pth
 """
