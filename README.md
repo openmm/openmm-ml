@@ -8,6 +8,9 @@ and [ANI-2x](https://pubs.acs.org/doi/full/10.1021/acs.jctc.0c00121), using the 
 suitable for small molecules involving a limited set of elements and no charges.  Future releases will add new potential
 functions that support a much wider range of molecules.
 
+Additionally [NequIP](https://www.nature.com/articles/s41467-022-29939-5) potential functions can be used using the implementation from https://github.com/mir-group/nequip , see the [README](examples/nequip/README.md) in `/examples/nequip` for more information.
+
+
 ### Installation
 
 OpenMM-ML can be installed with conda or mamba.
