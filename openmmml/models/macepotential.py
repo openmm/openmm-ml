@@ -31,7 +31,73 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 from openmmml.mlpotential import MLPotential, MLPotentialImpl, MLPotentialImplFactory
 import openmm
-from typing import Iterable, Optional, Union
+from typing import Iterable, Optional, Union, Tuple
+import torch
+
+
+@torch.jit.script
+def _simple_nl(positions: torch.Tensor, cell: torch.Tensor, pbc: torch.Tensor, cutoff: float, self_interaction: bool=False) -> Tuple[torch.Tensor, torch.Tensor]:
+    """simple torchscriptable neighborlist. 
+    
+    It aims are to be correct, clear, and torchscript compatible, no effort has been put into making it fast.
+    It outputs nieghbors and shifts in the same format as ASE:
+
+    neighbors, shifts = simple_nl(..)
+
+    is equivalent to
+    
+    [i, j], S = primitive_neighbor_list( quantities="ijS", ...)
+    """
+
+    num_atoms = positions.shape[0]
+    device=positions.device
+
+    i = torch.repeat_interleave(torch.range(0,num_atoms-1,dtype=torch.long, device=device), num_atoms)
+    j = torch.range(0,num_atoms-1,dtype=torch.long, device=device).repeat(num_atoms)
+    neighbors=torch.vstack((i,j))
+
+    if not self_interaction:
+        mask = i==j 
+        neighbors = neighbors[:,~mask]
+
+    full_deltas = positions[neighbors[0]] - positions[neighbors[1]]
+    deltas=full_deltas.clone()
+
+    if pbc[0]:
+
+        shifts_x = torch.round(full_deltas[:,0]/cell[0,0])
+        shifts_y = torch.round(full_deltas[:,1]/cell[1,1])
+        shifts_z = torch.round(full_deltas[:,2]/cell[2,2])
+
+        deltas[:,0] = full_deltas[:,0] - shifts_x*cell[0,0]
+        deltas[:,1] = full_deltas[:,1] - shifts_y*cell[1,1]
+        deltas[:,2] = full_deltas[:,2] - shifts_z*cell[2,2]
+
+    else:
+        shifts_x = torch.zeros(full_deltas.shape[0])
+        shifts_y = torch.zeros(full_deltas.shape[0])
+        shifts_z = torch.zeros(full_deltas.shape[0])
+
+    
+    distances = torch.linalg.norm(deltas, dim=1)
+
+    # filter
+    mask = distances > cutoff
+    neighbors = neighbors[:,~mask]
+    deltas = deltas[~mask,:]
+    shifts_x = shifts_x[~mask]
+    shifts_y = shifts_y[~mask]
+    shifts_z = shifts_z[~mask]
+
+    shifts = torch.vstack((shifts_x, shifts_y, shifts_z,)).T
+
+    return neighbors, shifts
+    
+
+
+
+
+
 
 class MACEPotentialImplFactory(MLPotentialImplFactory):
     """This is the factory that creates MACEPotentialImpl objects."""
@@ -62,7 +128,7 @@ class MACEPotentialImpl(MLPotentialImpl):
                   atoms: Optional[Iterable[int]],
                   forceGroup: int,
                   filename: str = 'macemodel.pt',
-                  implementation : str = None,
+                  #implementation : str = None,
                   device: str = None,
                   dtype: str = "float64",
                   **args):
@@ -70,7 +136,7 @@ class MACEPotentialImpl(MLPotentialImpl):
 
         import torch
         import openmmtorch
-        from torch_nl import compute_neighborlist
+        #from torch_nl import compute_neighborlist
         from e3nn.util import jit
         from mace.tools import utils, to_one_hot, atomic_numbers_to_indices
         
@@ -136,7 +202,7 @@ class MACEPotentialImpl(MLPotentialImpl):
                     self.pbc=torch.tensor([False, False, False], device=self.device)
 
 
-                self.compute_nl = compute_neighborlist
+                #self.compute_nl = compute_neighborlist
 
                 if indices is None:
                     self.indices = None
@@ -147,24 +213,26 @@ class MACEPotentialImpl(MLPotentialImpl):
 
             def forward(self, positions, boxvectors: Optional[torch.Tensor] = None):
                 # setup positions
-                positions = positions.to(dtype=self.default_dtype)
+
+                positions = positions.to(device=self.device,dtype=self.default_dtype)
                 if self.indices is not None:
                     positions = positions[self.indices]
 
                 positions = positions*self.nm_to_distance
 
                 if boxvectors is not None:
-                    cell = boxvectors.to(dtype=self.default_dtype) * self.nm_to_distance
+                    cell = boxvectors.to(device=self.device,dtype=self.default_dtype) * self.nm_to_distance
                 else:
                     cell = torch.eye(3, device=self.device)
 
                 # compute edges
-                mapping, _ , shifts_idx = self.compute_nl(cutoff=self.r_max, 
-                                                                            pos=positions, 
-                                                                            cell=cell, 
-                                                                            pbc=self.pbc, 
-                                                                            batch=self.batch, 
-                                                                            self_interaction=False)
+                # mapping, _ , shifts_idx = self.compute_nl(cutoff=self.r_max, 
+                #                                                             pos=positions, 
+                #                                                             cell=cell, 
+                #                                                             pbc=self.pbc, 
+                #                                                             batch=self.batch, 
+                #                                                             self_interaction=False)
+                mapping, shifts_idx = _simple_nl(positions, cell, self.pbc, self.r_max)
                 
                 edge_index = torch.stack((mapping[0], mapping[1]))
 
@@ -184,7 +252,7 @@ class MACEPotentialImpl(MLPotentialImpl):
                 # predict
                 out = self.model(input_dict,compute_force=False)
 
-                energy = out["energy"]
+                energy = out["interaction_energy"]
                 if energy is None:
                     energy = torch.tensor(0.0, device=self.device)
                 
