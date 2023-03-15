@@ -31,7 +31,68 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 from openmmml.mlpotential import MLPotential, MLPotentialImpl, MLPotentialImplFactory
 import openmm
-from typing import Iterable, Optional, Union
+from typing import Iterable, Optional, Union, Tuple
+import torch
+
+
+@torch.jit.script
+def _simple_nl(positions: torch.Tensor, cell: torch.Tensor, pbc: torch.Tensor, cutoff: float, self_interaction: bool=False) -> Tuple[torch.Tensor, torch.Tensor]:
+    """simple torchscriptable neighborlist. 
+    
+    It aims are to be correct, clear, and torchscript compatible, no effort has been put into making it fast.
+    It outputs nieghbors and shifts in the same format as ASE:
+    neighbors, shifts = simple_nl(..)
+    is equivalent to
+    
+    [i, j], S = primitive_neighbor_list( quantities="ijS", ...)
+    """
+
+    num_atoms = positions.shape[0]
+    device=positions.device
+
+    i = torch.repeat_interleave(torch.range(0,num_atoms-1,dtype=torch.long, device=device), num_atoms)
+    j = torch.range(0,num_atoms-1,dtype=torch.long, device=device).repeat(num_atoms)
+    neighbors=torch.vstack((i,j))
+
+    if not self_interaction:
+        mask = i==j 
+        neighbors = neighbors[:,~mask]
+
+    full_deltas = positions[neighbors[0]] - positions[neighbors[1]]
+    deltas=full_deltas.clone()
+
+    if pbc[0]:
+
+        shifts_x = torch.round(full_deltas[:,0]/cell[0,0])
+        shifts_y = torch.round(full_deltas[:,1]/cell[1,1])
+        shifts_z = torch.round(full_deltas[:,2]/cell[2,2])
+
+        deltas[:,0] = full_deltas[:,0] - shifts_x*cell[0,0]
+        deltas[:,1] = full_deltas[:,1] - shifts_y*cell[1,1]
+        deltas[:,2] = full_deltas[:,2] - shifts_z*cell[2,2]
+
+    else:
+        shifts_x = torch.zeros(full_deltas.shape[0])
+        shifts_y = torch.zeros(full_deltas.shape[0])
+        shifts_z = torch.zeros(full_deltas.shape[0])
+
+
+    distances = torch.linalg.norm(deltas, dim=1)
+
+    # filter
+    mask = distances > cutoff
+    neighbors = neighbors[:,~mask]
+    deltas = deltas[~mask,:]
+    shifts_x = shifts_x[~mask]
+    shifts_y = shifts_y[~mask]
+    shifts_z = shifts_z[~mask]
+
+    shifts = torch.vstack((shifts_x, shifts_y, shifts_z,)).T
+
+    return neighbors, shifts
+
+
+
 
 class NequIPPotentialImplFactory(MLPotentialImplFactory):
     """This is the factory that creates NequipPotentialImpl objects."""
@@ -65,14 +126,14 @@ class NequIPPotentialImpl(MLPotentialImpl):
                   atoms: Optional[Iterable[int]],
                   forceGroup: int,
                   filename: str = 'nequipmodel.pt',
-                  implementation : str = None,
+                  #implementation : str = None,
                   device: str = None,
                   **args):
         
 
         import torch
         import openmmtorch
-        from torch_nl import compute_neighborlist
+        #from torch_nl import compute_neighborlist
         import nequip._version
         import nequip.scripts.deploy
 
@@ -87,7 +148,7 @@ class NequIPPotentialImpl(MLPotentialImpl):
 
         class NequIPForce(torch.nn.Module):
 
-            def __init__(self, model_path, includedAtoms, indices, periodic, distance_to_nm, energy_to_kJ_per_mol, atom_types=None, device=None):
+            def __init__(self, model_path, includedAtoms, indices, periodic, distance_to_nm, energy_to_kJ_per_mol, atom_types=None, device=None, verbose=False):
                 super(NequIPForce, self).__init__()
 
                 if device is None: # use cuda if available
@@ -106,9 +167,15 @@ class NequIPPotentialImpl(MLPotentialImpl):
                 
                 self.model, metadata = nequip.scripts.deploy.load_deployed_model(model_path, device=self.device, freeze=False)
 
+                
+
                 self.default_dtype= {"float32": torch.float32, "float64": torch.float64}[metadata["model_dtype"]]
                 torch.set_default_dtype(self.default_dtype)
 
+                if verbose:
+                    print(self.model)
+                    print("running NequIPForce on device", self.device, "with dtype", self.default_dtype )
+                    print("is periodic:", periodic)
 
                 # instead load model directly using torch.jit.load and get the metadata we need
                 #metadata = {k: "" for k in ["r_max","n_species","type_names"]}
@@ -152,7 +219,7 @@ class NequIPPotentialImpl(MLPotentialImpl):
 
             def forward(self, positions, boxvectors: Optional[torch.Tensor] = None):
                 # setup positions
-                positions = positions.to(dtype=self.default_dtype)
+                positions = positions.to(device=self.device, dtype=self.default_dtype)
                 if self.indices is not None:
                     positions = positions[self.indices]
                 positions = positions*self.nm_to_distance
@@ -161,7 +228,7 @@ class NequIPPotentialImpl(MLPotentialImpl):
                 batch = torch.zeros(self.N,dtype=torch.long, device=self.device)
 
                 if boxvectors is not None:
-                    input_dict["cell"]=boxvectors.to(dtype=self.default_dtype) * self.nm_to_distance
+                    input_dict["cell"]=boxvectors.to(device=self.device, dtype=self.default_dtype) * self.nm_to_distance
 
                 else:
                     input_dict["cell"]=torch.eye(3, device=self.device)
@@ -173,18 +240,23 @@ class NequIPPotentialImpl(MLPotentialImpl):
                 input_dict["pos"] = positions
 
                 # compute edges
-                mapping, _ , shifts_idx = compute_neighborlist(cutoff=self.r_max, 
-                                                                            pos=input_dict["pos"], 
-                                                                            cell=input_dict["cell"], 
-                                                                            pbc=input_dict["pbc"], 
-                                                                            batch=batch, 
-                                                                            self_interaction=self_interaction)
+
+                # TODO: need to wrap coordinates to use torch_nl.compute_neighborlist (https://github.com/felixmusil/torch_nl/issues/1)
+                #mapping, _ , shifts_idx = compute_neighborlist(cutoff=self.r_max, 
+                #                                                            pos=input_dict["pos"], 
+                #                                                            cell=input_dict["cell"], 
+                #                                                            pbc=input_dict["pbc"], 
+                #                                                            batch=batch, 
+                #                                                            self_interaction=self_interaction)
+
+                mapping, shifts_idx = _simple_nl(positions, input_dict["cell"], input_dict["pbc"], self.r_max, self_interaction)
                 
                 edge_index = torch.stack((mapping[0], mapping[1]))
                 
                 input_dict["edge_index"] = edge_index
                 input_dict["edge_cell_shift"] = shifts_idx
 
+                
                 out = self.model(input_dict)    
 
                 # return energy and forces
@@ -196,7 +268,7 @@ class NequIPPotentialImpl(MLPotentialImpl):
 
         is_periodic = (topology.getPeriodicBoxVectors() is not None) or system.usesPeriodicBoundaryConditions()
 
-        nequipforce = NequIPForce(self.model_path, includedAtoms, atoms, is_periodic, self.distance_to_nm, self.energy_to_kJ_per_mol, self.atom_types, device)
+        nequipforce = NequIPForce(self.model_path, includedAtoms, atoms, is_periodic, self.distance_to_nm, self.energy_to_kJ_per_mol, self.atom_types, device, **args)
         
         # Convert it to TorchScript and save it.
         module = torch.jit.script(nequipforce)
