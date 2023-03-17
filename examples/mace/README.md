@@ -30,7 +30,7 @@ system = potential.createSystem(topology)
 There are three examples:
 - [run_mace.py](run_mace.py) runs a small molecule with pure MACE ML potential.
 - [run_mace_mixed.py](run_mace_mixed.py) runs a small molecule in a water box where the small molecule's intra-molecular forces use MACE and the rest of the system in MM.
-- [run_mace_waterbox.py](run_mace_waterbox.py) runs a water box with pure MACE ML potential.
+- [run_water_box.py](run_water_box.py) runs a water box with pure MACE ML potential.
 
 ## References
 The example pre-trained model is from here: https://github.com/jharrymoore/mace-openmm/tree/main/tests/example_data
