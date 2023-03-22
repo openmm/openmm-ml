@@ -1,1 +1,1 @@
-from . import anipotential, nequippotential
+from . import anipotential, nequippotential, utils

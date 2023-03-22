@@ -33,71 +33,10 @@ from openmmml.mlpotential import MLPotential, MLPotentialImpl, MLPotentialImplFa
 import openmm
 from typing import Iterable, Optional, Union, Tuple
 import torch
-import torch.profiler
+#import torch.profiler
+from openmmml.models.utils import simple_nl
 
 
-
-@torch.jit.script
-def _simple_nl(positions: torch.Tensor, cell: torch.Tensor, pbc: bool, cutoff: float, sorti: bool=False) -> Tuple[torch.Tensor, torch.Tensor]:
-    """simple torchscriptable neighborlist. 
-    
-    It aims are to be correct, clear, and torchscript compatible.
-    It is O(n^2) but with pytorch vectorisation the prefactor is small.
-    It outputs nieghbors and shifts in the same format as ASE:
-    neighbors, shifts = simple_nl(..)
-    is equivalent to
-    
-    [i, j], S = primitive_neighbor_list( quantities="ijS", ...)
-
-    Limitations:
-        - cell must be orthogonal
-        - either no PBCs or PBCs in all x,y,z
-        - cutoff must be less than half the smallest box length
-
-    """
-
-    num_atoms = positions.shape[0]
-    device=positions.device
-
-    # get i,j indices where j>i
-    uij = torch.triu_indices(num_atoms, num_atoms, 1, device=device)
-    triu_deltas = positions[uij[0]] - positions[uij[1]]
-
-    cell_size = torch.diag(cell)
-
-    if pbc:
-        assert(cutoff < torch.min(cell_size)*0.5)
-
-    wrapped_triu_deltas=triu_deltas.clone()
-
-    if pbc:
-        shifts = torch.round(triu_deltas/cell_size)
-        wrapped_triu_deltas = triu_deltas - shifts*cell_size
-
-    else:
-        shifts = torch.zeros(triu_deltas.shape[0],3,device=device)
-
-
-    triu_distances = torch.linalg.norm(wrapped_triu_deltas, dim=1)
-
-    # filter
-    mask = triu_distances > cutoff
-    uij = uij[:,~mask]    
-    wrapped_triu_deltas = wrapped_triu_deltas[~mask,:]
-
-    shifts = shifts[~mask, :]
-
-    # get the ij pairs where j<i
-    lij = torch.stack((uij[1], uij[0]))
-    neighbors = torch.hstack((uij, lij))
-    shifts = torch.vstack((shifts, -shifts))
-
-    if sorti:
-        idx = torch.argsort(neighbors[0])
-        neighbors = neighbors[:,idx]
-        shifts = shifts[idx,:]
-
-    return neighbors, shifts
 
 
 
@@ -232,7 +171,7 @@ class NequIPPotentialImpl(MLPotentialImpl):
                 positions = positions*self.nm_to_distance
 
                 input_dict={}
-                batch = torch.zeros(self.N,dtype=torch.long, device=self.device)
+                #batch = torch.zeros(self.N,dtype=torch.long, device=self.device)
 
                 if boxvectors is not None:
                     input_dict["cell"]=boxvectors.to(device=self.device, dtype=self.default_dtype) * self.nm_to_distance
@@ -242,7 +181,7 @@ class NequIPPotentialImpl(MLPotentialImpl):
                     input_dict["cell"]=torch.eye(3, device=self.device)
                     pbc=False
 
-                self_interaction=False
+                #self_interaction=False
                 input_dict["pbc"]=self.pbc
                 input_dict["atomic_numbers"] = self.atomic_numbers
                 input_dict["atom_types"] = self.atom_types
@@ -258,7 +197,7 @@ class NequIPPotentialImpl(MLPotentialImpl):
                 #                                                            batch=batch, 
                 #                                                            self_interaction=self_interaction)
 
-                mapping, shifts_idx = _simple_nl(positions, input_dict["cell"], pbc, self.r_max)
+                mapping, shifts_idx = simple_nl(positions, input_dict["cell"], pbc, self.r_max)
 
                 input_dict["edge_index"] = mapping
                 input_dict["edge_cell_shift"] = shifts_idx
