@@ -32,71 +32,7 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 from openmmml.mlpotential import MLPotential, MLPotentialImpl, MLPotentialImplFactory
 import openmm
 from typing import Iterable, Optional, Union, Tuple
-import torch
-
-
-@torch.jit.script
-def _simple_nl(positions: torch.Tensor, cell: torch.Tensor, pbc: torch.Tensor, cutoff: float, self_interaction: bool=False) -> Tuple[torch.Tensor, torch.Tensor]:
-    """simple torchscriptable neighborlist. 
-    
-    It aims are to be correct, clear, and torchscript compatible, no effort has been put into making it fast.
-    It outputs nieghbors and shifts in the same format as ASE:
-
-    neighbors, shifts = simple_nl(..)
-
-    is equivalent to
-    
-    [i, j], S = primitive_neighbor_list( quantities="ijS", ...)
-    """
-
-    num_atoms = positions.shape[0]
-    device=positions.device
-
-    i = torch.repeat_interleave(torch.range(0,num_atoms-1,dtype=torch.long, device=device), num_atoms)
-    j = torch.range(0,num_atoms-1,dtype=torch.long, device=device).repeat(num_atoms)
-    neighbors=torch.vstack((i,j))
-
-    if not self_interaction:
-        mask = i==j 
-        neighbors = neighbors[:,~mask]
-
-    full_deltas = positions[neighbors[0]] - positions[neighbors[1]]
-    deltas=full_deltas.clone()
-
-    if pbc[0]:
-
-        shifts_x = torch.round(full_deltas[:,0]/cell[0,0])
-        shifts_y = torch.round(full_deltas[:,1]/cell[1,1])
-        shifts_z = torch.round(full_deltas[:,2]/cell[2,2])
-
-        deltas[:,0] = full_deltas[:,0] - shifts_x*cell[0,0]
-        deltas[:,1] = full_deltas[:,1] - shifts_y*cell[1,1]
-        deltas[:,2] = full_deltas[:,2] - shifts_z*cell[2,2]
-
-    else:
-        shifts_x = torch.zeros(full_deltas.shape[0])
-        shifts_y = torch.zeros(full_deltas.shape[0])
-        shifts_z = torch.zeros(full_deltas.shape[0])
-
-    
-    distances = torch.linalg.norm(deltas, dim=1)
-
-    # filter
-    mask = distances > cutoff
-    neighbors = neighbors[:,~mask]
-    deltas = deltas[~mask,:]
-    shifts_x = shifts_x[~mask]
-    shifts_y = shifts_y[~mask]
-    shifts_z = shifts_z[~mask]
-
-    shifts = torch.vstack((shifts_x, shifts_y, shifts_z,)).T
-
-    return neighbors, shifts
-    
-
-
-
-
+from openmmml.models.utils import simple_nl
 
 
 class MACEPotentialImplFactory(MLPotentialImplFactory):
@@ -222,9 +158,10 @@ class MACEPotentialImpl(MLPotentialImpl):
 
                 if boxvectors is not None:
                     cell = boxvectors.to(device=self.device,dtype=self.default_dtype) * self.nm_to_distance
+                    pbc = True
                 else:
                     cell = torch.eye(3, device=self.device)
-
+                    pbc = False
                 # compute edges
                 # mapping, _ , shifts_idx = self.compute_nl(cutoff=self.r_max, 
                 #                                                             pos=positions, 
@@ -232,7 +169,7 @@ class MACEPotentialImpl(MLPotentialImpl):
                 #                                                             pbc=self.pbc, 
                 #                                                             batch=self.batch, 
                 #                                                             self_interaction=False)
-                mapping, shifts_idx = _simple_nl(positions, cell, self.pbc, self.r_max)
+                mapping, shifts_idx = simple_nl(positions, cell, pbc, self.r_max)
                 
                 edge_index = torch.stack((mapping[0], mapping[1]))
 
