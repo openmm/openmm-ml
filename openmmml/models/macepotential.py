@@ -46,12 +46,7 @@ class MACEPotentialImpl(MLPotentialImpl):
 
     The potential is implemented using MACE to build a PyTorch model.  A
     TorchForce is used to add it to the OpenMM System.  
-
-    TorchForce requires the model to be saved to disk in a separate file.  By default
-    it writes a file called 'macemodel.pt' in the current working directory.  You can
-    use the filename argument to specify a different name.  For example,
-
-    >>> system = potential.createSystem(topology, filename='mymodel.pt')
+    
     """
 
     def __init__(self, name, model_path):
@@ -63,10 +58,11 @@ class MACEPotentialImpl(MLPotentialImpl):
                   system: openmm.System,
                   atoms: Optional[Iterable[int]],
                   forceGroup: int,
-                  filename: str = 'macemodel.pt',
+                  #filename: str = 'macemodel.pt',
                   #implementation : str = None,
                   device: str = None,
                   dtype: str = "float64",
+                  interaction_energy: bool=True,
                   **args):
         
 
@@ -88,7 +84,7 @@ class MACEPotentialImpl(MLPotentialImpl):
 
         class MACEForce(torch.nn.Module):
 
-            def __init__(self, model_path, atomic_numbers, indices, periodic, device, dtype=torch.float64):
+            def __init__(self, model_path, atomic_numbers, indices, periodic, device, dtype=torch.float64, interaction_energy=True):
                 super(MACEForce, self).__init__()
 
                 if device is None: # use cuda if available
@@ -145,7 +141,11 @@ class MACEPotentialImpl(MLPotentialImpl):
                 else:
                     self.indices = torch.tensor(indices, dtype=torch.int64)
 
-            
+
+                if interaction_energy is True:
+                    self.return_energy_type = "interaction_energy"
+                else:
+                    self.return_energy_type = "energy"
 
             def forward(self, positions, boxvectors: Optional[torch.Tensor] = None):
                 # setup positions
@@ -189,7 +189,7 @@ class MACEPotentialImpl(MLPotentialImpl):
                 # predict
                 out = self.model(input_dict,compute_force=False)
 
-                energy = out["interaction_energy"]
+                energy = out[self.return_energy_type]
                 if energy is None:
                     energy = torch.tensor(0.0, device=self.device)
                 
@@ -206,14 +206,13 @@ class MACEPotentialImpl(MLPotentialImpl):
 
         torch_dtype = {"float32":torch.float32, "float64":torch.float64}[dtype]
 
-        maceforce = MACEForce(self.model_path, atomic_numbers, atoms, is_periodic, device, dtype=torch_dtype)
+        maceforce = MACEForce(self.model_path, atomic_numbers, atoms, is_periodic, device, dtype=torch_dtype, interaction_energy=interaction_energy)
         
-        # Convert it to TorchScript and save it.
+        # Convert it to TorchScript
         module = torch.jit.script(maceforce)
-        module.save(filename)
 
         # Create the TorchForce and add it to the System.
-        force = openmmtorch.TorchForce(filename)
+        force = openmmtorch.TorchForce(module)
         force.setForceGroup(forceGroup)
         force.setUsesPeriodicBoundaryConditions(is_periodic)
         #force.setOutputsForces(True)
