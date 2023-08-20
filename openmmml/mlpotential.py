@@ -253,13 +253,15 @@ class MLPotential(object):
             if isinstance(force, openmm.NonbondedForce):
                 for i in range(len(atomList)):
                     for j in range(i):
-                        force.addException(i, j, 0, 1, 0, True)
+                        force.addException(atomList[i], atomList[j], 0, 1, 0, True)
             elif isinstance(force, openmm.CustomNonbondedForce):
                 existing = set(tuple(force.getExclusionParticles(i)) for i in range(force.getNumExclusions()))
                 for i in range(len(atomList)):
+                    a1 = atomList[i]
                     for j in range(i):
-                        if (i, j) not in existing and (j, i) not in existing:
-                            force.addExclusion(i, j, True)
+                        a2 = atomList[j]
+                        if (a1, a2) not in existing and (a2, a1) not in existing:
+                            force.addExclusion(a1, a2, True)
 
         # Add the ML potential.
 
