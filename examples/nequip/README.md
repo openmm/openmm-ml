@@ -41,12 +41,7 @@ potential = MLPotential('nequip', model_path='example_model_deployed.pth',
 system = potential.createSystem(topology)
 ```
 
-## Examples
-There are two examples in this folder than run example [NequIP](https://github.com/mir-group/nequip) models.
-
+## Example
 
 ### run_nequip.ipynb
 Runs a simulation using the model created by NequIP example [config/example.yaml](https://github.com/mir-group/nequip/blob/main/configs/example.yaml). It is available as a python script: [`run_nequip.py`](run_nequip.py) and a Jupyter notebook [`run_nequip.ipynb`](run_nequip.ipynb) which can be run on Colab.
-
-### run_nequip_pbc.ipynb
-Runs a simulation with PBCs using the using the model created by NequIP example [config/minimal_toy_emt.yaml](https://github.com/mir-group/nequip/blob/main/configs/minimal_toy_emt.yaml). It is available as a python script: [`run_nequip_pbc.py`](run_nequip.py) and a Jupyter notebook [`run_nequip_pbc.ipynb`](run_nequip.ipynb) which can be run on Colab.
