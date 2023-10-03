@@ -5,18 +5,17 @@ This directory contains examples for running simulations using a NequIP potentia
 ## Installation
 
 
-first install openmm-torch and pytorch from conda-forge:
+first install openmm-torch from conda-forge:
 
 ```
-conda install -c conda-forge openmm-torch pytorch=1.13
+conda install -c conda-forge openmm-torch
 ```
 
-Then install NequIP development branch, this version of openmm-ml, and [torch-nl](https://github.com/felixmusil/torch_nl) using pip
+Then install NequIP development branch, this version of openmm-ml using pip
 
 ```
 pip install git+https://github.com/mir-group/nequip@develop
 pip install git+https://github.com/sef43/openmm-ml@nequip
-pip install torch-nl
 ```
 
 ## Usage

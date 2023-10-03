@@ -33,12 +33,7 @@ from openmmml.mlpotential import MLPotential, MLPotentialImpl, MLPotentialImplFa
 import openmm
 from typing import Iterable, Optional, Union, Tuple
 import torch
-#import torch.profiler
 from openmmml.models.utils import simple_nl
-
-
-
-
 
 class NequIPPotentialImplFactory(MLPotentialImplFactory):
     """This is the factory that creates NequipPotentialImpl objects."""
@@ -52,11 +47,6 @@ class NequIPPotentialImpl(MLPotentialImpl):
     The potential is implemented using NequIP to build a PyTorch model.  A
     TorchForce is used to add it to the OpenMM System.  
 
-    TorchForce requires the model to be saved to disk in a separate file.  By default
-    it writes a file called 'nequipmodel.pt' in the current working directory.  You can
-    use the filename argument to specify a different name.  For example,
-
-    >>> system = potential.createSystem(topology, filename='mymodel.pt')
     """
 
     def __init__(self, name, model_path, distance_to_nm, energy_to_kJ_per_mol, atom_types):
@@ -71,15 +61,13 @@ class NequIPPotentialImpl(MLPotentialImpl):
                   system: openmm.System,
                   atoms: Optional[Iterable[int]],
                   forceGroup: int,
-                  filename: str = 'nequipmodel.pt',
-                  #implementation : str = None,
+                  implementation : str = None,
                   device: str = None,
                   **args):
         
 
         import torch
         import openmmtorch
-        #from torch_nl import compute_neighborlist
         import nequip._version
         import nequip.scripts.deploy
 
@@ -88,32 +76,20 @@ class NequIPPotentialImpl(MLPotentialImpl):
 
         includedAtoms = list(topology.atoms())
         if atoms is not None:
-            #TODO: should atoms be sorted?
             includedAtoms = [includedAtoms[i] for i in atoms]
         
 
         class NequIPForce(torch.nn.Module):
 
-            def __init__(self, model_path, includedAtoms, indices, periodic, distance_to_nm, energy_to_kJ_per_mol, atom_types=None, device=None, verbose=False):
+            def __init__(self, model_path, includedAtoms, indices, periodic, distance_to_nm, energy_to_kJ_per_mol, atom_types=None, verbose=None):
                 super(NequIPForce, self).__init__()
-
-                if device is None: # use cuda if available
-                    self.device=torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
-
-                else: # unless user has specified the device 
-                    self.device=torch.device(device)
-
                 
                 # conversion constants 
-                self.nm_to_distance = 1.0/distance_to_nm
-                self.distance_to_nm = distance_to_nm
-                self.energy_to_kJ = energy_to_kJ_per_mol
+                self.register_buffer('nm_to_distance', torch.tensor(1.0/distance_to_nm))
+                self.register_buffer('distance_to_nm', torch.tensor(distance_to_nm))
+                self.register_buffer('energy_to_kJ', torch.tensor(energy_to_kJ_per_mol))
 
-                
-                
-                self.model, metadata = nequip.scripts.deploy.load_deployed_model(model_path, device=self.device, freeze=False)
-
-                
+                self.model, metadata = nequip.scripts.deploy.load_deployed_model(model_path, freeze=False)
 
                 self.default_dtype= {"float32": torch.float32, "float64": torch.float64}[metadata["model_dtype"]]
                 torch.set_default_dtype(self.default_dtype)
@@ -121,23 +97,14 @@ class NequIPPotentialImpl(MLPotentialImpl):
                 if verbose:
                     print(self.model)
                     print("running NequIPForce on device", self.device, "with dtype", self.default_dtype )
-                    print("is periodic:", periodic)
 
-                # instead load model directly using torch.jit.load and get the metadata we need
-                #metadata = {k: "" for k in ["r_max","n_species","type_names"]}
-                #self.model = torch.jit.load(model_path, _extra_files=metadata).to(device)
-                #self.model.eval()
-                # decode metadata
-                #metadata = {k: v.decode("ascii") for k, v in metadata.items()}
 
-                self.r_max = torch.tensor(float(metadata["r_max"]), device=self.device)
+                self.register_buffer('r_max', torch.tensor(float(metadata["r_max"])))
                 
                 if atom_types is not None: # use user set explicit atom types
-                    # TODO: checks
                     nequip_types = atom_types
                 
                 else: # use openmm atomic symbols
-                    # TODO: checks
 
                     type_names = str(metadata["type_names"]).split(" ")
 
@@ -147,14 +114,14 @@ class NequIPPotentialImpl(MLPotentialImpl):
                 
                 atomic_numbers = [atom.element.atomic_number for atom in includedAtoms]
 
-                self.atomic_numbers = torch.tensor(atomic_numbers,dtype=torch.long,device=self.device)
+                self.atomic_numbers = torch.nn.Parameter(torch.tensor(atomic_numbers, dtype=torch.long), requires_grad=False)
                 self.N = len(includedAtoms)
-                self.atom_types = torch.tensor(nequip_types,dtype=torch.long,device=self.device)
+                self.atom_types = torch.nn.Parameter(torch.tensor(nequip_types, dtype=torch.long), requires_grad=False)
 
                 if periodic:
-                    self.pbc=torch.tensor([True, True, True], device=self.device)
+                    self.pbc = torch.nn.Parameter(torch.tensor([True, True, True]), requires_grad=False)
                 else:
-                    self.pbc=torch.tensor([False, False, False], device=self.device)
+                    self.pbc = torch.nn.Parameter(torch.tensor([False, False, False]), requires_grad=False)
 
                 # indices for ML atoms in a mixed system
                 if indices is None: # default all atoms are ML
@@ -164,39 +131,30 @@ class NequIPPotentialImpl(MLPotentialImpl):
 
 
             def forward(self, positions, boxvectors: Optional[torch.Tensor] = None):
+                
                 # setup positions
-                positions = positions.to(device=self.device, dtype=self.default_dtype)
+                positions = positions.to(dtype=self.default_dtype)
                 if self.indices is not None:
                     positions = positions[self.indices]
                 positions = positions*self.nm_to_distance
 
+
+                # prepare input dict 
                 input_dict={}
-                #batch = torch.zeros(self.N,dtype=torch.long, device=self.device)
 
                 if boxvectors is not None:
-                    input_dict["cell"]=boxvectors.to(device=self.device, dtype=self.default_dtype) * self.nm_to_distance
-                    pbc=True
-
+                    input_dict["cell"]=boxvectors.to(dtype=self.default_dtype) * self.nm_to_distance
+                    pbc = True
                 else:
-                    input_dict["cell"]=torch.eye(3, device=self.device)
-                    pbc=False
+                    input_dict["cell"]=torch.eye(3)
+                    pbc = False
 
-                #self_interaction=False
                 input_dict["pbc"]=self.pbc
                 input_dict["atomic_numbers"] = self.atomic_numbers
                 input_dict["atom_types"] = self.atom_types
                 input_dict["pos"] = positions
 
                 # compute edges
-
-                # TODO: need to wrap coordinates to use torch_nl.compute_neighborlist (https://github.com/felixmusil/torch_nl/issues/1)
-                #mapping, _ , shifts_idx = compute_neighborlist(cutoff=self.r_max, 
-                #                                                            pos=input_dict["pos"], 
-                #                                                            cell=input_dict["cell"], 
-                #                                                            pbc=input_dict["pbc"], 
-                #                                                            batch=batch, 
-                #                                                            self_interaction=self_interaction)
-
                 mapping, shifts_idx = simple_nl(positions, input_dict["cell"], pbc, self.r_max)
 
                 input_dict["edge_index"] = mapping
@@ -213,14 +171,13 @@ class NequIPPotentialImpl(MLPotentialImpl):
 
         is_periodic = (topology.getPeriodicBoxVectors() is not None) or system.usesPeriodicBoundaryConditions()
 
-        nequipforce = NequIPForce(self.model_path, includedAtoms, atoms, is_periodic, self.distance_to_nm, self.energy_to_kJ_per_mol, self.atom_types, device, **args)
+        nequipforce = NequIPForce(self.model_path, includedAtoms, atoms, is_periodic, self.distance_to_nm, self.energy_to_kJ_per_mol, self.atom_types, **args)
         
-        # Convert it to TorchScript and save it.
+        # Convert it to TorchScript 
         module = torch.jit.script(nequipforce)
-        module.save(filename)
 
         # Create the TorchForce and add it to the System.
-        force = openmmtorch.TorchForce(filename)
+        force = openmmtorch.TorchForce(module)
         force.setForceGroup(forceGroup)
         force.setUsesPeriodicBoundaryConditions(is_periodic)
         force.setOutputsForces(True)

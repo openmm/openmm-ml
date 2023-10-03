@@ -11,7 +11,7 @@ nequip-deploy build --train-dir path/to/training/session/ example_model_deployed
 """
 
 # load toluene structure
-pdb = app.PDBFile("toluene.pdb")
+pdb = app.PDBFile('toluene.pdb')
 
 # create a System with NequIP MLP
 
@@ -29,7 +29,7 @@ system = potential.createSystem(pdb.topology)
 
 # run langevin dynamics at 300K for 1000 steps
 integrator = openmm.LangevinIntegrator(300*unit.kelvin, 10.0/unit.picoseconds, 1.0*unit.femtosecond)
-simulation=app.Simulation(pdb.topology, system, integrator)
+simulation = app.Simulation(pdb.topology, system, integrator)
 simulation.context.setPositions(pdb.positions)
 simulation.reporters.append(app.PDBReporter('output.pdb', 10))
 simulation.reporters.append(app.StateDataReporter(stdout, 10, step=True,
