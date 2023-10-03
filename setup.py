@@ -6,12 +6,12 @@ from setuptools import setup, find_packages
 DOCLINES = __doc__.split("\n")
 
 ########################
-__version__ = '1.0'
+__version__ = '1.1'
 VERSION = __version__
 ISRELEASED = False
 ########################
 CLASSIFIERS = """\
-Development Status :: 2 - Pre-Alpha
+Development Status :: 5 - Production/Stable
 Intended Audience :: Science/Research
 Intended Audience :: Developers
 License :: OSI Approved :: MIT License
