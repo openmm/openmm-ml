@@ -46,7 +46,7 @@ def simple_nl(positions: torch.Tensor, cell: torch.Tensor, pbc: bool, cutoff: fl
     """
 
     num_atoms = positions.shape[0]
-    device=positions.device
+    device = positions.device
 
     # get i,j indices where j>i
     uij = torch.triu_indices(num_atoms, num_atoms, 1, device=device)

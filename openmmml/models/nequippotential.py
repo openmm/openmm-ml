@@ -111,11 +111,6 @@ class NequIPPotentialImpl(MLPotentialImpl):
                 self.default_dtype= {"float32": torch.float32, "float64": torch.float64}[metadata["model_dtype"]]
                 torch.set_default_dtype(self.default_dtype)
 
-                if verbose:
-                    print(self.model)
-                    print("running NequIPForce on device", self.device, "with dtype", self.default_dtype )
-
-
                 self.register_buffer('r_max', torch.tensor(float(metadata["r_max"])))
                 
                 if atom_types is not None: # use user set explicit atom types
@@ -132,7 +127,7 @@ class NequIPPotentialImpl(MLPotentialImpl):
                 atomic_numbers = [atom.element.atomic_number for atom in includedAtoms]
 
                 self.atomic_numbers = torch.nn.Parameter(torch.tensor(atomic_numbers, dtype=torch.long), requires_grad=False)
-                self.N = len(includedAtoms)
+                #self.N = len(includedAtoms)
                 self.atom_types = torch.nn.Parameter(torch.tensor(nequip_types, dtype=torch.long), requires_grad=False)
 
                 if periodic:
@@ -163,7 +158,7 @@ class NequIPPotentialImpl(MLPotentialImpl):
                     input_dict["cell"]=boxvectors.to(dtype=self.default_dtype) * self.nm_to_distance
                     pbc = True
                 else:
-                    input_dict["cell"]=torch.eye(3)
+                    input_dict["cell"]=torch.eye(3, device=positions.device)
                     pbc = False
 
                 input_dict["pbc"]=self.pbc
