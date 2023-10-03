@@ -32,7 +32,6 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 from openmmml.mlpotential import MLPotential, MLPotentialImpl, MLPotentialImplFactory
 import openmm
 from typing import Iterable, Optional, Union, Tuple
-import torch
 from openmmml.models.utils import simple_nl
 
 class NequIPPotentialImplFactory(MLPotentialImplFactory):
@@ -44,8 +43,32 @@ class NequIPPotentialImplFactory(MLPotentialImplFactory):
 class NequIPPotentialImpl(MLPotentialImpl):
     """This is the MLPotentialImpl implementing the NequIP potential.
 
-    The potential is implemented using NequIP to build a PyTorch model.  A
-    TorchForce is used to add it to the OpenMM System.  
+    The potential is implemented using NequIP to build a PyTorch model.
+    A TorchForce is used to add it to the OpenMM System. Note that you must
+    provide a deployed model. No general purpose model is available.
+
+    There are three required keyword arguments
+
+    model_path: str
+        path to deployed NequIP model
+    distance_to_nm: float
+        conversion constant between the nequip model distance units and OpenMM units (nm)
+    energy_to_kJ_per_mol: float
+        conversion constant between the nequip model energy units and OpenMM units (kJ/mol)
+
+    for example
+
+    >>> potential = MLPotential('nequip', model_path='example_model_deployed.pth',
+                        distance_to_nm=0.1, energy_to_kJ_per_mol=4.184)    
+    
+    There is one optional keyword argument that lets you specify the nequip atom type of 
+    each atom. Note that by default this potential uses the atomic number to map the NequIP atom type. 
+    This will work if you trained your NequIP model using the standard `chemical_symbols` option. If you
+    require more flexibility you can use the atom_types argument. It must be a list containing an 
+    integer specifying the nequip atom type of each particle in the system.
+
+    atom_types: List[int]
+
 
     """
 
@@ -61,8 +84,6 @@ class NequIPPotentialImpl(MLPotentialImpl):
                   system: openmm.System,
                   atoms: Optional[Iterable[int]],
                   forceGroup: int,
-                  implementation : str = None,
-                  device: str = None,
                   **args):
         
 
@@ -71,14 +92,10 @@ class NequIPPotentialImpl(MLPotentialImpl):
         import nequip._version
         import nequip.scripts.deploy
 
-
-        # Create the PyTorch model that will be invoked by OpenMM.
-
         includedAtoms = list(topology.atoms())
         if atoms is not None:
             includedAtoms = [includedAtoms[i] for i in atoms]
         
-
         class NequIPForce(torch.nn.Module):
 
             def __init__(self, model_path, includedAtoms, indices, periodic, distance_to_nm, energy_to_kJ_per_mol, atom_types=None, verbose=None):
