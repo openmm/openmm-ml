@@ -16,7 +16,7 @@ while ala2.system.getNumForces() > 0:
 assert ala2.system.getNumConstraints() == 0
 assert ala2.system.getNumForces() == 0
 
-potential = MLPotential('mace', model_path='MACE_SPICE_larger.model')
+potential = MLPotential('mace', model_path='ani500k_small_CC.model')
 
 
 system = potential.createSystem(ala2.topology)
@@ -27,6 +27,6 @@ simulation=app.Simulation(ala2.topology, system, integrator)
 simulation.context.setPositions(ala2.positions)
 simulation.reporters.append(app.PDBReporter('output.pdb', 100))
 simulation.reporters.append(app.StateDataReporter(stdout, 100, step=True,
-        potentialEnergy=True, temperature=True, speed=True))
+        potentialEnergy=True, temperature=True))
 
-simulation.step(10000)
+simulation.step(1000)

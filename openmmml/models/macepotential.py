@@ -33,6 +33,7 @@ from openmmml.mlpotential import MLPotential, MLPotentialImpl, MLPotentialImplFa
 import openmm
 from typing import Iterable, Optional, Union, Tuple
 from openmmml.models.utils import simple_nl
+import logging
 
 
 class MACEPotentialImplFactory(MLPotentialImplFactory):
@@ -45,7 +46,21 @@ class MACEPotentialImpl(MLPotentialImpl):
     """This is the MLPotentialImpl implementing the MACE potential.
 
     The potential is implemented using MACE to build a PyTorch model.  A
-    TorchForce is used to add it to the OpenMM System.  
+    TorchForce is used to add it to the OpenMM System.
+
+    You must specify the path to a trained MACE model e.g.
+    >>> potential = MLPotential('mace', model_path='MACE.model')
+
+    When you create the system can optionally change the dtype of the model
+    with the keyword argument dtype='float32' or dtype='float64'. The default behavoir is
+    to use the dtype of the loaded MACE model.
+    e.g.
+    >>> system = potential.createSystem(topology, dtype='float32')
+
+    You can also specify that the full atomic energy (including the atom self energy) is returned 
+    rather than the default of the interaction energy.
+    e.g.
+    >>> system = potential.createSystem(topology, interaction_energy=False)
     
     """
 
@@ -58,89 +73,77 @@ class MACEPotentialImpl(MLPotentialImpl):
                   system: openmm.System,
                   atoms: Optional[Iterable[int]],
                   forceGroup: int,
-                  #filename: str = 'macemodel.pt',
-                  #implementation : str = None,
-                  device: str = None,
-                  dtype: str = "float64",
+                  implementation : str=None,
+                  dtype: str=None,
                   interaction_energy: bool=True,
                   **args):
         
 
         import torch
         import openmmtorch
-        #from torch_nl import compute_neighborlist
         from e3nn.util import jit
         from mace.tools import utils, to_one_hot, atomic_numbers_to_indices
         
-
-
-        # Create the PyTorch model that will be invoked by OpenMM.
-
         includedAtoms = list(topology.atoms())
         if atoms is not None:
-            # check if atoms needs to be ordered
             includedAtoms = [includedAtoms[i] for i in atoms]
         
-
         class MACEForce(torch.nn.Module):
 
-            def __init__(self, model_path, atomic_numbers, indices, periodic, device, dtype=torch.float64, interaction_energy=True):
+            def __init__(self, model_path, atomic_numbers, indices, periodic, dtype=None, interaction_energy=True):
                 super(MACEForce, self).__init__()
 
-                if device is None: # use cuda if available
-                    self.device=torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
 
-                else: # unless user has specified the device 
-                    self.device=torch.device(device)
+                if not torch.cuda.is_available():
+                    self.model = torch.load(model_path, map_location=torch.device('cpu'))
+                else:
+                    self.model = torch.load(model_path)
+                
+                # get the dtype of the saved model
+                model_dtype = [p.dtype for p in self.model.parameters()][0]
 
-                self.default_dtype = dtype
+                # check is user has request a different dtype    
+                if dtype is not None and dtype != model_dtype:
+                    logging.getLogger().warning(f'Warning: Loaded MACE model has dtype of {model_dtype} which is being changed to {dtype} as requested!')
+                    self.default_dtype = dtype
+                    self.model.to(self.default_dtype)
+                else:
+                    self.default_dtype = model_dtype
+
                 torch.set_default_dtype(self.default_dtype)
 
-                print("Running MACEForce on device: ", self.device, " with dtype: ", self.default_dtype)
-                
-
                 # conversion constants 
-                self.nm_to_distance = 10.0 # nm->A
-                self.distance_to_nm = 0.1 # A->nm
-                self.energy_to_kJ = 96.49 # eV->kJ
+                self.register_buffer('nm_to_distance', torch.tensor(10.0)) # nm->A
+                self.register_buffer('distance_to_nm', torch.tensor(0.1)) # A->nm
+                self.register_buffer('energy_to_kJ', torch.tensor(96.49)) # eV->kJ
 
-                self.model = torch.load(model_path,map_location=device)
-                self.model.to(self.default_dtype)
-                self.model.eval()
 
-                #print(self.model)
-                #for name, param in self.model.state_dict().items():
-                #    print(name, param.size())
-                
-                self.r_max = self.model.r_max
+                #self.register_buffer('r_max', self.model.r_max)
                 self.z_table = utils.AtomicNumberTable([int(z) for z in self.model.atomic_numbers])
 
                 self.model = jit.compile(self.model)
                 
                 # setup input
-                N=len(atomic_numbers)
-                self.ptr = torch.tensor([0,N],dtype=torch.long, device=self.device)
-                self.batch = torch.zeros(N, dtype=torch.long, device=self.device)
+                N = len(atomic_numbers)
+                self.ptr = torch.nn.Parameter(torch.tensor([0,N], dtype=torch.long), requires_grad=False)
+                self.batch = torch.nn.Parameter(torch.zeros(N, dtype=torch.long), requires_grad=False)
                 
                 # one hot encoding of atomic number
-                self.node_attrs =to_one_hot(
-                        torch.tensor(atomic_numbers_to_indices(atomic_numbers, z_table=self.z_table), dtype=torch.long, device=self.device).unsqueeze(-1),
+                self.node_attrs = torch.nn.Parameter(to_one_hot(
+                        torch.tensor(atomic_numbers_to_indices(atomic_numbers, z_table=self.z_table), dtype=torch.long).unsqueeze(-1),
                         num_classes=len(self.z_table),
-                    )
+                    ), requires_grad=False)
 
                 if periodic:
-                    self.pbc=torch.tensor([True, True, True], device=self.device)
+                    self.pbc = torch.nn.Parameter(torch.tensor([True, True, True]), requires_grad=False)
                 else:
-                    self.pbc=torch.tensor([False, False, False], device=self.device)
+                    self.pbc = torch.nn.Parameter(torch.tensor([False, False, False]), requires_grad=False)
 
-
-                #self.compute_nl = compute_neighborlist
 
                 if indices is None:
                     self.indices = None
                 else:
                     self.indices = torch.tensor(indices, dtype=torch.int64)
-
 
                 if interaction_energy is True:
                     self.return_energy_type = "interaction_energy"
@@ -148,28 +151,22 @@ class MACEPotentialImpl(MLPotentialImpl):
                     self.return_energy_type = "energy"
 
             def forward(self, positions, boxvectors: Optional[torch.Tensor] = None):
+                
                 # setup positions
-
-                positions = positions.to(device=self.device,dtype=self.default_dtype)
+                positions = positions.to(self.default_dtype)
                 if self.indices is not None:
                     positions = positions[self.indices]
 
                 positions = positions*self.nm_to_distance
 
                 if boxvectors is not None:
-                    cell = boxvectors.to(device=self.device,dtype=self.default_dtype) * self.nm_to_distance
+                    cell = boxvectors.to(self.default_dtype) * self.nm_to_distance
                     pbc = True
                 else:
-                    cell = torch.eye(3, device=self.device)
+                    cell = torch.eye(3, device=positions.device)
                     pbc = False
-                # compute edges
-                # mapping, _ , shifts_idx = self.compute_nl(cutoff=self.r_max, 
-                #                                                             pos=positions, 
-                #                                                             cell=cell, 
-                #                                                             pbc=self.pbc, 
-                #                                                             batch=self.batch, 
-                #                                                             self_interaction=False)
-                mapping, shifts_idx = simple_nl(positions, cell, pbc, self.r_max)
+  
+                mapping, shifts_idx = simple_nl(positions, cell, pbc, self.model.r_max)
                 
                 edge_index = torch.stack((mapping[0], mapping[1]))
 
@@ -191,7 +188,7 @@ class MACEPotentialImpl(MLPotentialImpl):
 
                 energy = out[self.return_energy_type]
                 if energy is None:
-                    energy = torch.tensor(0.0, device=self.device)
+                    energy = torch.tensor(0.0, dtype=self.default_dtype, device=positions.device)
                 
                 # return energy 
                 energy = energy*self.energy_to_kJ
@@ -204,9 +201,14 @@ class MACEPotentialImpl(MLPotentialImpl):
 
         atomic_numbers = [atom.element.atomic_number for atom in includedAtoms]
 
-        torch_dtype = {"float32":torch.float32, "float64":torch.float64}[dtype]
+        if dtype is None:
+            torch_dtype = None
+        elif dtype in ['float32', 'float64']:
+            torch_dtype = {'float32':torch.float32, 'float64':torch.float64}[dtype]
+        else:
+            raise ValueError(f'Specified dtype of {dtype} is not valid. Allowed values are None, "float32" or "float64"')
 
-        maceforce = MACEForce(self.model_path, atomic_numbers, atoms, is_periodic, device, dtype=torch_dtype, interaction_energy=interaction_energy)
+        maceforce = MACEForce(self.model_path, atomic_numbers, atoms, is_periodic, dtype=torch_dtype, interaction_energy=interaction_energy)
         
         # Convert it to TorchScript
         module = torch.jit.script(maceforce)
@@ -215,7 +217,6 @@ class MACEPotentialImpl(MLPotentialImpl):
         force = openmmtorch.TorchForce(module)
         force.setForceGroup(forceGroup)
         force.setUsesPeriodicBoundaryConditions(is_periodic)
-        #force.setOutputsForces(True)
         system.addForce(force)
 
 MLPotential.registerImplFactory('mace', MACEPotentialImplFactory())
