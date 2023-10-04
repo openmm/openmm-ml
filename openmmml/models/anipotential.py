@@ -6,7 +6,7 @@ Simbios, the NIH National Center for Physics-Based Simulation of
 Biological Structures at Stanford, funded under the NIH Roadmap for
 Medical Research, grant U54 GM072970. See https://simtk.org.
 
-Portions copyright (c) 2021 Stanford University and the Authors.
+Portions copyright (c) 2021-2023 Stanford University and the Authors.
 Authors: Peter Eastman
 Contributors:
 
@@ -47,6 +47,12 @@ class ANIPotentialImpl(MLPotentialImpl):
     TorchForce is used to add it to the OpenMM System.  The ANI1ccx and ANI2x
     versions are currently supported.
 
+    Both ANI1ccx and ANI2x are ensembles of eight models.  Averaging over all eight
+    models leads to slightly more accurate results than any one individually.  You
+    can optionally use only a single model by specifying the modelIndex argument to
+    select which one to use.  This leads to a large improvement in speed, at the
+    cost of a small decrease in accuracy.
+
     TorchForce requires the model to be saved to disk in a separate file.  By default
     it writes a file called 'animodel.pt' in the current working directory.  You can
     use the filename argument to specify a different name.  For example,
@@ -64,7 +70,8 @@ class ANIPotentialImpl(MLPotentialImpl):
                   atoms: Optional[Iterable[int]],
                   forceGroup: int,
                   filename: str = 'animodel.pt',
-                  implementation : str = 'nnpops',
+                  implementation: str = 'nnpops',
+                  modelIndex: Optional[int] = None,
                   **args):
         # Create the TorchANI model.
 
@@ -80,6 +87,8 @@ class ANIPotentialImpl(MLPotentialImpl):
             model = torchani.models.ANI2x(**_kwarg_dict)
         else:
             raise ValueError('Unsupported ANI model: '+self.name)
+        if modelIndex is not None:
+            model = model[modelIndex]
 
         # Create the PyTorch model that will be invoked by OpenMM.
         includedAtoms = list(topology.atoms())
