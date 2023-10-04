@@ -5,9 +5,9 @@ from openmmml import MLPotential
 from sys import stdout
 
 """
-Uses a deployed trained NequIP model, toluene example:
-nequip-train configs/example.yaml
-nequip-deploy build --train-dir path/to/training/session/ example_model_deployed.pth
+Uses a deployed trained NequIP model from the basic example on https://github.com/mir-group/nequip
+>>> nequip-train configs/example.yaml
+>>> nequip-deploy build --train-dir path/to/training/session/ example_model_deployed.pth
 """
 
 # load toluene structure
@@ -31,13 +31,13 @@ system = potential.createSystem(pdb.topology)
 integrator = openmm.LangevinIntegrator(300*unit.kelvin, 10.0/unit.picoseconds, 1.0*unit.femtosecond)
 simulation = app.Simulation(pdb.topology, system, integrator)
 simulation.context.setPositions(pdb.positions)
-simulation.reporters.append(app.PDBReporter('output.pdb', 10))
-simulation.reporters.append(app.StateDataReporter(stdout, 10, step=True,
-        potentialEnergy=True, temperature=True))
+simulation.reporters.append(app.PDBReporter('output.pdb', 100))
+simulation.reporters.append(app.StateDataReporter(stdout, 100, step=True,
+        potentialEnergy=True, temperature=True, speed=True))
 
 simulation.step(1000)
 
 # Minimize the energy
 simulation.minimizeEnergy()
 energy=simulation.context.getState(getEnergy=True).getPotentialEnergy()
-print(energy, energy.in_units_of(unit.kilocalorie_per_mole))
+print(energy)

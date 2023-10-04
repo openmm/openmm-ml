@@ -11,7 +11,7 @@ first install openmm-torch from conda-forge:
 conda install -c conda-forge openmm-torch
 ```
 
-Then install NequIP development branch, this version of openmm-ml using pip
+Then install NequIP development branch and this version of openmm-ml using pip
 
 ```
 pip install git+https://github.com/mir-group/nequip@develop
@@ -20,7 +20,7 @@ pip install git+https://github.com/sef43/openmm-ml@nequip
 
 ## Usage
 
-Once you have a deployed trained NequIP model you can use it at the potential in OpenMM-ML:
+Once you have a deployed trained NequIP model you can use it as the potential in OpenMM-ML:
 
 ```python
 from openmmml import MLPotential
