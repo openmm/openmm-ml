@@ -1,1 +1,1 @@
-from . import anipotential
+from . import anipotential, aimnet2potential
