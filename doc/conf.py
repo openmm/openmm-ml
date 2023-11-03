@@ -57,7 +57,7 @@ html_theme_options = {
     "github_url": "https://github.com/openmm/openmm-ml",
 
     "switcher": {
-        "json_url": "https://sef43.github.io/openmm-ml-docs-test/versions.json",
+        "json_url": "https://sef43.github.io/openmm-ml/versions.json",
         "version_match": release,
     },
 
