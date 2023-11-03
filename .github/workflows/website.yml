@@ -1,0 +1,127 @@
+name: website
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  # pull_request:
+  #   branches:
+  #     - main
+  #   types: [opened, edited, synchronize, reopened]
+  release:
+    types: [published]
+
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -l {0}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Cache conda
+        uses: actions/cache@v2
+        with:
+          path: ~/conda_pkgs_dir
+          key: ${{ runner.os }}-conda-${{hashFiles('environment.yml') }}
+
+      - uses: conda-incubator/setup-miniconda@v2
+        name: Install dependencies
+        with:
+          environment-file: doc/environment.yml
+          auto-activate-base: false
+          miniforge-version: latest
+          miniforge-variant: Mambaforge
+          use-mamba: true
+
+      - name: Describe environment
+        run: |
+          pwd
+          ls
+          conda list
+
+      - name: set dev path
+        run: |
+          echo "PAGES_DEPLOY_PATH=dev" >> $GITHUB_ENV
+        if: github.event_name == 'push'
+      # - name: set PR path
+      #   run: |
+      #     echo "PAGES_DEPLOY_PATH=PR${{ github.event.number }}" >> $GITHUB_ENV
+      #   if: github.event_name == 'pull_request'
+      - name: set release path
+        run: |
+         echo "PAGES_DEPLOY_PATH=${GITHUB_REF}" >> $GITHUB_ENV
+        if: github.event_name == 'release'
+      - name: Build Sphinx documentation
+        run: |
+          cd doc
+          make html
+      - name: Checkout gh-pages
+        if: success()
+        uses: actions/checkout@v2
+        with:
+          ref: gh-pages
+          path: 'deploy'
+          clean: false
+
+      - name: Prepare development deployment
+        if: success() && github.event_name == 'push'
+        env:
+          PR: ${{ github.event.number }}
+        run: |
+          rm -rf deploy/dev
+          mv doc/build/html deploy/dev
+      # - name: Prepare PR deployment
+      #   if: success() && github.event_name == 'pull_request'
+      #   env:
+      #     PR: ${{ github.event.number }}
+      #   run: |
+      #     rm -rf deploy/PR${PR}
+      #     mv build/html deploy/PR${PR}
+      - name: Prepare release deployment
+        if: success() && github.event_name == 'release'
+        env:
+          PR: ${{ github.event.number }}
+        run: |
+          rm -rf deploy/${GITHUB_REF}
+          mkdir -p deploy/${GITHUB_REF}
+          mv -T doc/build/html deploy/${GITHUB_REF}
+          rm -rf deploy/latest
+          ln -s ${GITHUB_REF} deploy/latest
+      - name: Deploy to GitHub Pages
+        if: success()
+        uses: crazy-max/ghaction-github-pages@v2
+        with:
+          target_branch: gh-pages
+          build_dir: deploy
+          jekyll: false
+          commit_message: "Deploy to GH Pages"
+          keep_history: true
+          follow_symlinks: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # - name: Find Comment
+      #   if: success() && github.event_name == 'pull_request'
+      #   uses: peter-evans/find-comment@v1
+      #   id: fc
+      #   with:
+      #     issue-number: ${{ github.event.pull_request.number }}
+      #     comment-author: 'github-actions[bot]'
+      #     body-includes: Example docs for this PR
+
+      # - name: Create or update comment
+      #   if: success() && github.event_name == 'pull_request'
+      #   uses: peter-evans/create-or-update-comment@v1
+      #   env:
+      #     PR: ${{ github.event.number }}
+      #   with:
+      #     comment-id: ${{ steps.fc.outputs.comment-id }}
+      #     issue-number: ${{ github.event.pull_request.number }}
+      #     body: |
+      #       Example docs for this PR [rendered here](https://openmm.github.io/openmm-cookbook/PR${{ github.event.number }})
+      #     edit-mode: replace

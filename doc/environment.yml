@@ -1,0 +1,14 @@
+name: openmm-cookbook
+channels:
+  - conda-forge
+dependencies:
+  - python
+  - pip
+  - sphinx
+  - openmm
+  - pydata-sphinx-theme
+  - pip:
+    - m2r2
+
+
+
