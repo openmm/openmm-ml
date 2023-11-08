@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>API &#8212; OpenMM ML Docs dev documentation</title>
+    <title>API &#8212; OpenMM ML 1.1dev_c588a99 documentation</title>
   
   
   
@@ -35,15 +35,15 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=365ca57ee442770a23c6" />
   <script src="_static/vendor/fontawesome/6.1.2/js/all.min.js?digest=365ca57ee442770a23c6"></script>
 
-    <script src="_static/documentation_options.js?v=3ce10a4d"></script>
+    <script src="_static/documentation_options.js?v=a1e6e1cb"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'api';</script>
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.14.3';
-        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://sef43.github.io/openmm-ml/versions.json';
+        DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://sef43.github.io/openmm-ml/dev/_static/versions.json';
         DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
-        DOCUMENTATION_OPTIONS.show_version_warning_banner = true;
+        DOCUMENTATION_OPTIONS.show_version_warning_banner = false;
         </script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -385,11 +385,11 @@ document.write(`
 <li class="toctree-l1"><a class="reference internal" href="generated/openmmml.MLPotential.html">openmmml.MLPotential</a></li>
 </ul>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="generated/openmmml.models.anipotential.ANIPotentialImpl.html">openmmml.models.anipotential.ANIPotentialImpl</a></li>
-</ul>
-<ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="generated/openmmml.mlpotential.MLPotentialImplFactory.html">openmmml.mlpotential.MLPotentialImplFactory</a></li>
 <li class="toctree-l1"><a class="reference internal" href="generated/openmmml.mlpotential.MLPotentialImpl.html">openmmml.mlpotential.MLPotentialImpl</a></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="generated/openmmml.models.anipotential.ANIPotentialImpl.html">openmmml.models.anipotential.ANIPotentialImpl</a></li>
 </ul>
 </div>
 </nav></div>
@@ -448,30 +448,30 @@ document.write(`
 <h1>API<a class="headerlink" href="#api" title="Link to this heading">#</a></h1>
 <table class="autosummary longtable table autosummary">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/openmmml.MLPotential.html#openmmml.MLPotential" title="openmmml.MLPotential"><code class="xref py py-obj docutils literal notranslate"><span class="pre">openmmml.MLPotential</span></code></a>(name, **args)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/openmmml.MLPotential.html#openmmml.MLPotential" title="openmmml.MLPotential"><code class="xref py py-obj docutils literal notranslate"><span class="pre">openmmml.MLPotential</span></code></a></p></td>
 <td><p>A potential function that can be used in simulations.</p></td>
 </tr>
 </tbody>
 </table>
-<section id="models">
-<h2>Models<a class="headerlink" href="#models" title="Link to this heading">#</a></h2>
-<table class="autosummary longtable table autosummary">
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/openmmml.models.anipotential.ANIPotentialImpl.html#openmmml.models.anipotential.ANIPotentialImpl" title="openmmml.models.anipotential.ANIPotentialImpl"><code class="xref py py-obj docutils literal notranslate"><span class="pre">openmmml.models.anipotential.ANIPotentialImpl</span></code></a>(name)</p></td>
-<td><p>This is the MLPotentialImpl implementing the ANI potential.</p></td>
-</tr>
-</tbody>
-</table>
-</section>
 <section id="developer-api">
 <h2>Developer API<a class="headerlink" href="#developer-api" title="Link to this heading">#</a></h2>
 <table class="autosummary longtable table autosummary">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="generated/openmmml.mlpotential.MLPotentialImplFactory.html#openmmml.mlpotential.MLPotentialImplFactory" title="openmmml.mlpotential.MLPotentialImplFactory"><code class="xref py py-obj docutils literal notranslate"><span class="pre">openmmml.mlpotential.MLPotentialImplFactory</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/openmmml.mlpotential.MLPotentialImplFactory.html#openmmml.mlpotential.MLPotentialImplFactory" title="openmmml.mlpotential.MLPotentialImplFactory"><code class="xref py py-obj docutils literal notranslate"><span class="pre">openmmml.mlpotential.MLPotentialImplFactory</span></code></a></p></td>
 <td><p>Abstract interface for classes that create MLPotentialImpl objects.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="generated/openmmml.mlpotential.MLPotentialImpl.html#openmmml.mlpotential.MLPotentialImpl" title="openmmml.mlpotential.MLPotentialImpl"><code class="xref py py-obj docutils literal notranslate"><span class="pre">openmmml.mlpotential.MLPotentialImpl</span></code></a>()</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="generated/openmmml.mlpotential.MLPotentialImpl.html#openmmml.mlpotential.MLPotentialImpl" title="openmmml.mlpotential.MLPotentialImpl"><code class="xref py py-obj docutils literal notranslate"><span class="pre">openmmml.mlpotential.MLPotentialImpl</span></code></a></p></td>
 <td><p>Abstract interface for classes that implement potential functions.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="models">
+<h2>Models<a class="headerlink" href="#models" title="Link to this heading">#</a></h2>
+<table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="generated/openmmml.models.anipotential.ANIPotentialImpl.html#openmmml.models.anipotential.ANIPotentialImpl" title="openmmml.models.anipotential.ANIPotentialImpl"><code class="xref py py-obj docutils literal notranslate"><span class="pre">openmmml.models.anipotential.ANIPotentialImpl</span></code></a></p></td>
+<td><p>This is the MLPotentialImpl implementing the ANI potential.</p></td>
 </tr>
 </tbody>
 </table>
@@ -521,8 +521,8 @@ document.write(`
   </div>
   <nav class="bd-toc-nav page-toc">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#models">Models</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#developer-api">Developer API</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#models">Models</a></li>
 </ul>
   </nav></div>
 

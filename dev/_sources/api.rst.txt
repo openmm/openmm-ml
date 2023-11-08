@@ -3,22 +3,27 @@ API
 
 .. autosummary::
     :toctree: generated/
+    :nosignatures:
 
     openmmml.MLPotential
-
-
-Models
-~~~~~~
-.. autosummary::
-    :toctree: generated/
-   
-    openmmml.models.anipotential.ANIPotentialImpl
 
 
 Developer API
 ~~~~~~~~~~~~~
 .. autosummary::
     :toctree: generated/
+    :nosignatures:
 
     openmmml.mlpotential.MLPotentialImplFactory
     openmmml.mlpotential.MLPotentialImpl
+
+
+Models
+~~~~~~
+.. autosummary::
+    :toctree: generated/
+    :nosignatures:
+   
+    
+      openmmml.models.anipotential.ANIPotentialImpl
+    
