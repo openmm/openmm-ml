@@ -9,6 +9,7 @@ dependencies:
   - pydata-sphinx-theme
   - pip:
     - m2r2
+    - GitPython
 
 
 
