@@ -387,7 +387,8 @@ class MLPotential(object):
                     angles.remove(angle)
         for torsions in root.findall('./Forces/Force/Torsions'):
             for torsion in torsions.findall('Torsion'):
-                torsionAtoms = [int(torsion.attrib[p]) for p in ('p1', 'p2', 'p3', 'p4')]
+                torsionLabels =  ('p1', 'p2', 'p3', 'p4') if 'p1' in torsion.attrib else ('a1', 'a2', 'a3', 'a4', 'b1', 'b2', 'b3', 'b4')
+                torsionAtoms = [int(torsion.attrib[p]) for p in torsionLabels]
                 if shouldRemove(torsionAtoms):
                     torsions.remove(torsion)
 
