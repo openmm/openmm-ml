@@ -8,7 +8,7 @@ Medical Research, grant U54 GM072970. See https://simtk.org.
 
 Portions copyright (c) 2021 Stanford University and the Authors.
 Authors: Peter Eastman
-Contributors: Stephen Farr
+Contributors: Stephen Farr, Joao Morado
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the "Software"),
@@ -28,195 +28,372 @@ DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-
-from openmmml.mlpotential import MLPotential, MLPotentialImpl, MLPotentialImplFactory
 import openmm
-from typing import Iterable, Optional, Union, Tuple
-from openmmml.models.utils import simple_nl
-import logging
+from openmmml.mlpotential import MLPotential, MLPotentialImpl, MLPotentialImplFactory
+from typing import Iterable, Optional, Tuple
 
 
 class MACEPotentialImplFactory(MLPotentialImplFactory):
     """This is the factory that creates MACEPotentialImpl objects."""
 
-    def createImpl(self, name: str, model_path: str, **args) -> MLPotentialImpl:
-        return MACEPotentialImpl(name, model_path)
+    def createImpl(self, name: str, modelPath: Optional[str] = None, **args) -> MLPotentialImpl:
+        return MACEPotentialImpl(name, modelPath)
+
 
 class MACEPotentialImpl(MLPotentialImpl):
     """This is the MLPotentialImpl implementing the MACE potential.
 
-    The potential is implemented using MACE to build a PyTorch model.  A
-    TorchForce is used to add it to the OpenMM System.
+    The MACE potential is constructed using MACE to build a PyTorch model,
+    and then integrated into the OpenMM System using a TorchForce.
+    This implementation supports both MACE-OFF23 and locally trained MACE models.
 
-    You must specify the path to a trained MACE model e.g.
-    >>> potential = MLPotential('mace', model_path='MACE.model')
+    To use one of the pre-trained MACE-OFF23 models, specify the model name. For example:
+    >>> potential = MLPotential('mace-off23-small')
 
-    When you create the system can optionally change the dtype of the model
-    with the keyword argument dtype='float32' or dtype='float64'. The default behavoir is
-    to use the dtype of the loaded MACE model.
-    e.g.
-    >>> system = potential.createSystem(topology, dtype='float32')
+    Other available MACE-OFF23 models include `mace-off23-medium` and `mace-off23-large`.
 
-    You can also specify that the full atomic energy (including the atom self energy) is returned 
-    rather than the default of the interaction energy.
-    e.g.
-    >>> system = potential.createSystem(topology, interaction_energy=False)
-    
+    To use a locally trained MACE model, provide the path to the model file. For example:
+    >>> potential = MLPotential('mace', modelPath='MACE.model')
+
+    During system creation, you can optionally specify the precision of the model using the
+    `precision` keyword argument. Supported options are 'single' and 'double'. For example:
+    >>> system = potential.createSystem(topology, precision='single')
+
+    By default, the implementation uses the precision of the loaded MACE model.
+    According to the MACE documentation, 'single' precision is recommended for MD (faster but
+    less accurate), while 'double' precision is recommended for geometry optimization.
+
+    Additionally, you can request computation of the full atomic energy, including the atom
+    self-energy, instead of the default interaction energy, by setting `returnEnergyType` to
+    `energy`. For example:
+    >>> system = potential.createSystem(topology, returnEnergyType=`energy`)
+
+    The default is to compute the interaction energy, which can be made explicit by setting
+    `returnEnergyType=interaction_energy`.
+
+    Attributes
+    ----------
+    name : str
+        The name of the MACE model.
+    modelPath : str
+        The path to the locally trained MACE model if `name` is `mace`.
     """
 
-    def __init__(self, name, model_path):
+    def __init__(self, name: str, modelPath) -> None:
+        """
+        Initialize the MACEPotentialImpl.
+
+        Parameters
+        ----------
+        name : str
+            The name of the MACE model.
+            Options include `mace-off23-small`, `mace-off23-medium`, `mace-off23-large`, and `mace`.
+        modelPath : str, optional
+            The path to the locally trained MACE model if `name` is `mace`.
+        """
         self.name = name
-        self.model_path = model_path
+        self.modelPath = modelPath
 
-    def addForces(self,
-                  topology: openmm.app.Topology,
-                  system: openmm.System,
-                  atoms: Optional[Iterable[int]],
-                  forceGroup: int,
-                  implementation : str=None,
-                  dtype: str=None,
-                  interaction_energy: bool=True,
-                  **args):
-        
+    def addForces(
+        self,
+        topology: openmm.app.Topology,
+        system: openmm.System,
+        atoms: Optional[Iterable[int]],
+        forceGroup: int,
+        precision: Optional[str] = None,
+        returnEnergyType: str = "energy",
+        filename: str = "macemodel.pt",
+        **args,
+    ) -> None:
+        """
+        Add the MACEForce to the OpenMM System.
 
+        Parameters
+        ----------
+        topology : openmm.app.Topology
+            The topology of the system.
+        system : openmm.System
+            The system to which the force will be added.
+        atoms : iterable of int
+            The indices of the atoms to include in the model. If None, all atoms are included.
+        forceGroup : int
+            The force group to which the force should be assigned.
+        precision : str, optional
+            The precision of the model. Supported options are 'single' and 'double'.
+            If None, the default precision of the model is used.
+        returnEnergyType : str, optional
+            Whether to return the interaction energy or the energy including the self-energy.
+            Default is `interaction_energy`. Supported options are `interaction_energy` and `energy`.
+        filename : str, optional
+            The filename to which the TorchForce will be saved. Default is 'macemodel.pt'.
+        """
         import torch
         import openmmtorch
-        from e3nn.util import jit
-        from mace.tools import utils, to_one_hot, atomic_numbers_to_indices
+
+        try:
+            from mace.tools import utils, to_one_hot, atomic_numbers_to_indices
+            from mace.calculators.foundations_models import mace_off
+        except ImportError as e:
+            raise ImportError(
+                f"Failed to import `mace` with error: {e}. Install `mace` with `pip install torch-mace`."
+            )
+        try:
+            from e3nn.util import jit
+        except ImportError as e:
+            raise ImportError(
+                f"Failed to import `e3nn` with error: {e}. Install `e3nn` with `pip install e3nn`."
+            )
+        try:
+            from NNPOps.neighbors import getNeighborPairs
+        except ImportError as e:
+            raise ImportError(
+                f"Failed to import `NNPOps` with error: {e}."
+                "Install `nnpops` with `conda install -c conda-forge nnpops`."
+            )
         
+        assert returnEnergyType in [
+            "interaction_energy",
+            "energy",
+        ], "Supported options for `returnEnergyType` are `interaction_energy` and `energy`."
+
+        # Load the model and compile it to TorchScript.
+        if self.name.startswith("mace-off23"):
+            size = self.name.split("-")[-1]
+            assert (
+                size in ["small", "medium", "large"]
+            ), "Available MACE-OFF23 models are: `mace-off23-small`, `mace-off23-medium`, `mace-off23-large`"
+            model = mace_off(model=size, return_raw_model=True)
+        elif self.name == "mace":
+            if self.modelPath is not None:
+                model = torch.load(self.modelPath)
+            else:
+                raise ValueError("No `modelPath` provided for local MACE model.")
+        else:
+            raise ValueError(f"Unsupported MACE model: {self.name}")
+        model = jit.compile(model)
+
+        # Get the atomic numbers of the ML region.
         includedAtoms = list(topology.atoms())
         if atoms is not None:
             includedAtoms = [includedAtoms[i] for i in atoms]
-        
-        class MACEForce(torch.nn.Module):
+        atomicNumbers = [atom.element.atomic_number for atom in includedAtoms]
 
-            def __init__(self, model_path, atomic_numbers, indices, periodic, dtype=None, interaction_energy=True):
+        # Set the precision that the model will be used with.
+        modelDefaultDtype = next(model.parameters()).dtype
+        if precision is None:
+            dtype = modelDefaultDtype
+        elif precision == "single":
+            dtype = torch.float32
+        elif precision == "double":
+            dtype = torch.float64
+        else:
+            raise ValueError(
+                f"Unsupported precision `{precision}` for the model. "
+                "Supported values are `single` and `double`."
+            )
+        if dtype != modelDefaultDtype:
+            print(
+                f"Model dtype is {modelDefaultDtype} "
+                f"and requested dtype is {dtype}. "
+                "The model will be converted to the requested dtype."
+            )
+
+        # One hot encoding of atomic numbers
+        zTable = utils.AtomicNumberTable([int(z) for z in model.atomic_numbers])
+        nodeAttrs = to_one_hot(
+                torch.tensor(
+                    atomic_numbers_to_indices(atomicNumbers, z_table=zTable),
+                    dtype=torch.long,
+                ).unsqueeze(-1),
+                num_classes=len(zTable),
+            )
+
+        class MACEForce(torch.nn.Module):
+            """
+            MACEForce class to be used with TorchForce.
+
+            Parameters
+            ----------
+            model : torch.jit._script.RecursiveScriptModule
+                The compiled MACE model.
+            dtype : torch.dtype
+                The precision with which the model will be used.
+            energyScale : float
+                Conversion factor for the energy, viz. eV to kJ/mol.
+            lengthScale : float
+                Conversion factor for the length, viz. nm to Angstrom.
+            indices : torch.Tensor
+                The indices of the atoms to calculate the energy for.
+            returnEnergyType : str
+                Whether to return the interaction energy or the energy including the self-energy.
+            inputDict : dict
+                The input dictionary passed to the model.
+            """
+
+            def __init__(
+                self,
+                model: torch.jit._script.RecursiveScriptModule,
+                nodeAttrs: torch.Tensor,
+                atoms: Optional[Iterable[int]],
+                periodic: bool,
+                dtype: torch.dtype,
+                returnEnergyType: str,
+            ) -> None:
+                """
+                Initialize the MACEForce.
+
+                Parameters
+                ----------
+                model : torch.jit._script.RecursiveScriptModule
+                    The MACE model.
+                nodeAttrs : torch.Tensor
+                    The one-hot encoded atomic numbers.
+                atoms : iterable of int
+                    The indices of the atoms. If None, all atoms are included.
+                periodic : bool
+                    Whether the system is periodic.
+                dtype : torch.dtype
+                    The precision of the model.
+                returnEnergyType : str
+                    Whether to return the interaction energy or the energy including the self-energy.
+                """
                 super(MACEForce, self).__init__()
 
+                self.dtype = dtype
+                self.model = model.to(self.dtype)
+                self.energyScale = 96.4853 
+                self.lengthScale = 10.0
+                self.returnEnergyType = returnEnergyType
 
-                if not torch.cuda.is_available():
-                    self.model = torch.load(model_path, map_location=torch.device('cpu'))
-                else:
-                    self.model = torch.load(model_path)
-                
-                # get the dtype of the saved model
-                model_dtype = [p.dtype for p in self.model.parameters()][0]
-
-                # check is user has request a different dtype    
-                if dtype is not None and dtype != model_dtype:
-                    logging.getLogger().warning(f'Warning: Loaded MACE model has dtype of {model_dtype} which is being changed to {dtype} as requested!')
-                    self.default_dtype = dtype
-                    self.model.to(self.default_dtype)
-                else:
-                    self.default_dtype = model_dtype
-
-                torch.set_default_dtype(self.default_dtype)
-
-                # conversion constants 
-                self.register_buffer('nm_to_distance', torch.tensor(10.0)) # nm->A
-                self.register_buffer('distance_to_nm', torch.tensor(0.1)) # A->nm
-                self.register_buffer('energy_to_kJ', torch.tensor(96.49)) # eV->kJ
-
-
-                #self.register_buffer('r_max', self.model.r_max)
-                self.z_table = utils.AtomicNumberTable([int(z) for z in self.model.atomic_numbers])
-
-                self.model = jit.compile(self.model)
-                
-                # setup input
-                N = len(atomic_numbers)
-                self.ptr = torch.nn.Parameter(torch.tensor([0,N], dtype=torch.long), requires_grad=False)
-                self.batch = torch.nn.Parameter(torch.zeros(N, dtype=torch.long), requires_grad=False)
-                
-                # one hot encoding of atomic number
-                self.node_attrs = torch.nn.Parameter(to_one_hot(
-                        torch.tensor(atomic_numbers_to_indices(atomic_numbers, z_table=self.z_table), dtype=torch.long).unsqueeze(-1),
-                        num_classes=len(self.z_table),
-                    ), requires_grad=False)
-
-                if periodic:
-                    self.pbc = torch.nn.Parameter(torch.tensor([True, True, True]), requires_grad=False)
-                else:
-                    self.pbc = torch.nn.Parameter(torch.tensor([False, False, False]), requires_grad=False)
-
-
-                if indices is None:
+                if atoms is None:
                     self.indices = None
                 else:
-                    self.indices = torch.tensor(indices, dtype=torch.int64)
+                    self.indices = torch.tensor(sorted(atoms), dtype=torch.int64)
 
-                if interaction_energy is True:
-                    self.return_energy_type = "interaction_energy"
+                # Create the default input dict.
+                self.inputDict = {
+                    "ptr": torch.tensor([0, nodeAttrs.shape[0]], dtype=torch.long, requires_grad=False),
+                    "node_attrs": nodeAttrs.to(self.dtype),
+                    "batch": torch.zeros(nodeAttrs.shape[0], dtype=torch.long, requires_grad=False),
+                    "pbc": torch.tensor([periodic, periodic, periodic], dtype=torch.bool, requires_grad=False),
+                }
+
+            def _getNeighborPairs(
+                self, positions: torch.Tensor, cell: Optional[torch.Tensor]
+            ) -> Tuple[torch.Tensor, torch.Tensor]:
+                """
+                Get the shifts and edge indices.
+
+                This method calculates the shifts and edge indices by determining neighbor pairs (`neighbors`)
+                and respective wrapped distances (`wrappedDeltas`) using `NNPOps.neighbors.getNeighborPairs`.
+                After obtaining the `neighbors` and `wrappedDeltas`, the pairs with negative indices (r>cutoff)
+                are filtered out, and the edge indices and shifts are finally calculated.
+
+                Parameters
+                ----------
+                positions : torch.Tensor
+                    The positions of the atoms.
+                cell : torch.Tensor
+                    The cell vectors.
+
+                Returns
+                -------
+                edgeIndex : torch.Tensor
+                    The edge indices.
+                shifts : torch.Tensor
+                    The shifts.
+                """
+                # Get the neighbor pairs, shifts and edge indeces.
+                neighbors, wrappedDeltas, _, _ = getNeighborPairs(
+                    positions, self.model.r_max, -1, cell
+                )
+                mask = neighbors >= 0
+                neighbors = neighbors[mask].view(2, -1)
+                wrappedDeltas = wrappedDeltas[mask[0], :]
+
+                edgeIndex = torch.hstack((neighbors, neighbors.flip(0))).to(torch.int64)
+                if cell is not None:
+                    deltas = positions[edgeIndex[0]] - positions[edgeIndex[1]]
+                    wrappedDeltas = torch.vstack((wrappedDeltas, -wrappedDeltas))
+                    shiftsIdx = torch.mm(deltas - wrappedDeltas, torch.linalg.inv(cell))
+                    shifts = torch.mm(shiftsIdx, cell)
                 else:
-                    self.return_energy_type = "energy"
+                    shifts = torch.zeros((edgeIndex.shape[1], 3), dtype=self.dtype)
 
-            def forward(self, positions, boxvectors: Optional[torch.Tensor] = None):
-                
-                # setup positions
-                positions = positions.to(self.default_dtype)
+                return edgeIndex, shifts
+
+            def forward(
+                self, positions: torch.Tensor, boxvectors: Optional[torch.Tensor] = None
+            ) -> torch.Tensor:
+                """
+                Forward pass of the model.
+
+                Parameters
+                ----------
+                positions : torch.Tensor
+                    The positions of the atoms.
+                box_vectors : torch.Tensor
+                    The box vectors.
+
+                Returns
+                -------
+                energy : torch.Tensor
+                    The predicted energy in kJ/mol.
+                """
+                # Setup positions and cell.
                 if self.indices is not None:
                     positions = positions[self.indices]
 
-                positions = positions*self.nm_to_distance
+                positions = positions.to(self.dtype) * self.lengthScale
 
                 if boxvectors is not None:
-                    cell = boxvectors.to(self.default_dtype) * self.nm_to_distance
-                    pbc = True
+                    cell = boxvectors.to(self.dtype) * self.lengthScale
                 else:
-                    cell = torch.eye(3, device=positions.device)
-                    pbc = False
-  
-                mapping, shifts_idx = simple_nl(positions, cell, pbc, self.model.r_max)
+                    cell = None
+
+                # Get the shifts and edge indices.
+                edgeIndex, shifts = self._getNeighborPairs(positions, cell)
+
+                # Update input dictionary.
+                self.inputDict["positions"] = positions
+                self.inputDict["edge_index"] = edgeIndex
+                self.inputDict["shifts"] = shifts
+
+                # Predict the energy.
+                energy = self.model(self.inputDict, compute_force=False)[
+                    self.returnEnergyType
+                ]
+
+                assert (
+                    energy is not None
+                ), "The model did not return any energy. Please check the input."
                 
-                edge_index = torch.stack((mapping[0], mapping[1]))
+                return energy * self.energyScale
 
-                shifts = torch.mm(shifts_idx, cell)
+        isPeriodic = (topology.getPeriodicBoxVectors() is not None
+        ) or system.usesPeriodicBoundaryConditions()
 
-                # create input dict
-                input_dict = { "ptr" : self.ptr, 
-                              "node_attrs": self.node_attrs, 
-                              "batch": self.batch, 
-                              "pbc": self.pbc,
-                              "cell": cell,
-                              "positions": positions,
-                              "edge_index": edge_index,
-                              "unit_shifts": shifts_idx,
-                              "shifts": shifts}
-                
-                # predict
-                out = self.model(input_dict,compute_force=False)
+        maceForce = MACEForce(
+            model,
+            nodeAttrs,
+            atoms,
+            isPeriodic,
+            dtype,
+            returnEnergyType,
+        )
 
-                energy = out[self.return_energy_type]
-                if energy is None:
-                    energy = torch.tensor(0.0, dtype=self.default_dtype, device=positions.device)
-                
-                # return energy 
-                energy = energy*self.energy_to_kJ
-
-                return energy
-            
-
-        is_periodic = (topology.getPeriodicBoxVectors() is not None) or system.usesPeriodicBoundaryConditions()
-
-
-        atomic_numbers = [atom.element.atomic_number for atom in includedAtoms]
-
-        if dtype is None:
-            torch_dtype = None
-        elif dtype in ['float32', 'float64']:
-            torch_dtype = {'float32':torch.float32, 'float64':torch.float64}[dtype]
-        else:
-            raise ValueError(f'Specified dtype of {dtype} is not valid. Allowed values are None, "float32" or "float64"')
-
-        maceforce = MACEForce(self.model_path, atomic_numbers, atoms, is_periodic, dtype=torch_dtype, interaction_energy=interaction_energy)
-        
-        # Convert it to TorchScript
-        module = torch.jit.script(maceforce)
+        # Convert it to TorchScript and save it.
+        module = torch.jit.script(maceForce)
+        module.save(filename)
 
         # Create the TorchForce and add it to the System.
-        force = openmmtorch.TorchForce(module)
+        force = openmmtorch.TorchForce(filename)
         force.setForceGroup(forceGroup)
-        force.setUsesPeriodicBoundaryConditions(is_periodic)
+        force.setUsesPeriodicBoundaryConditions(isPeriodic)
         system.addForce(force)
 
-MLPotential.registerImplFactory('mace', MACEPotentialImplFactory())
+
+MLPotential.registerImplFactory("mace", MACEPotentialImplFactory())
+MLPotential.registerImplFactory("mace-off23-small", MACEPotentialImplFactory())
+MLPotential.registerImplFactory("mace-off23-medium", MACEPotentialImplFactory())
+MLPotential.registerImplFactory("mace-off23-large", MACEPotentialImplFactory())
