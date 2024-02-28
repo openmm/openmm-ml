@@ -1,1 +1,1 @@
-from . import anipotential, macepotential, utils
+from . import anipotential, macepotential
