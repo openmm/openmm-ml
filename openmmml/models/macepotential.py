@@ -36,7 +36,9 @@ from typing import Iterable, Optional, Tuple
 class MACEPotentialImplFactory(MLPotentialImplFactory):
     """This is the factory that creates MACEPotentialImpl objects."""
 
-    def createImpl(self, name: str, modelPath: Optional[str] = None, **args) -> MLPotentialImpl:
+    def createImpl(
+        self, name: str, modelPath: Optional[str] = None, **args
+    ) -> MLPotentialImpl:
         return MACEPotentialImpl(name, modelPath)
 
 
@@ -150,11 +152,14 @@ class MACEPotentialImpl(MLPotentialImpl):
                 f"Failed to import `NNPOps` with error: {e}."
                 "Install `nnpops` with `conda install -c conda-forge nnpops`."
             )
-        
-        assert returnEnergyType in [
-            "interaction_energy",
-            "energy",
-        ], "Supported options for `returnEnergyType` are `interaction_energy` and `energy`."
+
+        assert (
+            returnEnergyType
+            in [
+                "interaction_energy",
+                "energy",
+            ]
+        ), "Supported options for `returnEnergyType` are `interaction_energy` and `energy`."
 
         # Load the model and compile it to TorchScript.
         if self.name.startswith("mace-off23"):
@@ -201,12 +206,12 @@ class MACEPotentialImpl(MLPotentialImpl):
         # One hot encoding of atomic numbers
         zTable = utils.AtomicNumberTable([int(z) for z in model.atomic_numbers])
         nodeAttrs = to_one_hot(
-                torch.tensor(
-                    atomic_numbers_to_indices(atomicNumbers, z_table=zTable),
-                    dtype=torch.long,
-                ).unsqueeze(-1),
-                num_classes=len(zTable),
-            )
+            torch.tensor(
+                atomic_numbers_to_indices(atomicNumbers, z_table=zTable),
+                dtype=torch.long,
+            ).unsqueeze(-1),
+            num_classes=len(zTable),
+        )
 
         class MACEForce(torch.nn.Module):
             """
@@ -261,7 +266,7 @@ class MACEPotentialImpl(MLPotentialImpl):
 
                 self.dtype = dtype
                 self.model = model.to(self.dtype)
-                self.energyScale = 96.4853 
+                self.energyScale = 96.4853
                 self.lengthScale = 10.0
                 self.returnEnergyType = returnEnergyType
 
@@ -272,10 +277,18 @@ class MACEPotentialImpl(MLPotentialImpl):
 
                 # Create the default input dict.
                 self.inputDict = {
-                    "ptr": torch.tensor([0, nodeAttrs.shape[0]], dtype=torch.long, requires_grad=False),
+                    "ptr": torch.tensor(
+                        [0, nodeAttrs.shape[0]], dtype=torch.long, requires_grad=False
+                    ),
                     "node_attrs": nodeAttrs.to(self.dtype),
-                    "batch": torch.zeros(nodeAttrs.shape[0], dtype=torch.long, requires_grad=False),
-                    "pbc": torch.tensor([periodic, periodic, periodic], dtype=torch.bool, requires_grad=False),
+                    "batch": torch.zeros(
+                        nodeAttrs.shape[0], dtype=torch.long, requires_grad=False
+                    ),
+                    "pbc": torch.tensor(
+                        [periodic, periodic, periodic],
+                        dtype=torch.bool,
+                        requires_grad=False,
+                    ),
                 }
 
             def _getNeighborPairs(
@@ -367,10 +380,11 @@ class MACEPotentialImpl(MLPotentialImpl):
                 assert (
                     energy is not None
                 ), "The model did not return any energy. Please check the input."
-                
+
                 return energy * self.energyScale
 
-        isPeriodic = (topology.getPeriodicBoxVectors() is not None
+        isPeriodic = (
+            topology.getPeriodicBoxVectors() is not None
         ) or system.usesPeriodicBoundaryConditions()
 
         maceForce = MACEForce(
