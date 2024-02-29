@@ -52,13 +52,13 @@ class MACEPotentialImpl(MLPotentialImpl):
     To use one of the pre-trained MACE-OFF23 models, specify the model name. For example:
     >>> potential = MLPotential('mace-off23-small')
 
-    Other available MACE-OFF23 models include `mace-off23-medium` and `mace-off23-large`.
+    Other available MACE-OFF23 models include 'mace-off23-medium' and 'mace-off23-large'.
 
     To use a locally trained MACE model, provide the path to the model file. For example:
     >>> potential = MLPotential('mace', modelPath='MACE.model')
 
     During system creation, you can optionally specify the precision of the model using the
-    `precision` keyword argument. Supported options are 'single' and 'double'. For example:
+    precision` keyword argument. Supported options are 'single' and 'double'. For example:
     >>> system = potential.createSystem(topology, precision='single')
 
     By default, the implementation uses the precision of the loaded MACE model.
@@ -67,18 +67,18 @@ class MACEPotentialImpl(MLPotentialImpl):
 
     Additionally, you can request computation of the full atomic energy, including the atom
     self-energy, instead of the default interaction energy, by setting `returnEnergyType` to
-    `energy`. For example:
-    >>> system = potential.createSystem(topology, returnEnergyType=`energy`)
+    'energy'. For example:
+    >>> system = potential.createSystem(topology, returnEnergyType='energy')
 
     The default is to compute the interaction energy, which can be made explicit by setting
-    `returnEnergyType=interaction_energy`.
+    `returnEnergyType='interaction_energy'`.
 
     Attributes
     ----------
     name : str
         The name of the MACE model.
     modelPath : str
-        The path to the locally trained MACE model if `name` is `mace`.
+        The path to the locally trained MACE model if `name` is 'mace'.
     """
 
     def __init__(self, name: str, modelPath) -> None:
@@ -89,9 +89,9 @@ class MACEPotentialImpl(MLPotentialImpl):
         ----------
         name : str
             The name of the MACE model.
-            Options include `mace-off23-small`, `mace-off23-medium`, `mace-off23-large`, and `mace`.
+            Options include 'mace-off23-small', 'mace-off23-medium', 'mace-off23-large', and 'mace'.
         modelPath : str, optional
-            The path to the locally trained MACE model if `name` is `mace`.
+            The path to the locally trained MACE model if `name` is 'mace'.
         """
         self.name = name
         self.modelPath = modelPath
@@ -103,8 +103,7 @@ class MACEPotentialImpl(MLPotentialImpl):
         atoms: Optional[Iterable[int]],
         forceGroup: int,
         precision: Optional[str] = None,
-        returnEnergyType: str = "energy",
-        filename: str = "macemodel.pt",
+        returnEnergyType: str = "interaction_energy",
         **args,
     ) -> None:
         """
@@ -117,17 +116,15 @@ class MACEPotentialImpl(MLPotentialImpl):
         system : openmm.System
             The system to which the force will be added.
         atoms : iterable of int
-            The indices of the atoms to include in the model. If None, all atoms are included.
+            The indices of the atoms to include in the model. If `None`, all atoms are included.
         forceGroup : int
             The force group to which the force should be assigned.
         precision : str, optional
             The precision of the model. Supported options are 'single' and 'double'.
-            If None, the default precision of the model is used.
+            If `None`, the default precision of the model is used.
         returnEnergyType : str, optional
             Whether to return the interaction energy or the energy including the self-energy.
-            Default is `interaction_energy`. Supported options are `interaction_energy` and `energy`.
-        filename : str, optional
-            The filename to which the TorchForce will be saved. Default is 'macemodel.pt'.
+            Default is 'interaction_energy'. Supported options are 'interaction_energy' and 'energy'.
         """
         import torch
         import openmmtorch
@@ -137,44 +134,44 @@ class MACEPotentialImpl(MLPotentialImpl):
             from mace.calculators.foundations_models import mace_off
         except ImportError as e:
             raise ImportError(
-                f"Failed to import `mace` with error: {e}. Install `mace` with `pip install torch-mace`."
+                f"Failed to import mace with error: {e}. "
+                "Install mace with 'pip install mace-torch'."
             )
         try:
             from e3nn.util import jit
         except ImportError as e:
             raise ImportError(
-                f"Failed to import `e3nn` with error: {e}. Install `e3nn` with `pip install e3nn`."
+                f"Failed to import e3nn with error: {e}. "
+                "Install e3nn with 'pip install e3nn'."
             )
         try:
             from NNPOps.neighbors import getNeighborPairs
         except ImportError as e:
             raise ImportError(
-                f"Failed to import `NNPOps` with error: {e}."
-                "Install `nnpops` with `conda install -c conda-forge nnpops`."
+                f"Failed to import NNPOps with error: {e}. "
+                "Install NNPOps with 'conda install -c conda-forge nnpops'."
             )
 
-        assert (
-            returnEnergyType
-            in [
-                "interaction_energy",
-                "energy",
-            ]
-        ), "Supported options for `returnEnergyType` are `interaction_energy` and `energy`."
+        assert returnEnergyType in [
+            "interaction_energy",
+            "energy",
+        ], f"Unsupported returnEnergyType: '{returnEnergyType}'. Supported options are 'interaction_energy' or 'energy'."
 
         # Load the model and compile it to TorchScript.
         if self.name.startswith("mace-off23"):
             size = self.name.split("-")[-1]
             assert (
                 size in ["small", "medium", "large"]
-            ), "Available MACE-OFF23 models are: `mace-off23-small`, `mace-off23-medium`, `mace-off23-large`"
+            ), f"Unsupported MACE model: '{self.name}'. Available MACE-OFF23 models are 'mace-off23-small', 'mace-off23-medium', 'mace-off23-large'"
             model = mace_off(model=size, return_raw_model=True)
         elif self.name == "mace":
             if self.modelPath is not None:
                 model = torch.load(self.modelPath)
             else:
-                raise ValueError("No `modelPath` provided for local MACE model.")
+                raise ValueError("No modelPath provided for local MACE model.")
         else:
             raise ValueError(f"Unsupported MACE model: {self.name}")
+
         model = jit.compile(model)
 
         # Get the atomic numbers of the ML region.
@@ -193,8 +190,8 @@ class MACEPotentialImpl(MLPotentialImpl):
             dtype = torch.float64
         else:
             raise ValueError(
-                f"Unsupported precision `{precision}` for the model. "
-                "Supported values are `single` and `double`."
+                f"Unsupported precision {precision} for the model. "
+                "Supported values are 'single' and 'double'."
             )
         if dtype != modelDefaultDtype:
             print(
@@ -254,7 +251,7 @@ class MACEPotentialImpl(MLPotentialImpl):
                 nodeAttrs : torch.Tensor
                     The one-hot encoded atomic numbers.
                 atoms : iterable of int
-                    The indices of the atoms. If None, all atoms are included.
+                    The indices of the atoms. If `None`, all atoms are included.
                 periodic : bool
                     Whether the system is periodic.
                 dtype : torch.dtype
@@ -297,6 +294,8 @@ class MACEPotentialImpl(MLPotentialImpl):
                 """
                 Get the shifts and edge indices.
 
+                Notes
+                -----
                 This method calculates the shifts and edge indices by determining neighbor pairs (`neighbors`)
                 and respective wrapped distances (`wrappedDeltas`) using `NNPOps.neighbors.getNeighborPairs`.
                 After obtaining the `neighbors` and `wrappedDeltas`, the pairs with negative indices (r>cutoff)
@@ -316,7 +315,7 @@ class MACEPotentialImpl(MLPotentialImpl):
                 shifts : torch.Tensor
                     The shifts.
                 """
-                # Get the neighbor pairs, shifts and edge indeces.
+                # Get the neighbor pairs, shifts and edge indices.
                 neighbors, wrappedDeltas, _, _ = getNeighborPairs(
                     positions, self.model.r_max, -1, cell
                 )
@@ -396,12 +395,11 @@ class MACEPotentialImpl(MLPotentialImpl):
             returnEnergyType,
         )
 
-        # Convert it to TorchScript and save it.
+        # Convert it to TorchScript.
         module = torch.jit.script(maceForce)
-        module.save(filename)
 
         # Create the TorchForce and add it to the System.
-        force = openmmtorch.TorchForce(filename)
+        force = openmmtorch.TorchForce(module)
         force.setForceGroup(forceGroup)
         force.setUsesPeriodicBoundaryConditions(isPeriodic)
         system.addForce(force)
