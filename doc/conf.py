@@ -7,8 +7,7 @@ import pkg_resources
 import git
 
 
-sys.path.append(os.path.abspath('../'))
-
+sys.path.append(os.path.abspath("../"))
 
 
 # version specified in ../setup.py
@@ -21,20 +20,19 @@ short_sha = hash = repo.git.rev_parse(repo.head, short=True)
 tag = next((tag for tag in repo.tags if tag.commit == repo.head.commit), None)
 
 if tag is None:
-    release = version + 'dev_' + short_sha
-    version_match = 'dev'
+    release = version + "dev_" + short_sha
+    version_match = "dev"
     version = version_match
 else:
-    release = str(tag) + '_' + short_sha
+    release = str(tag) + "_" + short_sha
     version_match = str(tag)
     version = version_match
 
-print('version:', version)
-print('git tag:', tag)
-print('git sha:', short_sha)
-print('release:', release)
-print('version_match', version_match)
-
+print("version:", version)
+print("git tag:", tag)
+print("git sha:", short_sha)
+print("release:", release)
+print("version_match", version_match)
 
 
 extensions = [
@@ -43,7 +41,7 @@ extensions = [
     "sphinx.ext.autosummary",
     "sphinx.ext.autodoc",
     "sphinx.ext.napoleon",
-    'm2r2'
+    "m2r2",
 ]
 
 autosummary_generate = True
@@ -56,8 +54,8 @@ autodoc_default_options = {
 source_suffix = ".rst"
 master_doc = "index"
 
-project = u"OpenMM ML"
-copyright = u"2023, Stanford University and the Authors"
+project = "OpenMM ML"
+copyright = "2023, Stanford University and the Authors"
 
 
 exclude_patterns = ["_build", "_templates"]
@@ -74,27 +72,25 @@ html_theme_options = {
         "image_light": "_static/logo.png",
         "image_dark": "_static/logo.png",
     },
-
     "external_links": [
-      {"name": "OpenMM.org", "url": "https://openmm.org/"},
-      {"name": "OpenMM docs", "url": "https://openmm.org/documentation"},
-      {"name": "GitHub", "url": "https://github.com/openmm"}
+        {"name": "OpenMM.org", "url": "https://openmm.org/"},
+        {"name": "OpenMM docs", "url": "https://openmm.org/documentation"},
+        {"name": "GitHub", "url": "https://github.com/openmm"},
     ],
-
-    "github_url": "https://github.com/openmm/openmm-ml"
+    "github_url": "https://github.com/openmm/openmm-ml",
 }
 
 
 # settings for version switcher and warning
-html_theme_options["navbar_start"]=["navbar-logo", "version-switcher"]
-html_theme_options["switcher"]= {
-        "json_url": "https://sef43.github.io/openmm-ml/dev/_static/versions.json",
-        "version_match": version_match,
-    }
+html_theme_options["navbar_start"] = ["navbar-logo", "version-switcher"]
+html_theme_options["switcher"] = {
+    "json_url": "https://openmm.github.io/openmm-ml/dev/_static/versions.json",
+    "version_match": version_match,
+}
 
-#https://github.com/pydata/pydata-sphinx-theme/issues/1552
-html_theme_options["show_version_warning_banner"]=False
-html_theme_options["check_switcher"]=False
+# https://github.com/pydata/pydata-sphinx-theme/issues/1552
+html_theme_options["show_version_warning_banner"] = False
+html_theme_options["check_switcher"] = False
 
 # Napoleon settings
 napoleon_google_docstring = True
