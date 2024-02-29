@@ -58,7 +58,7 @@ class MACEPotentialImpl(MLPotentialImpl):
     >>> potential = MLPotential('mace', modelPath='MACE.model')
 
     During system creation, you can optionally specify the precision of the model using the
-    precision` keyword argument. Supported options are 'single' and 'double'. For example:
+    `precision` keyword argument. Supported options are 'single' and 'double'. For example:
     >>> system = potential.createSystem(topology, precision='single')
 
     By default, the implementation uses the precision of the loaded MACE model.
