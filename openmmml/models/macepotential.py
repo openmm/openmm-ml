@@ -157,22 +157,23 @@ class MACEPotentialImpl(MLPotentialImpl):
             "energy",
         ], f"Unsupported returnEnergyType: '{returnEnergyType}'. Supported options are 'interaction_energy' or 'energy'."
 
-        # Load the model and compile it to TorchScript.
+        # Load the model to the CPU (OpenMM-Torch takes care of loading to the right devices)
         if self.name.startswith("mace-off23"):
             size = self.name.split("-")[-1]
             assert (
                 size in ["small", "medium", "large"]
             ), f"Unsupported MACE model: '{self.name}'. Available MACE-OFF23 models are 'mace-off23-small', 'mace-off23-medium', 'mace-off23-large'"
-            model = mace_off(model=size, return_raw_model=True)
+            model = mace_off(model=size, device="cpu", return_raw_model=True)
         elif self.name == "mace":
             if self.modelPath is not None:
-                model = torch.load(self.modelPath)
+                model = torch.load(self.modelPath, map_location="cpu")
             else:
                 raise ValueError("No modelPath provided for local MACE model.")
         else:
             raise ValueError(f"Unsupported MACE model: {self.name}")
 
-        model = jit.compile(model)
+        # Compile the model.
+        model = jit.compile(model)  
 
         # Get the atomic numbers of the ML region.
         includedAtoms = list(topology.atoms())
@@ -271,22 +272,19 @@ class MACEPotentialImpl(MLPotentialImpl):
                     self.indices = None
                 else:
                     self.indices = torch.tensor(sorted(atoms), dtype=torch.int64)
-
+                
                 # Create the default input dict.
+                self.register_buffer("ptr", torch.tensor([0, nodeAttrs.shape[0]], dtype=torch.long, requires_grad=False))
+                self.register_buffer("node_attrs", nodeAttrs.to(self.dtype))
+                self.register_buffer("batch", torch.zeros(nodeAttrs.shape[0], dtype=torch.long, requires_grad=False))
+                self.register_buffer("pbc", torch.tensor([periodic, periodic, periodic], dtype=torch.bool, requires_grad=False))
+
                 self.inputDict = {
-                    "ptr": torch.tensor(
-                        [0, nodeAttrs.shape[0]], dtype=torch.long, requires_grad=False
-                    ),
-                    "node_attrs": nodeAttrs.to(self.dtype),
-                    "batch": torch.zeros(
-                        nodeAttrs.shape[0], dtype=torch.long, requires_grad=False
-                    ),
-                    "pbc": torch.tensor(
-                        [periodic, periodic, periodic],
-                        dtype=torch.bool,
-                        requires_grad=False,
-                    ),
-                }
+                    "ptr": self.ptr,
+                    "node_attrs": self.node_attrs,
+                    "batch": self.batch,
+                    "pbc": self.pbc,
+                }                    
 
             def _getNeighborPairs(
                 self, positions: torch.Tensor, cell: Optional[torch.Tensor]
@@ -330,7 +328,7 @@ class MACEPotentialImpl(MLPotentialImpl):
                     shiftsIdx = torch.mm(deltas - wrappedDeltas, torch.linalg.inv(cell))
                     shifts = torch.mm(shiftsIdx, cell)
                 else:
-                    shifts = torch.zeros((edgeIndex.shape[1], 3), dtype=self.dtype)
+                    shifts = torch.zeros((edgeIndex.shape[1], 3), dtype=self.dtype, device=positions.device)
 
                 return edgeIndex, shifts
 
