@@ -8,6 +8,8 @@ and [ANI-2x](https://pubs.acs.org/doi/full/10.1021/acs.jctc.0c00121), using the 
 suitable for small molecules involving a limited set of elements and no charges.  Future releases will add new potential
 functions that support a much wider range of molecules.
 
+**You can find the current documentation at https://openmm.github.io/openmm-ml**
+
 ### Installation
 
 OpenMM-ML can be installed with conda or mamba.
