@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>openmmml.mlpotential.MLPotentialImplFactory &#8212; OpenMM ML 1.1dev_4cc85f4 documentation</title>
+    <title>openmmml.models.macepotential.MACEPotentialImpl &#8212; OpenMM ML 1.1dev_4cc85f4 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
     <script src="../_static/documentation_options.js?v=1ad91e88"></script>
     <script src="../_static/doctools.js?v=888ff710"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'generated/openmmml.mlpotential.MLPotentialImplFactory';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'generated/openmmml.models.macepotential.MACEPotentialImpl';</script>
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.15.2';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://openmm.github.io/openmm-ml/dev/_static/versions.json';
@@ -47,8 +47,7 @@
         </script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="openmmml.mlpotential.MLPotentialImpl" href="openmmml.mlpotential.MLPotentialImpl.html" />
-    <link rel="prev" title="openmmml.MLPotential" href="openmmml.MLPotential.html" />
+    <link rel="prev" title="openmmml.models.anipotential.ANIPotentialImpl" href="openmmml.models.anipotential.ANIPotentialImpl.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -382,13 +381,13 @@ document.write(`
   <div class="bd-toc-item navbar-nav"><ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="openmmml.MLPotential.html">openmmml.MLPotential</a></li>
 </ul>
-<ul class="current nav bd-sidenav">
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">openmmml.mlpotential.MLPotentialImplFactory</a></li>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="openmmml.mlpotential.MLPotentialImplFactory.html">openmmml.mlpotential.MLPotentialImplFactory</a></li>
 <li class="toctree-l1"><a class="reference internal" href="openmmml.mlpotential.MLPotentialImpl.html">openmmml.mlpotential.MLPotentialImpl</a></li>
 </ul>
-<ul class="nav bd-sidenav">
+<ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="openmmml.models.anipotential.ANIPotentialImpl.html">openmmml.models.anipotential.ANIPotentialImpl</a></li>
-<li class="toctree-l1"><a class="reference internal" href="openmmml.models.macepotential.MACEPotentialImpl.html">openmmml.models.macepotential.MACEPotentialImpl</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">openmmml.models.macepotential.MACEPotentialImpl</a></li>
 </ul>
 </div>
 </nav></div>
@@ -429,7 +428,7 @@ document.write(`
     
     <li class="breadcrumb-item"><a href="../api.html" class="nav-link">API</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page">openmmml.mlp...</li>
+    <li class="breadcrumb-item active" aria-current="page">openmmml.mod...</li>
   </ul>
 </nav>
 </div>
@@ -446,49 +445,96 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="openmmml-mlpotential-mlpotentialimplfactory">
-<h1>openmmml.mlpotential.MLPotentialImplFactory<a class="headerlink" href="#openmmml-mlpotential-mlpotentialimplfactory" title="Link to this heading">#</a></h1>
+  <section id="openmmml-models-macepotential-macepotentialimpl">
+<h1>openmmml.models.macepotential.MACEPotentialImpl<a class="headerlink" href="#openmmml-models-macepotential-macepotentialimpl" title="Link to this heading">#</a></h1>
 <dl class="py class">
-<dt class="sig sig-object py" id="openmmml.mlpotential.MLPotentialImplFactory">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">openmmml.mlpotential.</span></span><span class="sig-name descname"><span class="pre">MLPotentialImplFactory</span></span><a class="headerlink" href="#openmmml.mlpotential.MLPotentialImplFactory" title="Link to this definition">#</a></dt>
-<dd><p>Abstract interface for classes that create MLPotentialImpl objects.</p>
-<p>If you are defining a new potential function, you need to create subclasses
-of MLPotentialImpl and MLPotentialImplFactory, and register an instance of
-the factory by calling MLPotential.registerImplFactory().</p>
+<dt class="sig sig-object py" id="openmmml.models.macepotential.MACEPotentialImpl">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">openmmml.models.macepotential.</span></span><span class="sig-name descname"><span class="pre">MACEPotentialImpl</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modelPath</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#openmmml.models.macepotential.MACEPotentialImpl" title="Link to this definition">#</a></dt>
+<dd><p>This is the MLPotentialImpl implementing the MACE potential.</p>
+<p>The MACE potential is constructed using MACE to build a PyTorch model,
+and then integrated into the OpenMM System using a TorchForce.
+This implementation supports both MACE-OFF23 and locally trained MACE models.</p>
+<p>To use one of the pre-trained MACE-OFF23 models, specify the model name. For example:
+&gt;&gt;&gt; potential = MLPotential(‘mace-off23-small’)</p>
+<p>Other available MACE-OFF23 models include ‘mace-off23-medium’ and ‘mace-off23-large’.</p>
+<p>To use a locally trained MACE model, provide the path to the model file. For example:
+&gt;&gt;&gt; potential = MLPotential(‘mace’, modelPath=’MACE.model’)</p>
+<p>During system creation, you can optionally specify the precision of the model using the
+<cite>precision</cite> keyword argument. Supported options are ‘single’ and ‘double’. For example:
+&gt;&gt;&gt; system = potential.createSystem(topology, precision=’single’)</p>
+<p>By default, the implementation uses the precision of the loaded MACE model.
+According to the MACE documentation, ‘single’ precision is recommended for MD (faster but
+less accurate), while ‘double’ precision is recommended for geometry optimization.</p>
+<p>Additionally, you can request computation of the full atomic energy, including the atom
+self-energy, instead of the default interaction energy, by setting <cite>returnEnergyType</cite> to
+‘energy’. For example:
+&gt;&gt;&gt; system = potential.createSystem(topology, returnEnergyType=’energy’)</p>
+<p>The default is to compute the interaction energy, which can be made explicit by setting
+<cite>returnEnergyType=’interaction_energy’</cite>.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="openmmml.models.macepotential.MACEPotentialImpl.name">
+<span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#openmmml.models.macepotential.MACEPotentialImpl.name" title="Link to this definition">#</a></dt>
+<dd><p>The name of the MACE model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="openmmml.models.macepotential.MACEPotentialImpl.modelPath">
+<span class="sig-name descname"><span class="pre">modelPath</span></span><a class="headerlink" href="#openmmml.models.macepotential.MACEPotentialImpl.modelPath" title="Link to this definition">#</a></dt>
+<dd><p>The path to the locally trained MACE model if <cite>name</cite> is ‘mace’.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py method">
-<dt class="sig sig-object py" id="openmmml.mlpotential.MLPotentialImplFactory.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#openmmml.mlpotential.MLPotentialImplFactory.__init__" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dt class="sig sig-object py" id="openmmml.models.macepotential.MACEPotentialImpl.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modelPath</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#openmmml.models.macepotential.MACEPotentialImpl.__init__" title="Link to this definition">#</a></dt>
+<dd><p>Initialize the MACEPotentialImpl.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<em>str</em>) – The name of the MACE model.
+Options include ‘mace-off23-small’, ‘mace-off23-medium’, ‘mace-off23-large’, and ‘mace’.</p></li>
+<li><p><strong>modelPath</strong> (<em>str</em><em>, </em><em>optional</em>) – The path to the locally trained MACE model if <cite>name</cite> is ‘mace’.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 <p class="rubric">Methods</p>
 <table class="autosummary longtable table autosummary">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#openmmml.mlpotential.MLPotentialImplFactory.__init__" title="openmmml.mlpotential.MLPotentialImplFactory.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>()</p></td>
-<td><p></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#openmmml.models.macepotential.MACEPotentialImpl.__init__" title="openmmml.models.macepotential.MACEPotentialImpl.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(name, modelPath)</p></td>
+<td><p>Initialize the MACEPotentialImpl.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#openmmml.mlpotential.MLPotentialImplFactory.createImpl" title="openmmml.mlpotential.MLPotentialImplFactory.createImpl"><code class="xref py py-obj docutils literal notranslate"><span class="pre">createImpl</span></code></a>(name, **args)</p></td>
-<td><p>Create a MLPotentialImpl that will be used to implement a MLPotential.</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#openmmml.models.macepotential.MACEPotentialImpl.addForces" title="openmmml.models.macepotential.MACEPotentialImpl.addForces"><code class="xref py py-obj docutils literal notranslate"><span class="pre">addForces</span></code></a>(topology, system, atoms, forceGroup)</p></td>
+<td><p>Add the MACEForce to the OpenMM System.</p></td>
 </tr>
 </tbody>
 </table>
 <dl class="py method">
-<dt class="sig sig-object py" id="openmmml.mlpotential.MLPotentialImplFactory.createImpl">
-<span class="sig-name descname"><span class="pre">createImpl</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="openmmml.mlpotential.MLPotentialImpl.html#openmmml.mlpotential.MLPotentialImpl" title="openmmml.mlpotential.MLPotentialImpl"><span class="pre">MLPotentialImpl</span></a></span></span><a class="headerlink" href="#openmmml.mlpotential.MLPotentialImplFactory.createImpl" title="Link to this definition">#</a></dt>
-<dd><p>Create a MLPotentialImpl that will be used to implement a MLPotential.</p>
-<p>When a MLPotential is created, it invokes this method to create an object
-implementing the requested potential.  Subclasses must implement this method
-to return an instance of the correct MLPotentialImpl subclass.</p>
+<dt class="sig sig-object py" id="openmmml.models.macepotential.MACEPotentialImpl.addForces">
+<span class="sig-name descname"><span class="pre">addForces</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">topology</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Topology</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">system</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">System</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atoms</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">forceGroup</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">precision</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">returnEnergyType</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'interaction_energy'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#openmmml.models.macepotential.MACEPotentialImpl.addForces" title="Link to this definition">#</a></dt>
+<dd><p>Add the MACEForce to the OpenMM System.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>name</strong> (<em>str</em>) – the name of the potential that was specified to the MLPotential constructor</p></li>
-<li><p><strong>args</strong> – any additional keyword arguments that were provided to the MLPotential
-constructor are passed to this method.  This allows subclasses to customize
-their behavior based on extra arguments.</p></li>
+<li><p><strong>topology</strong> (<em>openmm.app.Topology</em>) – The topology of the system.</p></li>
+<li><p><strong>system</strong> (<em>openmm.System</em>) – The system to which the force will be added.</p></li>
+<li><p><strong>atoms</strong> (<em>iterable</em><em> of </em><em>int</em>) – The indices of the atoms to include in the model. If <cite>None</cite>, all atoms are included.</p></li>
+<li><p><strong>forceGroup</strong> (<em>int</em>) – The force group to which the force should be assigned.</p></li>
+<li><p><strong>precision</strong> (<em>str</em><em>, </em><em>optional</em>) – The precision of the model. Supported options are ‘single’ and ‘double’.
+If <cite>None</cite>, the default precision of the model is used.</p></li>
+<li><p><strong>returnEnergyType</strong> (<em>str</em><em>, </em><em>optional</em>) – Whether to return the interaction energy or the energy including the self-energy.
+Default is ‘interaction_energy’. Supported options are ‘interaction_energy’ and ‘energy’.</p></li>
 </ul>
-</dd>
-<dt class="field-even">Return type<span class="colon">:</span></dt>
-<dd class="field-even"><p>a MLPotentialImpl that implements the potential</p>
 </dd>
 </dl>
 </dd></dl>
@@ -508,22 +554,13 @@ their behavior based on extra arguments.</p></li>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="openmmml.MLPotential.html"
+       href="openmmml.models.anipotential.ANIPotentialImpl.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">openmmml.MLPotential</p>
+        <p class="prev-next-title">openmmml.models.anipotential.ANIPotentialImpl</p>
       </div>
-    </a>
-    <a class="right-next"
-       href="openmmml.mlpotential.MLPotentialImpl.html"
-       title="next page">
-      <div class="prev-next-info">
-        <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">openmmml.mlpotential.MLPotentialImpl</p>
-      </div>
-      <i class="fa-solid fa-angle-right"></i>
     </a>
 </div>
                 </footer>
@@ -543,9 +580,11 @@ their behavior based on extra arguments.</p></li>
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#openmmml.mlpotential.MLPotentialImplFactory"><code class="docutils literal notranslate"><span class="pre">MLPotentialImplFactory</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#openmmml.mlpotential.MLPotentialImplFactory.__init__"><code class="docutils literal notranslate"><span class="pre">MLPotentialImplFactory.__init__()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#openmmml.mlpotential.MLPotentialImplFactory.createImpl"><code class="docutils literal notranslate"><span class="pre">MLPotentialImplFactory.createImpl()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#openmmml.models.macepotential.MACEPotentialImpl"><code class="docutils literal notranslate"><span class="pre">MACEPotentialImpl</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#openmmml.models.macepotential.MACEPotentialImpl.name"><code class="docutils literal notranslate"><span class="pre">MACEPotentialImpl.name</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#openmmml.models.macepotential.MACEPotentialImpl.modelPath"><code class="docutils literal notranslate"><span class="pre">MACEPotentialImpl.modelPath</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#openmmml.models.macepotential.MACEPotentialImpl.__init__"><code class="docutils literal notranslate"><span class="pre">MACEPotentialImpl.__init__()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#openmmml.models.macepotential.MACEPotentialImpl.addForces"><code class="docutils literal notranslate"><span class="pre">MACEPotentialImpl.addForces()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -554,7 +593,7 @@ their behavior based on extra arguments.</p></li>
   <div class="sidebar-secondary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../_sources/generated/openmmml.mlpotential.MLPotentialImplFactory.rst.txt">
+    <a href="../_sources/generated/openmmml.models.macepotential.MACEPotentialImpl.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>

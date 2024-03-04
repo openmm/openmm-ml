@@ -27,3 +27,5 @@ Models
     
       openmmml.models.anipotential.ANIPotentialImpl
     
+      openmmml.models.macepotential.MACEPotentialImpl
+    
