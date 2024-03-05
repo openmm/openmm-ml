@@ -50,15 +50,18 @@ class MACEPotentialImpl(MLPotentialImpl):
     This implementation supports both MACE-OFF23 and locally trained MACE models.
 
     To use one of the pre-trained MACE-OFF23 models, specify the model name. For example:
+
     >>> potential = MLPotential('mace-off23-small')
 
     Other available MACE-OFF23 models include 'mace-off23-medium' and 'mace-off23-large'.
 
     To use a locally trained MACE model, provide the path to the model file. For example:
+
     >>> potential = MLPotential('mace', modelPath='MACE.model')
 
     During system creation, you can optionally specify the precision of the model using the
-    `precision` keyword argument. Supported options are 'single' and 'double'. For example:
+    ``precision`` keyword argument. Supported options are 'single' and 'double'. For example:
+
     >>> system = potential.createSystem(topology, precision='single')
 
     By default, the implementation uses the precision of the loaded MACE model.
@@ -66,19 +69,20 @@ class MACEPotentialImpl(MLPotentialImpl):
     less accurate), while 'double' precision is recommended for geometry optimization.
 
     Additionally, you can request computation of the full atomic energy, including the atom
-    self-energy, instead of the default interaction energy, by setting `returnEnergyType` to
+    self-energy, instead of the default interaction energy, by setting ``returnEnergyType`` to
     'energy'. For example:
+    
     >>> system = potential.createSystem(topology, returnEnergyType='energy')
 
     The default is to compute the interaction energy, which can be made explicit by setting
-    `returnEnergyType='interaction_energy'`.
+    ``returnEnergyType='interaction_energy'``.
 
     Attributes
     ----------
     name : str
         The name of the MACE model.
     modelPath : str
-        The path to the locally trained MACE model if `name` is 'mace'.
+        The path to the locally trained MACE model if ``name`` is 'mace'.
     """
 
     def __init__(self, name: str, modelPath) -> None:
@@ -91,7 +95,7 @@ class MACEPotentialImpl(MLPotentialImpl):
             The name of the MACE model.
             Options include 'mace-off23-small', 'mace-off23-medium', 'mace-off23-large', and 'mace'.
         modelPath : str, optional
-            The path to the locally trained MACE model if `name` is 'mace'.
+            The path to the locally trained MACE model if ``name`` is 'mace'.
         """
         self.name = name
         self.modelPath = modelPath
@@ -116,12 +120,12 @@ class MACEPotentialImpl(MLPotentialImpl):
         system : openmm.System
             The system to which the force will be added.
         atoms : iterable of int
-            The indices of the atoms to include in the model. If `None`, all atoms are included.
+            The indices of the atoms to include in the model. If ``None``, all atoms are included.
         forceGroup : int
             The force group to which the force should be assigned.
         precision : str, optional
             The precision of the model. Supported options are 'single' and 'double'.
-            If `None`, the default precision of the model is used.
+            If ``None``, the default precision of the model is used.
         returnEnergyType : str, optional
             Whether to return the interaction energy or the energy including the self-energy.
             Default is 'interaction_energy'. Supported options are 'interaction_energy' and 'energy'.
@@ -252,7 +256,7 @@ class MACEPotentialImpl(MLPotentialImpl):
                 nodeAttrs : torch.Tensor
                     The one-hot encoded atomic numbers.
                 atoms : iterable of int
-                    The indices of the atoms. If `None`, all atoms are included.
+                    The indices of the atoms. If ``None``, all atoms are included.
                 periodic : bool
                     Whether the system is periodic.
                 dtype : torch.dtype
@@ -294,9 +298,9 @@ class MACEPotentialImpl(MLPotentialImpl):
 
                 Notes
                 -----
-                This method calculates the shifts and edge indices by determining neighbor pairs (`neighbors`)
-                and respective wrapped distances (`wrappedDeltas`) using `NNPOps.neighbors.getNeighborPairs`.
-                After obtaining the `neighbors` and `wrappedDeltas`, the pairs with negative indices (r>cutoff)
+                This method calculates the shifts and edge indices by determining neighbor pairs (``neighbors``)
+                and respective wrapped distances (``wrappedDeltas``) using ``NNPOps.neighbors.getNeighborPairs``.
+                After obtaining the ``neighbors`` and ``wrappedDeltas``, the pairs with negative indices (r>cutoff)
                 are filtered out, and the edge indices and shifts are finally calculated.
 
                 Parameters
