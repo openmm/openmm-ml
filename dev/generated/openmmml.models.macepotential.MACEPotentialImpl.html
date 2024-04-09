@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>openmmml.models.macepotential.MACEPotentialImpl &#8212; OpenMM ML 1.1dev_4cc85f4 documentation</title>
+    <title>openmmml.models.macepotential.MACEPotentialImpl &#8212; OpenMM ML 1.1dev_df00239 documentation</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
   <script src="../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script src="../_static/documentation_options.js?v=1ad91e88"></script>
+    <script src="../_static/documentation_options.js?v=88a1a5b3"></script>
     <script src="../_static/doctools.js?v=888ff710"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'generated/openmmml.models.macepotential.MACEPotentialImpl';</script>
@@ -454,23 +454,31 @@ document.write(`
 <p>The MACE potential is constructed using MACE to build a PyTorch model,
 and then integrated into the OpenMM System using a TorchForce.
 This implementation supports both MACE-OFF23 and locally trained MACE models.</p>
-<p>To use one of the pre-trained MACE-OFF23 models, specify the model name. For example:
-&gt;&gt;&gt; potential = MLPotential(‘mace-off23-small’)</p>
+<p>To use one of the pre-trained MACE-OFF23 models, specify the model name. For example:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">potential</span> <span class="o">=</span> <span class="n">MLPotential</span><span class="p">(</span><span class="s1">&#39;mace-off23-small&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
 <p>Other available MACE-OFF23 models include ‘mace-off23-medium’ and ‘mace-off23-large’.</p>
-<p>To use a locally trained MACE model, provide the path to the model file. For example:
-&gt;&gt;&gt; potential = MLPotential(‘mace’, modelPath=’MACE.model’)</p>
+<p>To use a locally trained MACE model, provide the path to the model file. For example:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">potential</span> <span class="o">=</span> <span class="n">MLPotential</span><span class="p">(</span><span class="s1">&#39;mace&#39;</span><span class="p">,</span> <span class="n">modelPath</span><span class="o">=</span><span class="s1">&#39;MACE.model&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
 <p>During system creation, you can optionally specify the precision of the model using the
-<cite>precision</cite> keyword argument. Supported options are ‘single’ and ‘double’. For example:
-&gt;&gt;&gt; system = potential.createSystem(topology, precision=’single’)</p>
+<code class="docutils literal notranslate"><span class="pre">precision</span></code> keyword argument. Supported options are ‘single’ and ‘double’. For example:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">system</span> <span class="o">=</span> <span class="n">potential</span><span class="o">.</span><span class="n">createSystem</span><span class="p">(</span><span class="n">topology</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="s1">&#39;single&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
 <p>By default, the implementation uses the precision of the loaded MACE model.
 According to the MACE documentation, ‘single’ precision is recommended for MD (faster but
 less accurate), while ‘double’ precision is recommended for geometry optimization.</p>
 <p>Additionally, you can request computation of the full atomic energy, including the atom
-self-energy, instead of the default interaction energy, by setting <cite>returnEnergyType</cite> to
-‘energy’. For example:
-&gt;&gt;&gt; system = potential.createSystem(topology, returnEnergyType=’energy’)</p>
+self-energy, instead of the default interaction energy, by setting <code class="docutils literal notranslate"><span class="pre">returnEnergyType</span></code> to
+‘energy’. For example:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">system</span> <span class="o">=</span> <span class="n">potential</span><span class="o">.</span><span class="n">createSystem</span><span class="p">(</span><span class="n">topology</span><span class="p">,</span> <span class="n">returnEnergyType</span><span class="o">=</span><span class="s1">&#39;energy&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
 <p>The default is to compute the interaction energy, which can be made explicit by setting
-<cite>returnEnergyType=’interaction_energy’</cite>.</p>
+<code class="docutils literal notranslate"><span class="pre">returnEnergyType='interaction_energy'</span></code>.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="openmmml.models.macepotential.MACEPotentialImpl.name">
 <span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#openmmml.models.macepotential.MACEPotentialImpl.name" title="Link to this definition">#</a></dt>
@@ -485,7 +493,7 @@ self-energy, instead of the default interaction energy, by setting <cite>returnE
 <dl class="py attribute">
 <dt class="sig sig-object py" id="openmmml.models.macepotential.MACEPotentialImpl.modelPath">
 <span class="sig-name descname"><span class="pre">modelPath</span></span><a class="headerlink" href="#openmmml.models.macepotential.MACEPotentialImpl.modelPath" title="Link to this definition">#</a></dt>
-<dd><p>The path to the locally trained MACE model if <cite>name</cite> is ‘mace’.</p>
+<dd><p>The path to the locally trained MACE model if <code class="docutils literal notranslate"><span class="pre">name</span></code> is ‘mace’.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>str</p>
@@ -502,7 +510,7 @@ self-energy, instead of the default interaction energy, by setting <cite>returnE
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>name</strong> (<em>str</em>) – The name of the MACE model.
 Options include ‘mace-off23-small’, ‘mace-off23-medium’, ‘mace-off23-large’, and ‘mace’.</p></li>
-<li><p><strong>modelPath</strong> (<em>str</em><em>, </em><em>optional</em>) – The path to the locally trained MACE model if <cite>name</cite> is ‘mace’.</p></li>
+<li><p><strong>modelPath</strong> (<em>str</em><em>, </em><em>optional</em>) – The path to the locally trained MACE model if <code class="docutils literal notranslate"><span class="pre">name</span></code> is ‘mace’.</p></li>
 </ul>
 </dd>
 </dl>
@@ -528,10 +536,10 @@ Options include ‘mace-off23-small’, ‘mace-off23-medium’, ‘mace-off23-l
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>topology</strong> (<em>openmm.app.Topology</em>) – The topology of the system.</p></li>
 <li><p><strong>system</strong> (<em>openmm.System</em>) – The system to which the force will be added.</p></li>
-<li><p><strong>atoms</strong> (<em>iterable</em><em> of </em><em>int</em>) – The indices of the atoms to include in the model. If <cite>None</cite>, all atoms are included.</p></li>
+<li><p><strong>atoms</strong> (<em>iterable</em><em> of </em><em>int</em>) – The indices of the atoms to include in the model. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, all atoms are included.</p></li>
 <li><p><strong>forceGroup</strong> (<em>int</em>) – The force group to which the force should be assigned.</p></li>
 <li><p><strong>precision</strong> (<em>str</em><em>, </em><em>optional</em>) – The precision of the model. Supported options are ‘single’ and ‘double’.
-If <cite>None</cite>, the default precision of the model is used.</p></li>
+If <code class="docutils literal notranslate"><span class="pre">None</span></code>, the default precision of the model is used.</p></li>
 <li><p><strong>returnEnergyType</strong> (<em>str</em><em>, </em><em>optional</em>) – Whether to return the interaction energy or the energy including the self-energy.
 Default is ‘interaction_energy’. Supported options are ‘interaction_energy’ and ‘energy’.</p></li>
 </ul>
