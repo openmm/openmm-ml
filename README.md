@@ -4,7 +4,7 @@ This is a high level API for using machine learning models in OpenMM simulations
 can set up a simulation that uses a standard, pretrained model to represent some or all of the interactions in a system.
 
 In the current release, the supported potential functions are [ANI-1ccx](https://www.nature.com/articles/s41467-019-10827-4)
-and [ANI-2x](https://pubs.acs.org/doi/full/10.1021/acs.jctc.0c00121), using the implementations in [TorchANI](https://github.com/aiqm/torchani), as well as [MACE](https://arxiv.org/abs/2206.07697) models, including the pre-trained [MACE-OFF23 models](https://arxiv.org/abs/2312.15211), utilizing the [MACE](https://github.com/ACEsuit/mace) implementation.  They are
+and [ANI-2x](https://pubs.acs.org/doi/full/10.1021/acs.jctc.0c00121), using the implementations in [TorchANI](https://github.com/aiqm/torchani), as well as [MACE](https://arxiv.org/abs/2206.07697) models, including the pre-trained [MACE-OFF23 models](https://arxiv.org/abs/2312.15211), utilizing the [MACE implementation](https://github.com/ACEsuit/mace).  They are
 suitable for small molecules involving a limited set of elements and no charges.  Future releases will add new potential
 functions that support a much wider range of molecules.
 
