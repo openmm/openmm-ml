@@ -405,9 +405,3 @@ class MACEPotentialImpl(MLPotentialImpl):
         force.setForceGroup(forceGroup)
         force.setUsesPeriodicBoundaryConditions(isPeriodic)
         system.addForce(force)
-
-
-MLPotential.registerImplFactory("mace", MACEPotentialImplFactory())
-MLPotential.registerImplFactory("mace-off23-small", MACEPotentialImplFactory())
-MLPotential.registerImplFactory("mace-off23-medium", MACEPotentialImplFactory())
-MLPotential.registerImplFactory("mace-off23-large", MACEPotentialImplFactory())
