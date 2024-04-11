@@ -142,6 +142,3 @@ class ANIPotentialImpl(MLPotentialImpl):
         force.setForceGroup(forceGroup)
         force.setUsesPeriodicBoundaryConditions(is_periodic)
         system.addForce(force)
-
-MLPotential.registerImplFactory('ani1ccx', ANIPotentialImplFactory())
-MLPotential.registerImplFactory('ani2x', ANIPotentialImplFactory())
