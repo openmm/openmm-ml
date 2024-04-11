@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>openmmml.mlpotential.MLPotentialImplFactory &#8212; OpenMM ML 1.1dev_df00239 documentation</title>
+    <title>openmmml.mlpotential.MLPotentialImplFactory &#8212; OpenMM ML 1.1dev_688b1fc documentation</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8d27b9dea8ad943066ae" />
   <script src="../_static/vendor/fontawesome/6.5.1/js/all.min.js?digest=8d27b9dea8ad943066ae"></script>
 
-    <script src="../_static/documentation_options.js?v=88a1a5b3"></script>
+    <script src="../_static/documentation_options.js?v=ec64e88c"></script>
     <script src="../_static/doctools.js?v=888ff710"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'generated/openmmml.mlpotential.MLPotentialImplFactory';</script>
@@ -454,7 +454,11 @@ document.write(`
 <dd><p>Abstract interface for classes that create MLPotentialImpl objects.</p>
 <p>If you are defining a new potential function, you need to create subclasses
 of MLPotentialImpl and MLPotentialImplFactory, and register an instance of
-the factory by calling MLPotential.registerImplFactory().</p>
+the factory by calling MLPotential.registerImplFactory().  Alternatively,
+if a Python package creates an entry point in the group “openmmml.potentials”,
+the potential will be registered automatically.  The entry point name is the
+name of the potential function, and the value should be the name of the
+MLPotentialImplFactory subclass.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="openmmml.mlpotential.MLPotentialImplFactory.__init__">
 <span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#openmmml.mlpotential.MLPotentialImplFactory.__init__" title="Link to this definition">#</a></dt>
