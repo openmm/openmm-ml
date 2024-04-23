@@ -288,14 +288,14 @@ class NequIPPotentialImpl(MLPotentialImpl):
                 self, positions: torch.Tensor, cell: Optional[torch.Tensor]
             ) -> Tuple[torch.Tensor, torch.Tensor]:
                 """
-                Get the shifts and edge indices.
+                Get the shift and edge indices.
 
                 Notes
                 -----
                 This method calculates the shifts and edge indices by determining neighbor pairs (``neighbors``)
                 and respective wrapped distances (``wrappedDeltas``) using ``NNPOps.neighbors.getNeighborPairs``.
                 After obtaining the ``neighbors`` and ``wrappedDeltas``, the pairs with negative indices (r>cutoff)
-                are filtered out, and the edge indices and shifts are finally calculated.
+                are filtered out, and the edge indices and shift indices are finally calculated.
 
                 Parameters
                 ----------
@@ -306,10 +306,10 @@ class NequIPPotentialImpl(MLPotentialImpl):
 
                 Returns
                 -------
-                edgeIndex : torch.Tensor
-                    The edge indices.
-                shifts : torch.Tensor
-                    The shifts.
+                edgeIdx : torch.Tensor
+                    The edge indices tensor giving center -> neighbor relations.
+                shiftIdx : torch.Tensor
+                    The shift indices tensor indicating how many periodic cells each edge crosses in each cell vector. 
                 """
                 # Get the neighbor pairs, shifts and edge indices.
                 neighbors, wrappedDeltas, _, _ = getNeighborPairs(
@@ -319,20 +319,19 @@ class NequIPPotentialImpl(MLPotentialImpl):
                 neighbors = neighbors[mask].view(2, -1)
                 wrappedDeltas = wrappedDeltas[mask[0], :]
 
-                edgeIndex = torch.hstack((neighbors, neighbors.flip(0))).to(torch.int64)
+                edgeIdx = torch.hstack((neighbors, neighbors.flip(0))).to(torch.int64)
                 if cell is not None:
-                    deltas = positions[edgeIndex[0]] - positions[edgeIndex[1]]
+                    deltas = positions[edgeIdx[0]] - positions[edgeIdx[1]]
                     wrappedDeltas = torch.vstack((wrappedDeltas, -wrappedDeltas))
-                    shiftsIdx = torch.mm(deltas - wrappedDeltas, torch.linalg.inv(cell))
-                    shifts = torch.mm(shiftsIdx, cell)
+                    shiftIdx = torch.mm(deltas - wrappedDeltas, torch.linalg.inv(cell))
                 else:
-                    shifts = torch.zeros(
-                        (edgeIndex.shape[1], 3),
+                    shiftIdx = torch.zeros(
+                        (edgeIdx.shape[1], 3),
                         dtype=self.dtype,
                         device=positions.device,
                     )
 
-                return edgeIndex, shifts
+                return edgeIdx, shiftIdx
 
             def forward(
                 self, positions: torch.Tensor, boxvectors: Optional[torch.Tensor] = None
@@ -360,18 +359,18 @@ class NequIPPotentialImpl(MLPotentialImpl):
 
                 if boxvectors is not None:
                     cell = boxvectors.to(self.dtype) / self.lengthScale
-                    # self.inputDict["cell"] = cell
+                    self.inputDict["cell"] = cell
                 else:
                     cell = None
-                    # self.inputDict["cell"] = torch.eye(3, device=positions.device, dtype=self.dtype)
+                    self.inputDict["cell"] = torch.eye(3, device=positions.device, dtype=self.dtype)
 
                 # Get the shifts and edge indices.
-                edgeIndex, shifts = self._getNeighborPairs(positions, cell)
+                edgeIdx, shiftIdx = self._getNeighborPairs(positions, cell)
 
                 # Update the input dictionary.
                 self.inputDict["pos"] = positions
-                self.inputDict["edge_index"] = edgeIndex
-                self.inputDict["edge_cell_shift"] = shifts
+                self.inputDict["edge_index"] = edgeIdx
+                self.inputDict["edge_cell_shift"] = shiftIdx
 
                 # Predict the energy and forces.
                 out = self.model(self.inputDict)
