@@ -76,6 +76,14 @@ class NequIPPotentialImpl(MLPotentialImpl):
     the atom type of each particle in the system. Note that by default the model
     uses the atomic number to map the atom type. This will work if you trained
     your model using the standard ``chemical_symbols`` option.
+    
+    During system creation, you can optionally specify the precision of the model 
+    using the ``precision`` keyword argument. Supported options are 'single' and 
+    'double'. For example:
+
+    >>> system = potential.createSystem(topology, precision='single')
+
+    By default, the implementation uses the precision of the loaded model.
     """
     def __init__(
         self,
