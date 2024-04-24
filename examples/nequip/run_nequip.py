@@ -25,7 +25,7 @@ kcal_to_kJ_per_mol = 4.184
 
 potential = MLPotential(
     "nequip",
-    modelPath="example_model_deployed.pth",
+    modelPath="toluene-deployed.pth",
     lengthScale=A_to_nm,
     energyScale=kcal_to_kJ_per_mol,
 )

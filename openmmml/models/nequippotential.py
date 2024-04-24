@@ -157,7 +157,7 @@ class NequIPPotentialImpl(MLPotentialImpl):
             )
 
         try:
-            from nequip.scripts.deploy import load_deployed_model
+            import nequip.scripts.deploy
         except ImportError as e:
             raise ImportError(
                 f"Failed to import NequIP with error: {e}. "
@@ -165,7 +165,7 @@ class NequIPPotentialImpl(MLPotentialImpl):
             )
         
         # Load the model to the CPU.
-        self.model, metadata = load_deployed_model(
+        self.model, metadata = nequip.scripts.deploy.load_deployed_model(
             self.modelPath, device="cpu", freeze=False
         )
 
@@ -201,7 +201,7 @@ class NequIPPotentialImpl(MLPotentialImpl):
 
         # Get the atom types
         if self.atomTypes is None:
-            typeNames = str(metadata["type_names"]).split(" ")
+            typeNames = metadata[nequip.scripts.deploy.TYPE_NAMES_KEY].split(" ")
             typeNameToTypeIndex = {
                 typeNames: i for i, typeNames in enumerate(typeNames)
             }
@@ -210,7 +210,7 @@ class NequIPPotentialImpl(MLPotentialImpl):
             ]
 
         # Get the r_max from the metadata.
-        r_max = float(metadata["r_max"])
+        r_max = float(metadata[nequip.scripts.deploy.R_MAX_KEY])
 
         class NequIPForce(torch.nn.Module):
             """
@@ -279,13 +279,11 @@ class NequIPPotentialImpl(MLPotentialImpl):
                     self.indices = torch.tensor(sorted(atoms), dtype=torch.int64)
 
                 # Create the default input dict
-                self.register_buffer("atomic_numbers", torch.tensor([atom.element.atomic_number for atom in includedAtoms], dtype=torch.long, requires_grad=False))
                 self.register_buffer("atom_types", torch.tensor(atomTypes, dtype=torch.long, requires_grad=False))
                 self.register_buffer("pbc", torch.tensor([periodic, periodic, periodic], dtype=torch.bool, requires_grad=False))
 
                 self.inputDict = {
                     "pbc": self.pbc,
-                    "atomic_numbers": self.atomic_numbers,
                     "atom_types": self.atom_types,
                 }
 
@@ -367,7 +365,7 @@ class NequIPPotentialImpl(MLPotentialImpl):
                     self.inputDict["cell"] = cell
                 else:
                     cell = None
-                    self.inputDict["cell"] = torch.eye(3, device=positions.device, dtype=self.dtype)
+                    self.inputDict["cell"] = torch.zeros(3, 3, device=positions.device, dtype=self.dtype)
 
                 # Get the shifts and edge indices.
                 edgeIdx, shiftIdx = self._getNeighborPairs(positions, cell)
