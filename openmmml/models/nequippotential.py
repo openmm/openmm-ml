@@ -76,6 +76,14 @@ class NequIPPotentialImpl(MLPotentialImpl):
     the atom type of each particle in the system. Note that by default the model
     uses the atomic number to map the atom type. This will work if you trained
     your model using the standard ``chemical_symbols`` option.
+    
+    During system creation, you can optionally specify the precision of the model 
+    using the ``precision`` keyword argument. Supported options are 'single' and 
+    'double'. For example:
+
+    >>> system = potential.createSystem(topology, precision='single')
+
+    By default, the implementation uses the precision of the loaded model.
     """
     def __init__(
         self,
@@ -113,6 +121,7 @@ class NequIPPotentialImpl(MLPotentialImpl):
         system: openmm.System,
         atoms: Optional[Iterable[int]],
         forceGroup: int,
+        precision: Optional[str] = None,
         **kwargs,
     ):
         """
@@ -128,6 +137,9 @@ class NequIPPotentialImpl(MLPotentialImpl):
             The indices of the atoms to include in the model. If ``None``, all atoms are included.
         forceGroup : int
             The force group to which the force should be assigned.
+        precision : str, optional
+            The precision of the model. Supported options are 'single' and 'double'.
+            If ``None``, the default precision of the model is used.
         """
         import openmmtorch
         import torch
@@ -157,10 +169,30 @@ class NequIPPotentialImpl(MLPotentialImpl):
         if atoms is not None:
             includedAtoms = [includedAtoms[i] for i in atoms]
 
-        # Infer the model dtype from the metadata.
-        dtype = {"float32": torch.float32, "float64": torch.float64}[
+        # Try to infer the model dtype from the metadata.
+        # If not present, default to float32.
+        modelDefaultDtype = {"float32": torch.float32, "float64": torch.float64}[
             metadata.get("model_dtype", "float32")
         ]
+        # Set the precision that the model will be used with.
+        if precision is None:
+            dtype = modelDefaultDtype
+        elif precision == "single":
+            dtype = torch.float32
+        elif precision == "double":
+            dtype = torch.float64
+        else:
+            raise ValueError(
+                f"Unsupported precision {precision} for the model. "
+                "Supported values are 'single' and 'double'."
+            )
+
+        if dtype != modelDefaultDtype:
+            print(
+                f"Model dtype is {modelDefaultDtype} "
+                f"and requested dtype is {dtype}. "
+                "The model will be converted to the requested dtype."
+            )
 
         # Get the atom types
         if self.atomTypes is None:
