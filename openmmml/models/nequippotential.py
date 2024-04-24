@@ -139,7 +139,11 @@ class NequIPPotentialImpl(MLPotentialImpl):
             The force group to which the force should be assigned.
         precision : str, optional
             The precision of the model. Supported options are 'single' and 'double'.
-            If ``None``, the default precision of the model is used.
+            If ``None``, the default precision of the model is used. This is the
+            recommended option. Models deployed before NequIP v0.6.0 don't contain
+            information about their precision, so ``precision='double'`` should only be
+            used if the model was explicitly trained with ``default_dtype=float64``, 
+            as by default the model is trained with ``default_dtype=float32``.
         """
         import openmmtorch
         import torch
@@ -189,9 +193,10 @@ class NequIPPotentialImpl(MLPotentialImpl):
 
         if dtype != modelDefaultDtype:
             print(
-                f"Model dtype is {modelDefaultDtype} "
+                f"Model dtype in metadata is {modelDefaultDtype} "
                 f"and requested dtype is {dtype}. "
-                "The model will be converted to the requested dtype."
+                "The model will be converted to the requested dtype. "
+                "Make sure this is the precision the model was trained with."
             )
 
         # Get the atom types
