@@ -133,14 +133,6 @@ class NequIPPotentialImpl(MLPotentialImpl):
         import torch
 
         try:
-            from nequip.scripts.deploy import load_deployed_model
-        except ImportError as e:
-            raise ImportError(
-                f"Failed to import NequIP with error: {e}. "
-                "Install NequIP with 'pip install nequip'."
-            )
-
-        try:
             from NNPOps.neighbors import getNeighborPairs
         except ImportError as e:
             raise ImportError(
@@ -148,6 +140,14 @@ class NequIPPotentialImpl(MLPotentialImpl):
                 "Install NNPOps with 'conda install -c conda-forge nnpops'."
             )
 
+        try:
+            from nequip.scripts.deploy import load_deployed_model
+        except ImportError as e:
+            raise ImportError(
+                f"Failed to import NequIP with error: {e}. "
+                "Install NequIP with 'pip install git+https://github.com/mir-group/nequip@develop'."
+            )
+        
         # Load the model to the CPU.
         self.model, metadata = load_deployed_model(
             self.modelPath, device="cpu", freeze=False
