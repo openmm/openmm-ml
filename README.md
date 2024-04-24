@@ -3,13 +3,14 @@
 This is a high level API for using machine learning models in OpenMM simulations.  With just a few lines of code, you
 can set up a simulation that uses a standard, pretrained model to represent some or all of the interactions in a system.
 
-In the current release, the only supported potential functions are [ANI-1ccx](https://www.nature.com/articles/s41467-019-10827-4)
-and [ANI-2x](https://pubs.acs.org/doi/full/10.1021/acs.jctc.0c00121), using the implementations in [TorchANI](https://github.com/aiqm/torchani).  They are
-suitable for small molecules involving a limited set of elements and no charges.  Future releases will add new potential
-functions that support a much wider range of molecules.
+In the current release, the supported potential functions are [ANI-1ccx](https://www.nature.com/articles/s41467-019-10827-4)
+and [ANI-2x](https://pubs.acs.org/doi/full/10.1021/acs.jctc.0c00121), using the implementations in [TorchANI](https://github.com/aiqm/torchani), as well as [MACE](https://arxiv.org/abs/2206.07697) models, including the pre-trained [MACE-OFF23 models](https://arxiv.org/abs/2312.15211), utilizing the [MACE implementation](https://github.com/ACEsuit/mace).  They are
+suitable for small molecules involving a limited set of elements and no charges.  Additionally models generated with [NequIP](https://www.nature.com/articles/s41467-022-29939-5) can also be used.
+Future releases will add new potential functions that support a much wider range of molecules.
 
-Additionally [NequIP](https://www.nature.com/articles/s41467-022-29939-5) potential functions can be used using the implementation from https://github.com/mir-group/nequip , see the [README](examples/nequip/README.md) in `/examples/nequip` for more information.
+### Documentation 
 
+You can find the current documentation at https://openmm.github.io/openmm-ml
 
 ### Installation
 

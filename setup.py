@@ -38,5 +38,16 @@ setup(
     classifiers=CLASSIFIERS.splitlines(),
     packages=find_packages(),
     zip_safe=False,
-    install_requires=['numpy', 'openmm >= 7.5'])
+    install_requires=['numpy', 'openmm >= 7.5'],
+    entry_points={
+        'openmmml.potentials': [
+            'ani1ccx = openmmml.models.anipotential:ANIPotentialImplFactory',
+            'ani2x = openmmml.models.anipotential:ANIPotentialImplFactory',
+            'mace = openmmml.models.macepotential:MACEPotentialImplFactory',
+            'mace-off23-small = openmmml.models.macepotential:MACEPotentialImplFactory',
+            'mace-off23-medium = openmmml.models.macepotential:MACEPotentialImplFactory',
+            'mace-off23-large = openmmml.models.macepotential:MACEPotentialImplFactory'
+        ]
+    }
+)
 
