@@ -34,7 +34,7 @@ system = potential.createSystem(pdb.topology)
 
 # Run langevin dynamics at 300K for 1000 steps
 integrator = openmm.LangevinIntegrator(
-    300 * unit.kelvin, 10.0 / unit.picoseconds, 1.0 * unit.femtosecond
+    300 * unit.kelvin, 1.0 / unit.picoseconds, 1.0 * unit.femtosecond
 )
 simulation = app.Simulation(pdb.topology, system, integrator)
 simulation.context.setPositions(pdb.positions)
