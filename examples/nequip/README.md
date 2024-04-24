@@ -1,6 +1,6 @@
 # NequIP models in OpenMM-ML
 
-This directory contains examples for running simulations using a NequIP potential.
+This directory contains examples for running simulations using a potential generated through the NequIP framework.
 
 ## Installation
 
@@ -10,16 +10,16 @@ First install the `openmm-torch` and `nnpops` packages from conda-forge:
 conda install -c conda-forge openmm-torch nnpops
 ```
 
-Then install NequIP development branch and this version of `openmm-ml` using pip:
+Then install the development versions of NequIP and `openmm-ml` using pip:
 
 ```
 pip install git+https://github.com/mir-group/nequip@develop
-pip install git+https://github.com/sef43/openmm-ml@nequip
+pip install git+https://github.com/openmm/openmm-ml@main
 ```
 
 ## Usage
 
-Once you have a deployed trained NequIP model you can use it as the potential in OpenMM-ML:
+Once you have a deployed trained model you can use it as the potential in OpenMM-ML:
 
 ```python
 from openmmml import MLPotential
@@ -44,4 +44,4 @@ system = potential.createSystem(topology)
 ## Example
 
 ### run_nequip.ipynb
-Runs a simulation using the model created by NequIP example [config/example.yaml](https://github.com/mir-group/nequip/blob/main/configs/example.yaml). It is available as a Python script: [`run_nequip.py`](run_nequip.py) and a Jupyter notebook [`run_nequip.ipynb`](run_nequip.ipynb) which can be run on Colab.
+Runs a simulation using the model created in this NequIP example [config/example.yaml](https://github.com/mir-group/nequip/blob/main/configs/example.yaml). It is available as a Python script: [`run_nequip.py`](run_nequip.py) and a Jupyter notebook [`run_nequip.ipynb`](run_nequip.ipynb) which can be run on Colab.
