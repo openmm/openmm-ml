@@ -30,9 +30,8 @@ class TestNequIP:
         system = potential.createSystem(pdb.topology)
         platform = mm.Platform.getPlatform(platform_int)
         context = mm.Context(system, mm.VerletIntegrator(0.001), platform)
-        context.setPositions(pdb.positions)
-        positionsOriginal = context.getState(getPositions=True).getPositions(asNumpy=True)
-        energyRef = -710491.1875 # in kJ/mol
+        positionsOriginal = pdb.getPositions(asNumpy=True)
+        energyRef = -710491.18527 # in kJ/mol, calculated using the NequIPCalculator
         for i in range(10):
             positions = positionsOriginal + i * 2.0 * unit.nanometers # translate molecule to test PBC
             context.setPositions(positions)
