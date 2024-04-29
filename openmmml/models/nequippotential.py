@@ -406,6 +406,3 @@ class NequIPPotentialImpl(MLPotentialImpl):
         force.setUsesPeriodicBoundaryConditions(isPeriodic)
         force.setOutputsForces(True)
         system.addForce(force)
-
-
-MLPotential.registerImplFactory("nequip", NequIPPotentialImplFactory())
