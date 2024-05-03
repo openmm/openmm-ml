@@ -45,9 +45,8 @@ simulation.reporters.append(
     )
 )
 
-simulation.step(1000)
-
 # Minimize the energy
 simulation.minimizeEnergy()
-energy = simulation.context.getState(getEnergy=True).getPotentialEnergy()
-print(energy)
+
+# Run the simulation
+simulation.step(1000)
