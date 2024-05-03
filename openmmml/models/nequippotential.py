@@ -282,11 +282,6 @@ class NequIPPotentialImpl(MLPotentialImpl):
                 self.register_buffer("atom_types", torch.tensor(atomTypes, dtype=torch.long, requires_grad=False))
                 self.register_buffer("pbc", torch.tensor([periodic, periodic, periodic], dtype=torch.bool, requires_grad=False))
 
-                self.inputDict = {
-                    "pbc": self.pbc,
-                    "atom_types": self.atom_types,
-                }
-
             def _getNeighborPairs(
                 self, positions: torch.Tensor, cell: Optional[torch.Tensor]
             ) -> Tuple[torch.Tensor, torch.Tensor]:
@@ -362,21 +357,24 @@ class NequIPPotentialImpl(MLPotentialImpl):
 
                 if boxvectors is not None:
                     cell = boxvectors.to(self.dtype) / self.lengthScale
-                    self.inputDict["cell"] = cell
                 else:
                     cell = None
-                    self.inputDict["cell"] = torch.zeros(3, 3, device=positions.device, dtype=self.dtype)
 
                 # Get the shifts and edge indices.
                 edgeIdx, shiftIdx = self._getNeighborPairs(positions, cell)
 
-                # Update the input dictionary.
-                self.inputDict["pos"] = positions
-                self.inputDict["edge_index"] = edgeIdx
-                self.inputDict["edge_cell_shift"] = shiftIdx
+                # Create the input dictionary.
+                inputDict = {
+                    "pos": positions,
+                    "atom_types": self.atom_types,
+                    "edge_index": edgeIdx,
+                    "edge_cell_shift": shiftIdx,
+                    "pbc": self.pbc,
+                    "cell": cell if cell is not None else torch.zeros(3, 3, device=positions.device, dtype=self.dtype),
+                }
 
                 # Predict the energy and forces.
-                out = self.model(self.inputDict)
+                out = self.model(inputDict)
                 energy = out["total_energy"] * self.energyScale
                 forces = out["forces"] * self.energyScale / self.lengthScale
 
