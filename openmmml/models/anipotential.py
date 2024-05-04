@@ -101,11 +101,12 @@ class ANIPotentialImpl(MLPotentialImpl):
 
         class ANIForce(torch.nn.Module):
 
-            def __init__(self, model, species, atoms, periodic):
+            def __init__(self, model, species, atoms, periodic, implementation):
                 super(ANIForce, self).__init__()
                 self.model = model
                 self.species = torch.nn.Parameter(species, requires_grad=False)
                 self.energyScale = torchani.units.hartree2kjoulemol(1)
+                self.implementation = implementation
                 if atoms is None:
                     self.indices = None
                 else:
@@ -117,20 +118,23 @@ class ANIPotentialImpl(MLPotentialImpl):
 
             def forward(self, positions, boxvectors: Optional[torch.Tensor] = None):
                 positions = positions.to(torch.float32)
-                #print(f"(boxvectors, scale): {boxvectors, scale}")
                 if self.indices is not None:
                     positions = positions[self.indices]
                 if boxvectors is None:
                     _, energy = self.model((self.species, 10.0*positions.unsqueeze(0)))
                 else:
                     boxvectors = boxvectors.to(torch.float32)
+                    if self.implementation == "torchani":
+                        positions = positions - torch.outer(torch.floor(positions[:,2]/boxvectors[2,2]), boxvectors[2])
+                        positions = positions - torch.outer(torch.floor(positions[:,1]/boxvectors[1,1]), boxvectors[1])
+                        positions = positions - torch.outer(torch.floor(positions[:,0]/boxvectors[0,0]), boxvectors[0])
                     _, energy = self.model((self.species, 10.0*positions.unsqueeze(0)), cell=10.0*boxvectors, pbc=self.pbc)
 
                 return self.energyScale*energy
 
         # is_periodic...
         is_periodic = (topology.getPeriodicBoxVectors() is not None) or system.usesPeriodicBoundaryConditions()
-        aniForce = ANIForce(model, species, atoms, is_periodic)
+        aniForce = ANIForce(model, species, atoms, is_periodic, implementation)
 
         # Convert it to TorchScript.
 
