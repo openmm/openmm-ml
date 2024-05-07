@@ -83,7 +83,11 @@ class NequIPPotentialImpl(MLPotentialImpl):
 
     >>> system = potential.createSystem(topology, precision='single')
 
-    By default, the implementation uses the precision of the loaded model.
+    By default, the implementation uses the precision of the loaded model. Note that
+    models deployed before NequIP v0.6.0 don't contain information about their 
+    precision, so ``precision='double'`` should only be used if the model was 
+    explicitly trained with ``default_dtype=float64``, as by default the model is 
+    trained with ``default_dtype=float32``.
     """
     def __init__(
         self,
