@@ -12,15 +12,14 @@ from openmmml import MLPotential
 rtol = 1e-5
 platform_ints = range(mm.Platform.getNumPlatforms())
 # Get the path to the test data
-test_data_dir = os.path.dirname(os.path.abspath(__file__))
-test_data_dir = os.path.join(test_data_dir, "data")
+test_data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
 
 
 @pytest.mark.parametrize("implementation,platform_int", list(itertools.product(['nnpops', 'torchani'], list(platform_ints))))
 class TestMLPotential:
 
     def testCreateMixedSystem(self, implementation, platform_int):
-        pdb = app.PDBFile(os.path.join(test_data_dir, 'alanine-dipeptide/alanine-dipeptide-explicit.pdb'))
+        pdb = app.PDBFile(os.path.join(test_data_dir, 'alanine-dipeptide', 'alanine-dipeptide-explicit.pdb'))
         ff = app.ForceField('amber14-all.xml', 'amber14/tip3pfb.xml')
         mmSystem = ff.createSystem(pdb.topology, nonbondedMethod=app.PME)
         potential = MLPotential('ani2x')

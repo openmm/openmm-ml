@@ -4,17 +4,16 @@ This directory contains examples for running simulations using a potential gener
 
 ## Installation
 
-First install the `openmm-torch` and `nnpops` packages from conda-forge:
+First install the `openmm-ml` and `nnpops` packages from conda-forge:
 
 ```
-conda install -c conda-forge openmm-torch nnpops
+conda install -c conda-forge openmm-ml nnpops
 ```
 
-Then install the development versions of NequIP and `openmm-ml` using pip:
+Then install the development version of NequIP using pip:
 
 ```
 pip install git+https://github.com/mir-group/nequip@develop
-pip install git+https://github.com/openmm/openmm-ml@main
 ```
 
 ## Usage

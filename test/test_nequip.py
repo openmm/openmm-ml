@@ -13,8 +13,7 @@ nnpops = pytest.importorskip("NNPOps", reason="nnpops is not installed")
 rtol = 1e-5
 platform_ints = range(mm.Platform.getNumPlatforms())
 # Get the path to the test data
-test_data_dir = os.path.dirname(os.path.abspath(__file__))
-test_data_dir = os.path.join(test_data_dir, "data")
+test_data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
 
 
 @pytest.mark.parametrize("platform_int", list(platform_ints))
@@ -23,8 +22,8 @@ class TestNequIP:
     _ENERGY_SCALE = 4.184
     
     def testCreatePureMLSystem(self, platform_int):
-        pdb = app.PDBFile(os.path.join(test_data_dir, 'toluene/toluene.pdb'))
-        potential = MLPotential("nequip", modelPath=os.path.join(test_data_dir, "toluene/toluene-nequip.pth"), lengthScale=self._LENGTH_SCALE, energyScale=self._ENERGY_SCALE)
+        pdb = app.PDBFile(os.path.join(test_data_dir, "toluene", "toluene.pdb"))
+        potential = MLPotential("nequip", modelPath=os.path.join(test_data_dir, "toluene", "toluene-nequip.pth"), lengthScale=self._LENGTH_SCALE, energyScale=self._ENERGY_SCALE)
         cubicBox = np.eye(3) * 2.0 * unit.nanometers
         pdb.topology.setPeriodicBoxVectors(cubicBox)
         system = potential.createSystem(pdb.topology)
@@ -46,11 +45,11 @@ class TestNequIP:
         assert np.isclose(energyRef, energyML, rtol=rtol)
 
     def testCreateMixedSystem(self, platform_int):
-        prmtop = app.AmberPrmtopFile(os.path.join(test_data_dir, 'toluene/toluene-explicit.prm7'))
-        inpcrd = app.AmberInpcrdFile(os.path.join(test_data_dir, 'toluene/toluene-explicit.rst7'))
+        prmtop = app.AmberPrmtopFile(os.path.join(test_data_dir, "toluene", "toluene-explicit.prm7"))
+        inpcrd = app.AmberInpcrdFile(os.path.join(test_data_dir, "toluene", "toluene-explicit.rst7"))
         mlAtoms = list(range(15))
         mmSystem = prmtop.createSystem(nonbondedMethod=app.PME)
-        potential = MLPotential("nequip", modelPath=os.path.join(test_data_dir, "toluene/toluene-nequip.pth"), lengthScale=self._LENGTH_SCALE, energyScale=self._ENERGY_SCALE)
+        potential = MLPotential("nequip", modelPath=os.path.join(test_data_dir, "toluene", "toluene-nequip.pth"), lengthScale=self._LENGTH_SCALE, energyScale=self._ENERGY_SCALE)
         mixedSystem = potential.createMixedSystem(prmtop.topology, mmSystem, mlAtoms, interpolate=False)
         interpSystem = potential.createMixedSystem(prmtop.topology, mmSystem, mlAtoms, interpolate=True)
         platform = mm.Platform.getPlatform(platform_int)

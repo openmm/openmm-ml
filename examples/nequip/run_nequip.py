@@ -9,7 +9,7 @@ from openmmml import MLPotential
 """
 Uses a deployed trained NequIP model from the basic example on https://github.com/mir-group/nequip
 >>> nequip-train configs/example.yaml
->>> nequip-deploy build --train-dir path/to/training/session/ example_model_deployed.pth
+>>> nequip-deploy build --train-dir path/to/training/session/ toluene-deployed.pth
 """
 
 # Load toluene structure
@@ -38,7 +38,7 @@ integrator = openmm.LangevinIntegrator(
 )
 simulation = app.Simulation(pdb.topology, system, integrator)
 simulation.context.setPositions(pdb.positions)
-simulation.reporters.append(app.PDBReporter("output.pdb", 100))
+simulation.reporters.append(app.DCDReporter("output.dcd", 100))
 simulation.reporters.append(
     app.StateDataReporter(
         stdout, 100, step=True, potentialEnergy=True, temperature=True, speed=True
@@ -48,5 +48,6 @@ simulation.reporters.append(
 # Minimize the energy
 simulation.minimizeEnergy()
 
-# Run the simulation
+# Set the velocities to 300K and run 1000 steps
+simulation.context.setVelocitiesToTemperature(300*unit.kelvin)
 simulation.step(1000)

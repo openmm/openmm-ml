@@ -33,7 +33,7 @@ from typing import Iterable, List, Optional, Tuple
 
 import openmm
 
-from openmmml.mlpotential import MLPotential, MLPotentialImpl, MLPotentialImplFactory
+from openmmml.mlpotential import MLPotentialImpl, MLPotentialImplFactory
 
 
 class NequIPPotentialImplFactory(MLPotentialImplFactory):
@@ -45,9 +45,8 @@ class NequIPPotentialImplFactory(MLPotentialImplFactory):
         modelPath: str,
         lengthScale: float,
         energyScale: float,
-        atomTypes: Optional[List[int]] = None,
     ) -> MLPotentialImpl:
-        return NequIPPotentialImpl(name, modelPath, lengthScale, energyScale, atomTypes)
+        return NequIPPotentialImpl(name, modelPath, lengthScale, energyScale)
 
 
 class NequIPPotentialImpl(MLPotentialImpl):
@@ -70,24 +69,26 @@ class NequIPPotentialImpl(MLPotentialImpl):
                                 energyScale=4.184 # kcal/mol to kJ/mol
                                 )
 
-    Additionally, you can specify the atom types for the model if the model was
-    trained with custom atom types by passing a list of atom types to the
-    ``atomTypes`` parameter. This must be a list containing an integer specifying
-    the atom type of each particle in the system. Note that by default the model
-    uses the atomic number to map the atom type. This will work if you trained
-    your model using the standard ``chemical_symbols`` option.
-    
-    During system creation, you can optionally specify the precision of the model 
-    using the ``precision`` keyword argument. Supported options are 'single' and 
-    'double'. For example:
+    During system creation, if the model was trained with custom atom types,
+    you can specify this by passing to the ``atomTypes`` parameter a list of
+    of integers corresponding to the nequip atom type for each particle that
+    will be modeled using this potential. This argument should, therefore,
+    have the same length as the number of ML atoms in the system.  Note that
+    by default the model uses the atomic number to map the atom type. This
+    will work if you trained your model using the standard
+    ``chemical_symbols`` option.
+
+    Additionally, you can specify the precision of
+    the model using the ``precision`` keyword argument. Supported options are
+    'single' and 'double'. For example:
 
     >>> system = potential.createSystem(topology, precision='single')
 
-    By default, the implementation uses the precision of the loaded model. Note that
-    models deployed before NequIP v0.6.0 don't contain information about their 
-    precision, so ``precision='double'`` should only be used if the model was 
-    explicitly trained with ``default_dtype=float64``, as by default the model is 
-    trained with ``default_dtype=float32``.
+    By default, the implementation uses the precision of the loaded model.
+    Note that models deployed before NequIP v0.6.0 don't contain information
+    about their precision, so ``precision='double'`` should only be used if
+    the model was explicitly trained with ``default_dtype=float64``, as by
+    default the model is trained with ``default_dtype=float32``.
     """
     def __init__(
         self,
@@ -95,7 +96,6 @@ class NequIPPotentialImpl(MLPotentialImpl):
         modelPath: str,
         lengthScale: float,
         energyScale: float,
-        atomTypes: Optional[List[int]] = None,
     ) -> None:
         """
         Initialize the NequIPPotentialImpl.
@@ -103,21 +103,18 @@ class NequIPPotentialImpl(MLPotentialImpl):
         Parameters
         ----------
         name : str
-            The name of the deployed model.
+            The name specified by the MLPotential constructor, viz. 'nequip'.
         modelPath : str, optional
             The path to the deployed model.
         lengthScale : float
             The energy conversion factor from the model units to kJ/mol.
         energyScale : float
             The length conversion factor from the model units to nanometers.
-        atomTypes : List[int], optional
-            The atom types for the model if the model was trained with custom atom types.
         """
         self.name = name
         self.modelPath = modelPath
         self.lengthScale = lengthScale
         self.energyScale = energyScale
-        self.atomTypes = atomTypes
 
     def addForces(
         self,
@@ -126,6 +123,7 @@ class NequIPPotentialImpl(MLPotentialImpl):
         atoms: Optional[Iterable[int]],
         forceGroup: int,
         precision: Optional[str] = None,
+        atomTypes: Optional[List[int]] = None,
         **kwargs,
     ):
         """
@@ -148,6 +146,11 @@ class NequIPPotentialImpl(MLPotentialImpl):
             information about their precision, so ``precision='double'`` should only be
             used if the model was explicitly trained with ``default_dtype=float64``, 
             as by default the model is trained with ``default_dtype=float32``.
+        atomTypes : List[int], optional
+            A list of integers corresponding to the nequip atom type for each ML atom in the system.
+            This is only required if the model was trained with custom atom types. If ``None``,
+            the atomic number is used to determine the atom type. This list should have the same
+            length as the number of ML atoms in the system.
         """
         import openmmtorch
         import torch
@@ -169,7 +172,7 @@ class NequIPPotentialImpl(MLPotentialImpl):
             )
         
         # Load the model to the CPU.
-        self.model, metadata = nequip.scripts.deploy.load_deployed_model(
+        model, metadata = nequip.scripts.deploy.load_deployed_model(
             self.modelPath, device="cpu", freeze=False
         )
 
@@ -204,14 +207,19 @@ class NequIPPotentialImpl(MLPotentialImpl):
             )
 
         # Get the atom types
-        if self.atomTypes is None:
+        if atomTypes is None:
             typeNames = metadata[nequip.scripts.deploy.TYPE_NAMES_KEY].split(" ")
             typeNameToTypeIndex = {
                 typeNames: i for i, typeNames in enumerate(typeNames)
             }
-            self.atomTypes = [
+            atomTypes = [
                 typeNameToTypeIndex[atom.element.symbol] for atom in includedAtoms
             ]
+        else:
+            if len(atomTypes) != len(includedAtoms):
+                raise ValueError(
+                    "The length of atomTypes must be equal to the number of ML atoms in the system."
+                )
 
         # Get the r_max from the metadata.
         r_max = float(metadata[nequip.scripts.deploy.R_MAX_KEY])
@@ -222,18 +230,19 @@ class NequIPPotentialImpl(MLPotentialImpl):
 
             Attributes
             ----------
-            model : str
-                The path to the deployed NequIP model.
-            lengthScale : float
-                The energy conversion factor from the model units to kJ/mol.
-            energyScale : float
-                The length conversion factor from the model units to nanometers.
             dtype : torch.dtype
                 The precision of the model.
+            model : str
+                The loaded deployed NequIP model.
+            energyScale : float
+                The length conversion factor from the model units to nanometers.
+            lengthScale : float
+                The energy conversion factor from the model units to kJ/mol.
             r_max : torch.Tensor
                 The maximum distance for the neighbor search.
-            inputDict : dict
-                The input dictionary passed to the model.
+            indices : torch.Tensor or None
+                The indices of the atoms to model using this potential.
+                If ``None``, all atoms are considered as ML atoms.
             """
 
             def __init__(
@@ -253,7 +262,7 @@ class NequIPPotentialImpl(MLPotentialImpl):
                 Parameters
                 ----------
                 model : torch.jit._script.RecursiveScriptModule
-                    The deployed NequIP model.
+                    The loaded deployed NequIP model.
                 atoms : iterable of int
                     Indices of the atoms to use with the model. If ``None``, all atoms are used.
                 periodic : bool
@@ -389,12 +398,12 @@ class NequIPPotentialImpl(MLPotentialImpl):
         ) or system.usesPeriodicBoundaryConditions()
 
         nequipForce = NequIPForce(
-            self.model,
+            model,
             atoms,
             isPeriodic,
             self.lengthScale,
             self.energyScale,
-            self.atomTypes,
+            atomTypes,
             r_max,
             dtype,
         )
