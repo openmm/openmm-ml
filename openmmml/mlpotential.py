@@ -159,14 +159,16 @@ class MLPotential(object):
             potential functions for more information.
         """
         self._impl = MLPotential._implFactories[name].createImpl(name, **args)
-    
-    def createSystem(self, topology: openmm.app.Topology, **args) -> openmm.System:
+
+    def createSystem(self, topology: openmm.app.Topology, removeCMMotion: bool = True, **args) -> openmm.System:
         """Create a System for running a simulation with this potential function.
 
         Parameters
         ----------
         topology: Topology
             the Topology for which to create a System
+        removeCMMotion: bool
+            if true, a CMMotionRemover will be added to the System. 
         args:
             particular potential functions may define additional arguments that can
             be used to customize them.  See the documentation on the specific
@@ -185,6 +187,8 @@ class MLPotential(object):
             else:
                 system.addParticle(atom.element.mass)
         self._impl.addForces(topology, system, None, 0, **args)
+        if removeCMMotion:
+            system.addForce(openmm.CMMotionRemover())
         return system
 
     def createMixedSystem(self,
