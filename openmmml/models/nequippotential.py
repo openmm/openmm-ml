@@ -168,7 +168,7 @@ class NequIPPotentialImpl(MLPotentialImpl):
         except ImportError as e:
             raise ImportError(
                 f"Failed to import NequIP with error: {e}. "
-                "Install NequIP with 'pip install git+https://github.com/mir-group/nequip@develop'."
+                "Install NequIP with 'pip install nequip'."
             )
         
         # Load the model to the CPU.

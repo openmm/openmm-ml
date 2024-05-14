@@ -10,10 +10,10 @@ First install the `openmm-ml` and `nnpops` packages from conda-forge:
 conda install -c conda-forge openmm-ml nnpops
 ```
 
-Then install the development version of NequIP using pip:
+Then install NequIP using pip:
 
 ```
-pip install git+https://github.com/mir-group/nequip@develop
+pip install nequip
 ```
 
 ## Usage
