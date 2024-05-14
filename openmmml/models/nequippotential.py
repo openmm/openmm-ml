@@ -361,7 +361,10 @@ class NequIPPotentialImpl(MLPotentialImpl):
                 -------
                 energy, forces : Tuple[torch.Tensor, torch.Tensor]
                     The predicted energy in kJ/mol and forces in kJ/(mol*nm).
-                """
+                """         
+                # Created a padded forces tensor.     
+                forces_padded = torch.zeros_like(positions).to(self.dtype)
+
                 # Setup positions and cell.
                 if self.indices is not None:
                     positions = positions[self.indices]
@@ -389,9 +392,13 @@ class NequIPPotentialImpl(MLPotentialImpl):
                 # Predict the energy and forces.
                 out = self.model(inputDict)
                 energy = out["total_energy"] * self.energyScale
-                forces = out["forces"] * self.energyScale / self.lengthScale
 
-                return (energy, forces)
+                if self.indices is None:
+                    forces_padded = out["forces"] * self.energyScale / self.lengthScale
+                else:
+                    forces_padded[self.indices, :] = out["forces"] * self.energyScale / self.lengthScale
+            
+                return (energy, forces_padded)
 
         isPeriodic = (
             topology.getPeriodicBoxVectors() is not None
