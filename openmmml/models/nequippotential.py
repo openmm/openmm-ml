@@ -369,7 +369,7 @@ class NequIPPotentialImpl(MLPotentialImpl):
                 if self.indices is not None:
                     positions = positions[self.indices]
 
-                positions = positions.to(self.dtype) / self.lengthScale
+                positions = positions / self.lengthScale
 
                 if boxvectors is not None:
                     cell = boxvectors.to(self.dtype) / self.lengthScale
