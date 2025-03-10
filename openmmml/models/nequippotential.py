@@ -107,9 +107,9 @@ class NequIPPotentialImpl(MLPotentialImpl):
         modelPath : str, optional
             The path to the deployed model.
         lengthScale : float
-            The energy conversion factor from the model units to kJ/mol.
-        energyScale : float
             The length conversion factor from the model units to nanometers.
+        energyScale : float
+            The energy conversion factor from the model units to kJ/mol.
         """
         self.name = name
         self.modelPath = modelPath
@@ -234,9 +234,9 @@ class NequIPPotentialImpl(MLPotentialImpl):
                 The precision of the model.
             model : str
                 The loaded deployed NequIP model.
-            energyScale : float
-                The length conversion factor from the model units to nanometers.
             lengthScale : float
+                The length conversion factor from the model units to nanometers.
+            energyScale : float
                 The energy conversion factor from the model units to kJ/mol.
             r_max : torch.Tensor
                 The maximum distance for the neighbor search.
@@ -268,9 +268,9 @@ class NequIPPotentialImpl(MLPotentialImpl):
                 periodic : bool
                     Whether the system is periodic.
                 lengthScale : float
-                    The energy conversion factor from the model units to kJ/mol.
-                energyScale : float
                     The length conversion factor from the model units to nanometers.
+                energyScale : float
+                    The energy conversion factor from the model units to kJ/mol.
                 atomTypes : List[int]
                     The nequip atom types for the model.
                 r_max : float
