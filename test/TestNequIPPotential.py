@@ -32,7 +32,7 @@ class TestNequIP:
         positionsOriginal = pdb.getPositions(asNumpy=True)
         energyRef = -710491.18527 # in kJ/mol, calculated using the NequIPCalculator
         for i in range(10):
-            positions = positionsOriginal + i * 2.0 * unit.nanometers # translate molecule to test PBC
+            positions = positionsOriginal + i * 0.5 * unit.nanometers # translate molecule to test PBC
             context.setPositions(positions)
             energyML = context.getState(getEnergy=True).getPotentialEnergy().value_in_unit(unit.kilojoules_per_mole)
             assert np.isclose(energyRef, energyML, rtol=rtol)
