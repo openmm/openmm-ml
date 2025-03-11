@@ -29,3 +29,5 @@ Models
     
       openmmml.models.macepotential.MACEPotentialImpl
     
+      openmmml.models.nequippotential.NequIPPotentialImpl
+    
