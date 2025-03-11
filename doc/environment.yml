@@ -4,12 +4,13 @@ channels:
 dependencies:
   - python
   - pip
-  - sphinx
+  - setuptools
   - openmm
+  - sphinx
   - pydata-sphinx-theme
   - pip:
     - m2r2
     - GitPython
-
+    - docutils>=0.18.1,<0.21
 
 

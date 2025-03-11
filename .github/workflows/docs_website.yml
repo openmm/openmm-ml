@@ -20,18 +20,17 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Cache conda
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: ~/conda_pkgs_dir
           key: ${{ runner.os }}-conda-${{hashFiles('environment.yml') }}
 
-      - uses: conda-incubator/setup-miniconda@v2
+      - uses: conda-incubator/setup-miniconda@v3
         name: Install dependencies
         with:
           environment-file: doc/environment.yml
           auto-activate-base: false
           miniforge-version: latest
-          miniforge-variant: Mambaforge
           use-mamba: true
 
       - name: Describe environment
