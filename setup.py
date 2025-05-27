@@ -47,6 +47,8 @@ setup(
             'mace-off23-small = openmmml.models.macepotential:MACEPotentialImplFactory',
             'mace-off23-medium = openmmml.models.macepotential:MACEPotentialImplFactory',
             'mace-off23-large = openmmml.models.macepotential:MACEPotentialImplFactory',
+            'mace-off23b-medium = openmmml.models.macepotential:MACEPotentialImplFactory',
+            'mace-off24-medium = openmmml.models.macepotential:MACEPotentialImplFactory',
             'nequip = openmmml.models.nequippotential:NequIPPotentialImplFactory',
         ]
     }
