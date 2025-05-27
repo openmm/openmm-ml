@@ -181,7 +181,6 @@ class MACEPotentialImpl(MLPotentialImpl):
 
         try:
             from mace.tools import utils, to_one_hot, atomic_numbers_to_indices
-            from mace.calculators.foundations_models import mace_off
         except ImportError as e:
             raise ImportError(
                 f"Failed to import mace with error: {e}. "
