@@ -101,27 +101,27 @@ class MACEPotentialImpl(MLPotentialImpl):
         ----------
         name : str
             The name of the MACE model.
-            Options include 'mace-off23-small', 'mace-off23-medium', 'mace-off23-large', and 'mace'.
+            Options include 'mace-off23-small', 'mace-off23-medium', 'mace-off23b-medium', 'mace-off23-large', 'mace-off24-medium', and 'mace'.
         modelPath : str, optional
             The path to the locally trained MACE model if ``name`` is 'mace'.
         """
         self.name = name
         self.modelPath = modelPath
 
-    def loadFoundationModel(self, model: str) -> torch.jit._script.RecursiveScriptModule:
+    def getFoundationModelPath(self, model: str):
         """
-        Downloads a MACE foundation model (if not found locally) and loads it.
+        Download a MACE foundation model (if not found locally) and return the path to the model.
 
         Parameters
         ----------
-        model : str or None
+        model : str
             Name of the foundation model to use.
             Options include 'mace-off23-small', 'mace-off23-medium', 'mace-off23-large', 'mace-off23b-medium', 'mace-off24-medium'.
 
         Returns
         -------
-        model : torch.jit._script.RecursiveScriptModule
-            The MACE model.
+        path : str
+            The path to the MACE foundation model.
         """
         import urllib.request
         from pathlib import Path
@@ -144,8 +144,7 @@ class MACEPotentialImpl(MLPotentialImpl):
         else:
             print(f"Using cached MACE model from {cachedModelPath}")
 
-        # Load the model.
-        return torch.load(cachedModelPath, map_location="cpu")
+        return str(cachedModelPath)
 
     def addForces(
         self,
@@ -210,7 +209,8 @@ class MACEPotentialImpl(MLPotentialImpl):
 
         # Load the model to the CPU (OpenMM-Torch takes care of loading to the right devices)
         if self.name.startswith("mace-off"):
-            model = self.loadFoundationModel(self.name.lower())
+            modelPath = self.getFoundationModelPath(self.name.lower())
+            model = torch.load(modelPath, map_location="cpu")
         elif self.name == "mace":
             if self.modelPath is not None:
                 model = torch.load(self.modelPath, map_location="cpu")
