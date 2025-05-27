@@ -85,6 +85,14 @@ class MACEPotentialImpl(MLPotentialImpl):
         The path to the locally trained MACE model if ``name`` is 'mace'.
     """
 
+    _MACE_OFF_MODELS = {
+        "mace-off23-small": "https://github.com/ACEsuit/mace-off/blob/main/mace_off23/MACE-OFF23_small.model?raw=true",
+        "mace-off23-medium": "https://github.com/ACEsuit/mace-off/blob/main/mace_off23/MACE-OFF23_medium.model?raw=true",
+        "mace-off23-large": "https://github.com/ACEsuit/mace-off/blob/main/mace_off23/MACE-OFF23_large.model?raw=true",
+        "mace-off23b-medium": "https://github.com/ACEsuit/mace-off/blob/main/mace_off23/MACE-OFF23b_medium.model?raw=true",
+        "mace-off24-medium": "https://github.com/ACEsuit/mace-off/blob/main/mace_off24/MACE-OFF24_medium.model?raw=true",
+    }
+
     def __init__(self, name: str, modelPath) -> None:
         """
         Initialize the MACEPotentialImpl.
@@ -99,6 +107,45 @@ class MACEPotentialImpl(MLPotentialImpl):
         """
         self.name = name
         self.modelPath = modelPath
+
+    def loadFoundationModel(self, model: str) -> torch.jit._script.RecursiveScriptModule:
+        """
+        Downloads a MACE foundation model (if not found locally) and loads it.
+
+        Parameters
+        ----------
+        model : str or None
+            Name of the foundation model to use.
+            Options include 'mace-off23-small', 'mace-off23-medium', 'mace-off23-large', 'mace-off23b-medium', 'mace-off24-medium'.
+
+        Returns
+        -------
+        model : torch.jit._script.RecursiveScriptModule
+            The MACE model.
+        """
+        import urllib.request
+        from pathlib import Path
+
+        modelUrl = self._MACE_OFF_MODELS.get(model)
+        if modelUrl is None:
+            raise ValueError(f"Unsupported MACE model: {model}. Supported models are {list(self._MACE_OFF_MODELS.keys())}")
+
+        # Download the model if not found locally.
+        cacheDir = Path.home() / ".cache" / "mace"
+        cachedModelPath = cacheDir / Path(modelUrl).name.split("?")[0]
+        if not cachedModelPath.exists():
+            print(f"Downloading MACE model from {modelUrl}")
+            print("The model is licensed under ASL: https://github.com/gabor1/ASL")
+            print("To use the model you accept the terms of the license.")
+            print("ASL is based on the Gnu Public License, but does not permit commercial use")
+            cacheDir.mkdir(parents=True, exist_ok=True)
+            urllib.request.urlretrieve(modelUrl, cachedModelPath)
+            print(f"Model cached at: {cachedModelPath}")
+        else:
+            print(f"Using cached MACE model from {cachedModelPath}")
+
+        # Load the model.
+        return torch.load(cachedModelPath, map_location="cpu")
 
     def addForces(
         self,
@@ -162,12 +209,8 @@ class MACEPotentialImpl(MLPotentialImpl):
         ], f"Unsupported returnEnergyType: '{returnEnergyType}'. Supported options are 'interaction_energy' or 'energy'."
 
         # Load the model to the CPU (OpenMM-Torch takes care of loading to the right devices)
-        if self.name.startswith("mace-off23"):
-            size = self.name.split("-")[-1]
-            assert (
-                size in ["small", "medium", "large"]
-            ), f"Unsupported MACE model: '{self.name}'. Available MACE-OFF23 models are 'mace-off23-small', 'mace-off23-medium', 'mace-off23-large'"
-            model = mace_off(model=size, device="cpu", return_raw_model=True)
+        if self.name.startswith("mace-off"):
+            model = self.loadFoundationModel(self.name.lower())
         elif self.name == "mace":
             if self.modelPath is not None:
                 model = torch.load(self.modelPath, map_location="cpu")
