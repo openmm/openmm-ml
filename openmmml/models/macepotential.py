@@ -47,13 +47,14 @@ class MACEPotentialImpl(MLPotentialImpl):
 
     The MACE potential is constructed using MACE to build a PyTorch model,
     and then integrated into the OpenMM System using a TorchForce.
-    This implementation supports both MACE-OFF23 and locally trained MACE models.
+    This implementation supports both MACE-OFF and locally trained MACE models.
 
-    To use one of the pre-trained MACE-OFF23 models, specify the model name. For example:
+    To use one of the pre-trained MACE-OFF models, specify the model name. For example:
 
     >>> potential = MLPotential('mace-off23-small')
 
-    Other available MACE-OFF23 models include 'mace-off23-medium' and 'mace-off23-large'.
+    Other available MACE-OFF models include 'mace-off23-medium', 'mace-off23b-medium', 'mace-off23-large',
+    and 'mace-off24-medium'.
 
     To use a locally trained MACE model, provide the path to the model file. For example:
 
