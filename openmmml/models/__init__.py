@@ -1,1 +1,1 @@
-from . import anipotential, macepotential, nequippotential
+from . import anipotential, macepotential, nequippotential, deepmdpotential
