@@ -32,7 +32,6 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 from openmmml.mlpotential import MLPotential, MLPotentialImpl, MLPotentialImplFactory
 import openmm
 from typing import Iterable, Optional
-from OpenMMDeepmdPlugin import DeepmdForce, DeepPotentialModel
 
 class DeepmdPotentialImplFactory(MLPotentialImplFactory):
     """This is the factory that creates DeepmdPotentialImpl objects."""
@@ -62,6 +61,15 @@ class DeepmdPotentialImpl(MLPotentialImpl):
                   lambdaName: Optional[str] = None,
                   lambdaValue: Optional[float] = 1.0,
                   **args):
+        try:
+            from OpenMMDeepmdPlugin import DeepPotentialModel
+            from OpenMMDeepmdPlugin import DeepmdForce
+        except ImportError:
+            raise ImportError(
+                "OpenMMDeepmdPlugin is not installed."
+                "Please install it with `conda install `conda install -c conda-forge ye-ding::openmm_deepmd_plugin`."
+            )
+        
         # Create the DeepPotentialModel object.    
         dp_model = DeepPotentialModel(modelPath)
         dp_model.setUnitTransformCoefficients(coordinatesCoefficient, forceCoefficient, energyCoefficient)
