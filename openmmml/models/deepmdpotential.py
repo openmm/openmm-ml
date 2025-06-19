@@ -67,7 +67,7 @@ class DeepmdPotentialImpl(MLPotentialImpl):
         except ImportError:
             raise ImportError(
                 "OpenMMDeepmdPlugin is not installed."
-                "Please install it with `conda install `conda install -c conda-forge ye-ding::openmm_deepmd_plugin`."
+                "Please install it with `conda install -c conda-forge ye-ding::openmm_deepmd_plugin`."
             )
         
         # Create the DeepPotentialModel object.    
