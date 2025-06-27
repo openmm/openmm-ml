@@ -41,9 +41,79 @@ class DeepmdPotentialImplFactory(MLPotentialImplFactory):
 
 
 class DeepmdPotentialImpl(MLPotentialImpl):
-    """This is the MLPotentialImpl implementing the DeePMD potential.
-
-    The potential is implemented using OpenMMDeepmdPlugin.  
+    """Implementation of the DeePMD (Deep Potential Molecular Dynamics) potential for OpenMM.
+    
+    This class provides an interface to use DeePMD neural network potentials in OpenMM simulations
+    through the OpenMMDeepmdPlugin. DeePMD potentials are trained using the DeepMD-kit framework
+    and can provide highly accurate quantum mechanical-level forces and energies for molecular
+    dynamics simulations.
+    
+    The DeePMD potential supports various advanced features including:
+    - Alchemical free energy calculations with lambda parameters  
+    - QM/MM-style region selection
+    - Custom unit conversions between different simulation packages
+    
+    Prerequisites:
+        - OpenMMDeepmdPlugin must be installed: 
+          `conda install -c conda-forge ye-ding::openmm_deepmd_plugin`
+        - A trained DeePMD model file (.pb format from DeepMD-kit)
+    
+    Usage:
+        The DeepmdPotentialImpl is typically used through the MLPotential interface:
+        
+        ```python
+        from openmmml import MLPotential
+        import openmm.app as app
+        
+        # Load your system
+        pdb = app.PDBFile('system.pdb')
+        
+        # Create DeePMD potential
+        potential = MLPotential('deepmd')
+        
+        # Create system with DeePMD forces
+        system = potential.createSystem(
+            topology=pdb.topology,
+            modelPath='model.pb',
+            atoms=None,  # Use all atoms, or specify subset
+            coordinatesCoefficient=10.0,  # Angstrom to nm conversion
+            forceCoefficient=964.8792534459,  # eV/Angstrom to kJ/mol/nm  
+            energyCoefficient=96.48792534459,  # eV to kJ/mol
+        )
+        ```
+        
+        For alchemical simulations:
+        
+        ```python
+        # Create system with lambda parameter for free energy calculations
+        system = potential.createSystem(
+            topology=pdb.topology,
+            modelPath='model.pb',
+            lambdaName='lambda_alchemical',
+            lambdaValue=0.5,  # Lambda value between 0 and 1
+        )
+        
+        # During simulation, you can also update lambda value through the context:
+        context.setParameter('lambda_alchemical', new_lambda_value)
+        ```
+        
+        For QM/MM-style simulations with atom subsets:
+        
+        ```python
+        # Define QM region atoms (0-indexed)
+        qm_atoms = [0, 1, 2, 3, 4]  # First 5 atoms
+        
+        system = potential.createSystem(
+            topology=pdb.topology,
+            modelPath='model.pb',
+            atoms=qm_atoms,  # Only these atoms use DeePMD
+        )
+        ```
+    
+    Note:
+        The default unit conversion coefficients are set up for converting between
+        DeePMD-kit's native units (Angstrom, eV) and OpenMM's units (nm, kJ/mol).
+        Modify these coefficients if your model uses different units.
     """
 
     def __init__(self, name):
@@ -81,7 +151,7 @@ class DeepmdPotentialImpl(MLPotentialImpl):
             dp_force = dp_model.addParticlesToDPRegion(atoms_all, topology)
         
         if lambdaName is not None:
-            dp_force.setLambdaName(lambdaName)
+            dp_force.addLambdaParameter(lambdaName, lambdaValue)
         
         # Create the TorchForce and add it to the System.
         dp_force.setForceGroup(forceGroup)
