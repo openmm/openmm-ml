@@ -103,7 +103,7 @@ class DeepmdPotentialImpl(MLPotentialImpl):
         # Define QM region atoms (0-indexed)
         qm_atoms = [0, 1, 2, 3, 4]  # First 5 atoms
         
-        system = potential.createSystem(
+        system = potential.createMixedSystem(
             topology=pdb.topology,
             modelPath='model.pb',
             atoms=qm_atoms,  # Only these atoms use DeePMD
