@@ -67,16 +67,15 @@ class DeepmdPotentialImpl(MLPotentialImpl):
         pdb = app.PDBFile('system.pdb')
         
         # Create DeePMD potential
-        potential = MLPotential('deepmd')
+        potential = MLPotential('deepmd', model='model.pb',
+                                coordinatesCoefficient=10.0,
+                                forceCoefficient=964.8792534459,
+                                energyCoefficient=96.48792534459)
         
         # Create system with DeePMD forces
         system = potential.createSystem(
             topology=pdb.topology,
-            modelPath='model.pb',
             atoms=None,  # Use all atoms, or specify subset
-            coordinatesCoefficient=10.0,  # Angstrom to nm conversion
-            forceCoefficient=964.8792534459,  # eV/Angstrom to kJ/mol/nm  
-            energyCoefficient=96.48792534459,  # eV to kJ/mol
         )
         ```
         
@@ -84,9 +83,9 @@ class DeepmdPotentialImpl(MLPotentialImpl):
         
         ```python
         # Create system with lambda parameter for free energy calculations
+        potential = MLPotential('deepmd', model='model.pb')
         system = potential.createSystem(
             topology=pdb.topology,
-            modelPath='model.pb',
             lambdaName='lambda_alchemical',
             lambdaValue=0.5,  # Lambda value between 0 and 1
         )
@@ -104,12 +103,11 @@ class DeepmdPotentialImpl(MLPotentialImpl):
         # Define NNP region atoms (0-indexed)
         nnp_atoms = [0, 1, 2, 3, 4]  # First 5 atoms
         
-        potential = MLPotential('deepmd')
-        system = potential.createMixedSystem(
+        potential = MLPotential('deepmd', model='model.pb')
+        nnp_mm_system = potential.createMixedSystem(
             topology=pdb.topology,
             system=mm_system,
             atoms=nnp_atoms,  # Only these atoms use DeePMD
-            modelPath='model.pb'
         )
         ```
     
@@ -119,21 +117,12 @@ class DeepmdPotentialImpl(MLPotentialImpl):
         Modify these coefficients if your model uses different units.
     """
 
-    def __init__(self, name):
-        self.name = name
-
-    def addForces(self,
-                  topology: openmm.app.Topology,
-                  system: openmm.System,
-                  atoms: Optional[Iterable[int]],
-                  forceGroup: int,
-                  modelPath: str,
-                  coordinatesCoefficient: float = 10.0,
-                  forceCoefficient: float = 964.8792534459,
-                  energyCoefficient: float = 96.48792534459,
-                  lambdaName: Optional[str] = None,
-                  lambdaValue: Optional[float] = 1.0,
-                  **args):
+    def __init__(self, 
+                name, 
+                model: str = None, 
+                coordinatesCoefficient: float = 10.0,
+                forceCoefficient: float = 964.8792534459,
+                energyCoefficient: float = 96.48792534459,):
         try:
             from OpenMMDeepmdPlugin import DeepPotentialModel
             from OpenMMDeepmdPlugin import DeepmdForce
@@ -142,16 +131,31 @@ class DeepmdPotentialImpl(MLPotentialImpl):
                 "OpenMMDeepmdPlugin is not installed."
                 "Please install it with `conda install -c conda-forge ye-ding::openmm_deepmd_plugin`."
             )
+        self.name = name
+        self.modelPath = model
+        if self.modelPath is None:
+            raise ValueError("model must be specified for DeepmdPotentialImpl.")
         
-        # Create the DeepPotentialModel object.    
-        dp_model = DeepPotentialModel(modelPath)
-        dp_model.setUnitTransformCoefficients(coordinatesCoefficient, forceCoefficient, energyCoefficient)
+        # Create the DeepPotentialModel object.
+        self.dp_model = DeepPotentialModel(self.modelPath)
+        self.dp_model.setUnitTransformCoefficients(
+            coordinatesCoefficient, forceCoefficient, energyCoefficient
+        )
+
+    def addForces(self,
+                  topology: openmm.app.Topology,
+                  system: openmm.System,
+                  atoms: Optional[Iterable[int]],
+                  forceGroup: int = 0,
+                  lambdaName: Optional[str] = None,
+                  lambdaValue: Optional[float] = 1.0,
+                  **args):    
         
         if atoms is not None:
-            dp_force = dp_model.addParticlesToDPRegion(atoms, topology)
+            dp_force = self.dp_model.addParticlesToDPRegion(atoms, topology)
         else:
             atoms_all = [atom.index for atom in topology.atoms()]
-            dp_force = dp_model.addParticlesToDPRegion(atoms_all, topology)
+            dp_force = self.dp_model.addParticlesToDPRegion(atoms_all, topology)
         
         if lambdaName is not None:
             dp_force.addLambdaParameter(lambdaName, lambdaValue)
