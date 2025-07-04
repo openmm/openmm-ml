@@ -122,7 +122,7 @@ class DeepmdPotentialImpl(MLPotentialImpl):
                 model: str = None, 
                 coordinatesCoefficient: float = 10.0,
                 forceCoefficient: float = 964.8792534459,
-                energyCoefficient: float = 96.48792534459,):
+                energyCoefficient: float = 96.48792534459,) -> None:
         try:
             from OpenMMDeepmdPlugin import DeepPotentialModel
             from OpenMMDeepmdPlugin import DeepmdForce
@@ -149,7 +149,7 @@ class DeepmdPotentialImpl(MLPotentialImpl):
                   forceGroup: int = 0,
                   lambdaName: Optional[str] = None,
                   lambdaValue: Optional[float] = 1.0,
-                  **args):    
+                  **args) -> None:    
         
         if atoms is not None:
             dp_force = self.dp_model.addParticlesToDPRegion(atoms, topology)
