@@ -43,14 +43,12 @@ class DeepmdPotentialImplFactory(MLPotentialImplFactory):
 class DeepmdPotentialImpl(MLPotentialImpl):
     """Implementation of the DeePMD (Deep Potential Molecular Dynamics) potential for OpenMM.
     
-    This class provides an interface to use DeePMD neural network potentials in OpenMM simulations
-    through the OpenMMDeepmdPlugin. DeePMD potentials are trained using the DeepMD-kit framework
-    and can provide highly accurate quantum mechanical-level forces and energies for molecular
-    dynamics simulations.
+    This class provides an interface to use DeePMD neural network potentials in OpenMM simulations through the OpenMMDeepmdPlugin. 
+    DeePMD potentials are trained using the DeepMD-kit framework and can provide highly accurate quantum mechanical-level forces and energies for molecular dynamics simulations.
     
     The DeePMD potential supports various advanced features including:
     - Alchemical free energy calculations with lambda parameters  
-    - QM/MM-style region selection
+    - NNP/MM-style region selection
     - Custom unit conversions between different simulation packages
     
     Prerequisites:
@@ -97,16 +95,21 @@ class DeepmdPotentialImpl(MLPotentialImpl):
         context.setParameter('lambda_alchemical', new_lambda_value)
         ```
         
-        For QM/MM-style simulations with atom subsets:
+        For NNP/MM-style simulations with atom subsets:
         
         ```python
-        # Define QM region atoms (0-indexed)
-        qm_atoms = [0, 1, 2, 3, 4]  # First 5 atoms
+        forcefield = ForceField('amber14-all.xml', 'amber14/tip3pfb.xml')
+        mm_system = forcefield.createSystem(topology)
         
+        # Define NNP region atoms (0-indexed)
+        nnp_atoms = [0, 1, 2, 3, 4]  # First 5 atoms
+        
+        potential = MLPotential('deepmd')
         system = potential.createMixedSystem(
             topology=pdb.topology,
-            modelPath='model.pb',
-            atoms=qm_atoms,  # Only these atoms use DeePMD
+            system=mm_system,
+            atoms=nnp_atoms,  # Only these atoms use DeePMD
+            modelPath='model.pb'
         )
         ```
     
