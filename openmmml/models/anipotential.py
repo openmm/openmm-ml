@@ -68,7 +68,10 @@ class ANIPotentialImpl(MLPotentialImpl):
                   **args):
         # Create the TorchANI model.
 
-        import torchani
+        try:
+            import torchani
+        except ImportError as e:
+            raise ImportError(f"Failed to import torchani with error: {e}. Make sure torchani is installed.")
         import torch
         import openmmtorch
 
