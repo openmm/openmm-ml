@@ -55,7 +55,7 @@ source_suffix = ".rst"
 master_doc = "index"
 
 project = "OpenMM ML"
-copyright = "2023, Stanford University and the Authors"
+copyright = "2025, Stanford University and the Authors"
 
 
 exclude_patterns = ["_build", "_templates"]
