@@ -24,7 +24,7 @@ by following the instructions from the package developers.
 ## Usage
 
 The central class in OpenMM-ML is `MLPotential`.  It represents an MLIP that can be used for simulations.  In the
-simplest cases you simply provide it the name of the pretrained potential function to use.  You can then call
+simplest cases you just provide it the name of the pretrained potential function to use.  You can then call
 `createSystem()` to create a `System` object for a simulation.  For example,
 
 ```python
@@ -65,7 +65,7 @@ See the API documentation for additional information about the arguments to `cre
 ## Supported Models
 
 OpenMM-ML supports models created with a number of packages.  For each one we list the supported model names (the first
-argument to the `MLPotential` constructor, as well as additional arguments that can be passed to the constructor and to
+argument to the `MLPotential` constructor), as well as additional arguments that can be passed to the constructor and to
 `createSystem()`.
 
 ### MACE
@@ -166,3 +166,11 @@ When using DeePMD-kit models, the following extra keyword arguments to `createSy
 | --- | --- |
 | `lambdaName` | The name of a lambda parameter to use for alchemical calculations.  The default value is `None`, which does not create a lambda parameter. |
  | `lambdaValue` | The initial value of the lambda parameter |
+
+### Other Packages
+
+OpenMM-ML is based on a plugin architecture, allowing other packages to provide their own interfaces to it.  The
+packages listed above are the ones for which OpenMM-ML has built in support.  Other packages can interface to it by
+defining two classes that subclass `MLPotentialImpl` and `MLPotentialImplFactory`, then registering them by specifying
+an [entry point](https://packaging.python.org/en/latest/specifications/entry-points/) in the group `openmmml.potentials`.
+Consult the documentation for other packages to see whether they provide interfaces for OpenMM-ML.
