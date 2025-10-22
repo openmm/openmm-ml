@@ -1,3 +1,5 @@
+# User Guide
+
 ## Introduction
 
 OpenMM-ML is a high level API for using machine learning interatomic potentials (MLIPs) in OpenMM simulations.  With
@@ -70,8 +72,8 @@ argument to the `MLPotential` constructor), as well as additional arguments that
 
 ### MACE
 
-The [MACE](https://github.com/ACEsuit/mace) package can be used to create models based on the [MACE](https://arxiv.org/abs/2206.07697)
-architecture.  This includes both pretrained models and custom models you create yourself.  The following model names
+The [MACE](https://github.com/ACEsuit/mace) package can be used to create models based on the [MACE architecture](https://arxiv.org/abs/2206.07697).
+This includes both pretrained models and custom models you create yourself.  The following model names
 are supported.
 
 | Name | Model |
@@ -94,8 +96,8 @@ When using MACE models, the following extra keyword arguments to `createSystem()
 
 ### NequIP
 
-The [NequIP](https://github.com/mir-group/nequip) package can be used to create models based on the [NequIP](https://www.nature.com/articles/s41467-022-29939-5)
-architecture.  That includes models created with [Allegro](https://github.com/mir-group/allegro), which is an extension
+The [NequIP](https://github.com/mir-group/nequip) package can be used to create models based on the [NequIP architecture](https://www.nature.com/articles/s41467-022-29939-5).
+That includes models created with [Allegro](https://github.com/mir-group/allegro), which is an extension
 package for NequIP.  The following model names are supported.
 
 | Name | Model |
