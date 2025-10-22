@@ -52,65 +52,65 @@ class DeepmdPotentialImpl(MLPotentialImpl):
     - Custom unit conversions between different simulation packages
     
     Prerequisites:
-        - OpenMMDeepmdPlugin must be installed: 
+        - OpenMMDeepmdPlugin must be installed:
           `conda install -c conda-forge ye-ding::openmm_deepmd_plugin`
         - A trained DeePMD model file (.pb format from DeepMD-kit)
     
     Usage:
         The DeepmdPotentialImpl is typically used through the MLPotential interface:
         
-        ```python
-        from openmmml import MLPotential
-        import openmm.app as app
-        
-        # Load your system
-        pdb = app.PDBFile('system.pdb')
-        
-        # Create DeePMD potential
-        potential = MLPotential('deepmd', model='model.pb',
-                                coordinatesCoefficient=10.0,
-                                forceCoefficient=964.8792534459,
-                                energyCoefficient=96.48792534459)
-        
-        # Create system with DeePMD forces
-        system = potential.createSystem(
-            topology=pdb.topology,
-            atoms=None,  # Use all atoms, or specify subset
-        )
-        ```
-        
+        .. code-block:: python
+
+            from openmmml import MLPotential
+            import openmm.app as app
+
+            # Load your system
+            pdb = app.PDBFile('system.pdb')
+
+            # Create DeePMD potential
+            potential = MLPotential('deepmd', model='model.pb',
+                                    coordinatesCoefficient=10.0,
+                                    forceCoefficient=964.8792534459,
+                                    energyCoefficient=96.48792534459)
+
+            # Create system with DeePMD forces
+            system = potential.createSystem(
+                topology=pdb.topology,
+                atoms=None,  # Use all atoms, or specify subset
+            )
+
         For alchemical simulations:
-        
-        ```python
-        # Create system with lambda parameter for free energy calculations
-        potential = MLPotential('deepmd', model='model.pb')
-        system = potential.createSystem(
-            topology=pdb.topology,
-            lambdaName='lambda_alchemical',
-            lambdaValue=0.5,  # Lambda value between 0 and 1
-        )
-        
-        # During simulation, you can also update lambda value through the context:
-        context.setParameter('lambda_alchemical', new_lambda_value)
-        ```
-        
+
+        .. code-block:: python
+
+            # Create system with lambda parameter for free energy calculations
+            potential = MLPotential('deepmd', model='model.pb')
+            system = potential.createSystem(
+                topology=pdb.topology,
+                lambdaName='lambda_alchemical',
+                lambdaValue=0.5,  # Lambda value between 0 and 1
+            )
+
+            # During simulation, you can also update lambda value through the context:
+            context.setParameter('lambda_alchemical', new_lambda_value)
+
         For NNP/MM-style simulations with atom subsets:
         
-        ```python
-        forcefield = ForceField('amber14-all.xml', 'amber14/tip3pfb.xml')
-        mm_system = forcefield.createSystem(topology)
-        
-        # Define NNP region atoms (0-indexed)
-        nnp_atoms = [0, 1, 2, 3, 4]  # First 5 atoms
-        
-        potential = MLPotential('deepmd', model='model.pb')
-        nnp_mm_system = potential.createMixedSystem(
-            topology=pdb.topology,
-            system=mm_system,
-            atoms=nnp_atoms,  # Only these atoms use DeePMD
-        )
-        ```
-    
+        .. code-block:: python
+
+            forcefield = ForceField('amber14-all.xml', 'amber14/tip3pfb.xml')
+            mm_system = forcefield.createSystem(topology)
+
+            # Define NNP region atoms (0-indexed)
+            nnp_atoms = [0, 1, 2, 3, 4]  # First 5 atoms
+
+            potential = MLPotential('deepmd', model='model.pb')
+            nnp_mm_system = potential.createMixedSystem(
+                topology=pdb.topology,
+                system=mm_system,
+                atoms=nnp_atoms,  # Only these atoms use DeePMD
+            )
+
     Note:
         The default unit conversion coefficients are set up for converting between
         DeePMD-kit's native units (Angstrom, eV) and OpenMM's units (nm, kJ/mol).
