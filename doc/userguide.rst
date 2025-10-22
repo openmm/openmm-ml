@@ -1,4 +1,4 @@
 User Guide
 ----------
 
-.. mdinclude:: ../README.md
+.. mdinclude:: userguide.md
