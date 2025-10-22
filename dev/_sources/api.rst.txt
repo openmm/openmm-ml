@@ -27,6 +27,8 @@ Models
     
       openmmml.models.anipotential.ANIPotentialImpl
     
+      openmmml.models.deepmdpotential.DeepmdPotentialImpl
+    
       openmmml.models.macepotential.MACEPotentialImpl
     
       openmmml.models.nequippotential.NequIPPotentialImpl

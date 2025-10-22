@@ -1,0 +1,23 @@
+﻿openmmml.models.deepmdpotential.DeepmdPotentialImpl
+===================================================
+
+.. currentmodule:: openmmml.models.deepmdpotential
+
+.. autoclass:: DeepmdPotentialImpl
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~DeepmdPotentialImpl.__init__
+      ~DeepmdPotentialImpl.addForces
+   
+   
+
+   
+   
+   
