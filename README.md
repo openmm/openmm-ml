@@ -31,6 +31,14 @@ mamba install -c conda-forge openmm-ml
 
 We recommend using mamba, since it is faster and less buggy than conda.
 
+### Install
+
+Install with [`mamba`](https://mamba.readthedocs.io/en/latest/user_guide/mamba.html), a faster CLI tool to manage `conda` environments.
+
+```bash
+$ mamba install -c conda-forge/label/openmm_rc -c conda-forge/label/openmm-torch_rc openmm-ml
+```
+
 ### Usage
 
 To use this package, create a MLPotential object, specifying the name of the potential function to use.  You can then
