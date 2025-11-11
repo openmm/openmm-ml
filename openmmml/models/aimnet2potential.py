@@ -58,10 +58,8 @@ class AIMNet2PotentialImpl(MLPotentialImpl):
 
         import torch
         import openmmtorch
-        if self.name == 'aimnet2-wb97m-d3':
-            model = torch.load('aimnet2_wb97m-d3_ens.jpt')
-        else:
-            raise ValueError('Unsupported AIMNet2 model: '+self.name)
+        from aimnet.calculators import AIMNet2Calculator
+        model = AIMNet2Calculator('aimnet2')
 
         # Create the PyTorch model that will be invoked by OpenMM.
 
@@ -69,37 +67,40 @@ class AIMNet2PotentialImpl(MLPotentialImpl):
         if atoms is not None:
             includedAtoms = [includedAtoms[i] for i in atoms]
         numbers = torch.tensor([[atom.element.atomic_number for atom in includedAtoms]])
-        charge = torch.tensor([args['charge']], dtype=torch.float32)
+        charge = torch.tensor([args.get('charge', 0)], dtype=torch.float32)
+        multiplicity = torch.tensor([args.get('multiplicity', 1)], dtype=torch.float32)
 
         class AIMNet2Force(torch.nn.Module):
 
-            def __init__(self, model, numbers, charge, atoms):
+            def __init__(self, calc, numbers, charge, atoms):
                 super(AIMNet2Force, self).__init__()
-                self.model = model
+                self.model = calc.model
                 self.numbers = torch.nn.Parameter(numbers, requires_grad=False)
                 self.charge = torch.nn.Parameter(charge, requires_grad=False)
+                self.multiplicity = torch.nn.Parameter(multiplicity, requires_grad=False)
                 self.energyScale = (unit.ev/unit.item).conversion_factor_to(unit.kilojoules_per_mole)
                 if atoms is None:
                     self.indices = None
                 else:
                     self.indices = torch.tensor(sorted(atoms), dtype=torch.int64)
 
-            def forward(self, positions, boxvectors: Optional[torch.Tensor] = None):
+            def forward(self, positions: torch.Tensor, boxvectors: Optional[torch.Tensor] = None):
                 positions = positions.to(torch.float32)
                 if self.indices is not None:
                     positions = positions[self.indices]
                 args = {'coord': 10.0*positions.unsqueeze(0),
                         'numbers': self.numbers,
-                        'charge': self.charge}
+                        'charge': self.charge,
+                        'mult': self.multiplicity}
                 result = self.model(args)
-                return (self.energyScale*result['energy'], (10.0*self.energyScale)*result['forces'][0])
+                energy = result["energy"].sum()
+                return self.energyScale*energy
 
         # Create the TorchForce and add it to the System.
 
         module = torch.jit.script(AIMNet2Force(model, numbers, charge, atoms))
         force = openmmtorch.TorchForce(module)
         force.setForceGroup(forceGroup)
-        force.setOutputsForces(True)
         system.addForce(force)
 
-MLPotential.registerImplFactory('aimnet2-wb97m-d3', AIMNet2PotentialImplFactory())
+MLPotential.registerImplFactory('aimnet2', AIMNet2PotentialImplFactory())
