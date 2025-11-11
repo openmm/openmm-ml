@@ -94,6 +94,23 @@ When using MACE models, the following extra keyword arguments to `createSystem()
 | `precision` | The numerical precision of the model. Supported options are `'single'` and `'double'`.  If `None`, the default precision of the model is used. |
  | `returnEnergyType` | Whether to return the interaction energy or the energy including the self-energy.  The default is `'interaction_energy'`. Supported options are `'interaction_energy'` and `'energy'`. |
 
+### AIMNet2
+
+The [aimnet](https://github.com/isayevlab/aimnetcentral) package can be used to create models using the pretrained
+[AIMNet2](https://doi.org/10.1039/D4SC08572H) potential.  The following model names
+are supported.
+
+| Name | Model |
+| --- | --- |
+| `aimnet2` | Pretrained AIMNet2 models |
+
+When using AIMNet2 models, the following extra keyword arguments to `createSystem()` and `createMixedSystem()` are supported.
+
+| Argument       | Description |
+| --- | --- |
+| `charge`       | The total charge of the system.  If omitted, it is assumed to be 0. |
+| `multiplicity` | The spin multiplicity of the system.  If omitted, it is assumed to be 1. |
+
 ### NequIP
 
 The [NequIP](https://github.com/mir-group/nequip) package can be used to create models based on the [NequIP architecture](https://www.nature.com/articles/s41467-022-29939-5).

@@ -43,6 +43,11 @@ class AIMNet2PotentialImplFactory(MLPotentialImplFactory):
 
 class AIMNet2PotentialImpl(MLPotentialImpl):
     """This is the MLPotentialImpl implementing the AIMNet2 potential.
+
+    The AIMNet2 potential is constructed using `aimnet` to build a PyTorch model,
+    and then integrated into the OpenMM System using a TorchForce.  To use it, specify the model by name:
+
+    >>> potential = MLPotential('aimnet2')
     """
 
     def __init__(self, name):
