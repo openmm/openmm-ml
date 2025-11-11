@@ -6,7 +6,7 @@ Simbios, the NIH National Center for Physics-Based Simulation of
 Biological Structures at Stanford, funded under the NIH Roadmap for
 Medical Research, grant U54 GM072970. See https://simtk.org.
 
-Portions copyright (c) 2021 Stanford University and the Authors.
+Portions copyright (c) 2021-2024 Stanford University and the Authors.
 Authors: Peter Eastman
 Contributors:
 
@@ -34,6 +34,11 @@ import openmm.app
 import openmm.unit as unit
 from copy import deepcopy
 from typing import Dict, Iterable, Optional
+import sys
+if sys.version_info < (3, 10):
+    from importlib_metadata import entry_points
+else:
+    from importlib.metadata import entry_points
 
 
 class MLPotentialImplFactory(object):
@@ -41,7 +46,11 @@ class MLPotentialImplFactory(object):
 
     If you are defining a new potential function, you need to create subclasses
     of MLPotentialImpl and MLPotentialImplFactory, and register an instance of
-    the factory by calling MLPotential.registerImplFactory().
+    the factory by calling MLPotential.registerImplFactory().  Alternatively,
+    if a Python package creates an entry point in the group "openmmml.potentials",
+    the potential will be registered automatically.  The entry point name is the
+    name of the potential function, and the value should be the name of the
+    MLPotentialImplFactory subclass.
     """
     
     def createImpl(self, name: str, **args) -> "MLPotentialImpl":
@@ -150,14 +159,16 @@ class MLPotential(object):
             potential functions for more information.
         """
         self._impl = MLPotential._implFactories[name].createImpl(name, **args)
-    
-    def createSystem(self, topology: openmm.app.Topology, **args) -> openmm.System:
+
+    def createSystem(self, topology: openmm.app.Topology, removeCMMotion: bool = True, **args) -> openmm.System:
         """Create a System for running a simulation with this potential function.
 
         Parameters
         ----------
         topology: Topology
             the Topology for which to create a System
+        removeCMMotion: bool
+            if true, a CMMotionRemover will be added to the System. 
         args:
             particular potential functions may define additional arguments that can
             be used to customize them.  See the documentation on the specific
@@ -176,6 +187,8 @@ class MLPotential(object):
             else:
                 system.addParticle(atom.element.mass)
         self._impl.addForces(topology, system, None, 0, **args)
+        if removeCMMotion:
+            system.addForce(openmm.CMMotionRemover())
         return system
 
     def createMixedSystem(self,
@@ -261,7 +274,7 @@ class MLPotential(object):
                     for j in range(i):
                         a2 = atomList[j]
                         if (a1, a2) not in existing and (a2, a1) not in existing:
-                            force.addExclusion(a1, a2, True)
+                            force.addExclusion(a1, a2)
 
         # Add the ML potential.
 
@@ -387,7 +400,8 @@ class MLPotential(object):
                     angles.remove(angle)
         for torsions in root.findall('./Forces/Force/Torsions'):
             for torsion in torsions.findall('Torsion'):
-                torsionAtoms = [int(torsion.attrib[p]) for p in ('p1', 'p2', 'p3', 'p4')]
+                torsionLabels =  ('p1', 'p2', 'p3', 'p4') if 'p1' in torsion.attrib else ('a1', 'a2', 'a3', 'a4', 'b1', 'b2', 'b3', 'b4')
+                torsionAtoms = [int(torsion.attrib[p]) for p in torsionLabels]
                 if shouldRemove(torsionAtoms):
                     torsions.remove(torsion)
 
@@ -416,3 +430,9 @@ class MLPotential(object):
             a factory object that will be used to create MLPotentialImpl objects
         """
         MLPotential._implFactories[name] = factory
+
+
+# Register any potential functions defined by entry points.
+
+for potential in entry_points(group='openmmml.potentials'):
+    MLPotential.registerImplFactory(potential.name, potential.load()())

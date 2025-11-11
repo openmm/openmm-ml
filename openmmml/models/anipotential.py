@@ -31,7 +31,7 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 from openmmml.mlpotential import MLPotential, MLPotentialImpl, MLPotentialImplFactory
 import openmm
-from typing import Iterable, Optional, Union
+from typing import Iterable, Optional
 
 class ANIPotentialImplFactory(MLPotentialImplFactory):
     """This is the factory that creates ANIPotentialImpl objects."""
@@ -52,12 +52,6 @@ class ANIPotentialImpl(MLPotentialImpl):
     can optionally use only a single model by specifying the modelIndex argument to
     select which one to use.  This leads to a large improvement in speed, at the
     cost of a small decrease in accuracy.
-
-    TorchForce requires the model to be saved to disk in a separate file.  By default
-    it writes a file called 'animodel.pt' in the current working directory.  You can
-    use the filename argument to specify a different name.  For example,
-
-    >>> system = potential.createSystem(topology, filename='mymodel.pt')
     """
 
     def __init__(self, name):
@@ -69,13 +63,15 @@ class ANIPotentialImpl(MLPotentialImpl):
                   system: openmm.System,
                   atoms: Optional[Iterable[int]],
                   forceGroup: int,
-                  filename: str = 'animodel.pt',
                   implementation: str = 'nnpops',
                   modelIndex: Optional[int] = None,
                   **args):
         # Create the TorchANI model.
 
-        import torchani
+        try:
+            import torchani
+        except ImportError as e:
+            raise ImportError(f"Failed to import torchani with error: {e}. Make sure torchani is installed.")
         import torch
         import openmmtorch
 
@@ -108,11 +104,12 @@ class ANIPotentialImpl(MLPotentialImpl):
 
         class ANIForce(torch.nn.Module):
 
-            def __init__(self, model, species, atoms, periodic):
+            def __init__(self, model, species, atoms, periodic, implementation):
                 super(ANIForce, self).__init__()
                 self.model = model
                 self.species = torch.nn.Parameter(species, requires_grad=False)
                 self.energyScale = torchani.units.hartree2kjoulemol(1)
+                self.implementation = implementation
                 if atoms is None:
                     self.indices = None
                 else:
@@ -124,32 +121,31 @@ class ANIPotentialImpl(MLPotentialImpl):
 
             def forward(self, positions, boxvectors: Optional[torch.Tensor] = None):
                 positions = positions.to(torch.float32)
-                #print(f"(boxvectors, scale): {boxvectors, scale}")
                 if self.indices is not None:
                     positions = positions[self.indices]
                 if boxvectors is None:
                     _, energy = self.model((self.species, 10.0*positions.unsqueeze(0)))
                 else:
                     boxvectors = boxvectors.to(torch.float32)
+                    if self.implementation == "torchani":
+                        positions = positions - torch.outer(torch.floor(positions[:,2]/boxvectors[2,2]), boxvectors[2])
+                        positions = positions - torch.outer(torch.floor(positions[:,1]/boxvectors[1,1]), boxvectors[1])
+                        positions = positions - torch.outer(torch.floor(positions[:,0]/boxvectors[0,0]), boxvectors[0])
                     _, energy = self.model((self.species, 10.0*positions.unsqueeze(0)), cell=10.0*boxvectors, pbc=self.pbc)
 
                 return self.energyScale*energy
 
         # is_periodic...
         is_periodic = (topology.getPeriodicBoxVectors() is not None) or system.usesPeriodicBoundaryConditions()
-        aniForce = ANIForce(model, species, atoms, is_periodic)
+        aniForce = ANIForce(model, species, atoms, is_periodic, implementation)
 
-        # Convert it to TorchScript and save it.
+        # Convert it to TorchScript.
 
         module = torch.jit.script(aniForce)
-        module.save(filename)
 
         # Create the TorchForce and add it to the System.
 
-        force = openmmtorch.TorchForce(filename)
+        force = openmmtorch.TorchForce(module)
         force.setForceGroup(forceGroup)
         force.setUsesPeriodicBoundaryConditions(is_periodic)
         system.addForce(force)
-
-MLPotential.registerImplFactory('ani1ccx', ANIPotentialImplFactory())
-MLPotential.registerImplFactory('ani2x', ANIPotentialImplFactory())
