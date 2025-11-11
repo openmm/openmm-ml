@@ -61,9 +61,12 @@ class AIMNet2PotentialImpl(MLPotentialImpl):
                   **args):
         # Load the AIMNet2 model.
 
+        try:
+            from aimnet.calculators import AIMNet2Calculator
+        except ImportError as e:
+            raise ImportError(f"Failed to import aimnet with error: {e}. Install from https://github.com/isayevlab/aimnetcentral.")
         import torch
         import openmmtorch
-        from aimnet.calculators import AIMNet2Calculator
         model = AIMNet2Calculator('aimnet2')
 
         # Create the PyTorch model that will be invoked by OpenMM.
