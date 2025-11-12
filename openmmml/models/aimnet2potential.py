@@ -93,7 +93,7 @@ class AIMNet2PotentialImpl(MLPotentialImpl):
                     self.indices = torch.tensor(sorted(atoms), dtype=torch.int64)
 
             def forward(self, positions: torch.Tensor, boxvectors: Optional[torch.Tensor] = None):
-                positions = positions.to(torch.float32)
+                positions = positions.to(torch.float32).to(self.numbers.device)
                 if self.indices is not None:
                     positions = positions[self.indices]
                 args = {'coord': 10.0*positions.unsqueeze(0),
@@ -106,7 +106,7 @@ class AIMNet2PotentialImpl(MLPotentialImpl):
 
         # Create the TorchForce and add it to the System.
 
-        module = torch.jit.script(AIMNet2Force(model, numbers, charge, atoms))
+        module = torch.jit.script(AIMNet2Force(model, numbers, charge, atoms)).to(torch.device('cpu'))
         force = openmmtorch.TorchForce(module)
         force.setForceGroup(forceGroup)
         system.addForce(force)
