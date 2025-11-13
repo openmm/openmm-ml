@@ -25,6 +25,8 @@ Models
     :nosignatures:
    
     
+      openmmml.models.aimnet2potential.AIMNet2PotentialImpl
+    
       openmmml.models.anipotential.ANIPotentialImpl
     
       openmmml.models.deepmdpotential.DeepmdPotentialImpl

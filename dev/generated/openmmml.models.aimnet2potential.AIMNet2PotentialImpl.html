@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>openmmml.models.nequippotential.NequIPPotentialImpl &#8212; OpenMM ML 1.3dev_f7698ba documentation</title>
+    <title>openmmml.models.aimnet2potential.AIMNet2PotentialImpl &#8212; OpenMM ML 1.3dev_f7698ba documentation</title>
   
   
   
@@ -41,7 +41,7 @@
     <script src="../_static/documentation_options.js?v=4605e66e"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'generated/openmmml.models.nequippotential.NequIPPotentialImpl';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'generated/openmmml.models.aimnet2potential.AIMNet2PotentialImpl';</script>
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://openmm.github.io/openmm-ml/dev/_static/versions.json';
@@ -51,7 +51,8 @@
         </script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="prev" title="openmmml.models.macepotential.MACEPotentialImpl" href="openmmml.models.macepotential.MACEPotentialImpl.html" />
+    <link rel="next" title="openmmml.models.anipotential.ANIPotentialImpl" href="openmmml.models.anipotential.ANIPotentialImpl.html" />
+    <link rel="prev" title="openmmml.mlpotential.MLPotentialImpl" href="openmmml.mlpotential.MLPotentialImpl.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="dev" />
@@ -366,11 +367,11 @@
 <li class="toctree-l1"><a class="reference internal" href="openmmml.mlpotential.MLPotentialImpl.html">openmmml.mlpotential.MLPotentialImpl</a></li>
 </ul>
 <ul class="current nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="openmmml.models.aimnet2potential.AIMNet2PotentialImpl.html">openmmml.models.aimnet2potential.AIMNet2PotentialImpl</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">openmmml.models.aimnet2potential.AIMNet2PotentialImpl</a></li>
 <li class="toctree-l1"><a class="reference internal" href="openmmml.models.anipotential.ANIPotentialImpl.html">openmmml.models.anipotential.ANIPotentialImpl</a></li>
 <li class="toctree-l1"><a class="reference internal" href="openmmml.models.deepmdpotential.DeepmdPotentialImpl.html">openmmml.models.deepmdpotential.DeepmdPotentialImpl</a></li>
 <li class="toctree-l1"><a class="reference internal" href="openmmml.models.macepotential.MACEPotentialImpl.html">openmmml.models.macepotential.MACEPotentialImpl</a></li>
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">openmmml.models.nequippotential.NequIPPotentialImpl</a></li>
+<li class="toctree-l1"><a class="reference internal" href="openmmml.models.nequippotential.NequIPPotentialImpl.html">openmmml.models.nequippotential.NequIPPotentialImpl</a></li>
 </ul>
 </div>
 </nav></div>
@@ -414,7 +415,7 @@
     
     <li class="breadcrumb-item"><a href="../api.html" class="nav-link">API</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">openmmml.models.nequippotential.NequIPPotentialImpl</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">openmmml.models.aimnet2potential.AIMNet2PotentialImpl</span></li>
   </ul>
 </nav>
 </div>
@@ -431,95 +432,51 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="openmmml-models-nequippotential-nequippotentialimpl">
-<h1>openmmml.models.nequippotential.NequIPPotentialImpl<a class="headerlink" href="#openmmml-models-nequippotential-nequippotentialimpl" title="Link to this heading">#</a></h1>
+  <section id="openmmml-models-aimnet2potential-aimnet2potentialimpl">
+<h1>openmmml.models.aimnet2potential.AIMNet2PotentialImpl<a class="headerlink" href="#openmmml-models-aimnet2potential-aimnet2potentialimpl" title="Link to this heading">#</a></h1>
 <dl class="py class">
-<dt class="sig sig-object py" id="openmmml.models.nequippotential.NequIPPotentialImpl">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">openmmml.models.nequippotential.</span></span><span class="sig-name descname"><span class="pre">NequIPPotentialImpl</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modelPath</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lengthScale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">energyScale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#openmmml.models.nequippotential.NequIPPotentialImpl" title="Link to this definition">#</a></dt>
-<dd><p>This is the MLPotentialImpl implementing support for E(3)-equivariant
-interatomic potentials generated by NequIP or Allegro.</p>
-<p>The potential must be constructed using the NequIP/Allegro code to build and
-deploy a PyTorch model, which can then be integrated into OpenMM using a
-TorchForce. The TorchForce is used to add it to the OpenMM System. Note that
-you must provide a deployed model, as no general purpose model is available.</p>
-<p>To use a deployed model in openmm-ml, you must provide the path to the model,
-and the conversion factors between the model length and energy units and OpenMM
-units (nm and kJ/mol, respectively). For example:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">potential</span> <span class="o">=</span> <span class="n">MLPotential</span><span class="p">(</span><span class="s1">&#39;nequip&#39;</span><span class="p">,</span>
-<span class="go">                            modelPath=&#39;example_model_deployed.pth&#39;,</span>
-<span class="go">                            lengthScale=0.1, # Angstrom to nm</span>
-<span class="go">                            energyScale=4.184 # kcal/mol to kJ/mol</span>
-<span class="go">                            )</span>
+<dt class="sig sig-object py" id="openmmml.models.aimnet2potential.AIMNet2PotentialImpl">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">openmmml.models.aimnet2potential.</span></span><span class="sig-name descname"><span class="pre">AIMNet2PotentialImpl</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#openmmml.models.aimnet2potential.AIMNet2PotentialImpl" title="Link to this definition">#</a></dt>
+<dd><p>This is the MLPotentialImpl implementing the AIMNet2 potential.</p>
+<p>The AIMNet2 potential is constructed using <cite>aimnet</cite> to build a PyTorch model,
+and then integrated into the OpenMM System using a TorchForce.  To use it, specify the model by name:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">potential</span> <span class="o">=</span> <span class="n">MLPotential</span><span class="p">(</span><span class="s1">&#39;aimnet2&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>During system creation, if the model was trained with custom atom types,
-you can specify this by passing to the <code class="docutils literal notranslate"><span class="pre">atomTypes</span></code> parameter a list of
-of integers corresponding to the nequip atom type for each particle that
-will be modeled using this potential. This argument should, therefore,
-have the same length as the number of ML atoms in the system.  Note that
-by default the model uses the atomic number to map the atom type. This
-will work if you trained your model using the standard
-<code class="docutils literal notranslate"><span class="pre">chemical_symbols</span></code> option.</p>
-<p>Additionally, you can specify the precision of
-the model using the <code class="docutils literal notranslate"><span class="pre">precision</span></code> keyword argument. Supported options are
-‘single’ and ‘double’. For example:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">system</span> <span class="o">=</span> <span class="n">potential</span><span class="o">.</span><span class="n">createSystem</span><span class="p">(</span><span class="n">topology</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="s1">&#39;single&#39;</span><span class="p">)</span>
-</pre></div>
-</div>
-<p>By default, the implementation uses the precision of the loaded model.
-Note that models deployed before NequIP v0.6.0 don’t contain information
-about their precision, so <code class="docutils literal notranslate"><span class="pre">precision='double'</span></code> should only be used if
-the model was explicitly trained with <code class="docutils literal notranslate"><span class="pre">default_dtype=float64</span></code>, as by
-default the model is trained with <code class="docutils literal notranslate"><span class="pre">default_dtype=float32</span></code>.</p>
 <dl class="py method">
-<dt class="sig sig-object py" id="openmmml.models.nequippotential.NequIPPotentialImpl.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modelPath</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lengthScale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">energyScale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#openmmml.models.nequippotential.NequIPPotentialImpl.__init__" title="Link to this definition">#</a></dt>
-<dd><p>Initialize the NequIPPotentialImpl.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>name</strong> (<em>str</em>) – The name specified by the MLPotential constructor, viz. ‘nequip’.</p></li>
-<li><p><strong>modelPath</strong> (<em>str</em><em>, </em><em>optional</em>) – The path to the deployed model.</p></li>
-<li><p><strong>lengthScale</strong> (<em>float</em>) – The length conversion factor from the model units to nanometers.</p></li>
-<li><p><strong>energyScale</strong> (<em>float</em>) – The energy conversion factor from the model units to kJ/mol.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
+<dt class="sig sig-object py" id="openmmml.models.aimnet2potential.AIMNet2PotentialImpl.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#openmmml.models.aimnet2potential.AIMNet2PotentialImpl.__init__" title="Link to this definition">#</a></dt>
+<dd></dd></dl>
 
 <p class="rubric">Methods</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#openmmml.models.nequippotential.NequIPPotentialImpl.__init__" title="openmmml.models.nequippotential.NequIPPotentialImpl.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(name, modelPath, lengthScale, ...)</p></td>
-<td><p>Initialize the NequIPPotentialImpl.</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#openmmml.models.aimnet2potential.AIMNet2PotentialImpl.__init__" title="openmmml.models.aimnet2potential.AIMNet2PotentialImpl.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(name)</p></td>
+<td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#openmmml.models.nequippotential.NequIPPotentialImpl.addForces" title="openmmml.models.nequippotential.NequIPPotentialImpl.addForces"><code class="xref py py-obj docutils literal notranslate"><span class="pre">addForces</span></code></a>(topology, system, atoms, forceGroup)</p></td>
-<td><p>Add the NequIPForce to the OpenMM System.</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#openmmml.models.aimnet2potential.AIMNet2PotentialImpl.addForces" title="openmmml.models.aimnet2potential.AIMNet2PotentialImpl.addForces"><code class="xref py py-obj docutils literal notranslate"><span class="pre">addForces</span></code></a>(topology, system, atoms, ...)</p></td>
+<td><p>Add Force objects to a System to implement the potential function.</p></td>
 </tr>
 </tbody>
 </table>
 </div>
 <dl class="py method">
-<dt class="sig sig-object py" id="openmmml.models.nequippotential.NequIPPotentialImpl.addForces">
-<span class="sig-name descname"><span class="pre">addForces</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">topology</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Topology</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">system</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">System</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atoms</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">forceGroup</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">precision</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atomTypes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#openmmml.models.nequippotential.NequIPPotentialImpl.addForces" title="Link to this definition">#</a></dt>
-<dd><p>Add the NequIPForce to the OpenMM System.</p>
+<dt class="sig sig-object py" id="openmmml.models.aimnet2potential.AIMNet2PotentialImpl.addForces">
+<span class="sig-name descname"><span class="pre">addForces</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">topology</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Topology</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">system</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">System</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atoms</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">forceGroup</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#openmmml.models.aimnet2potential.AIMNet2PotentialImpl.addForces" title="Link to this definition">#</a></dt>
+<dd><p>Add Force objects to a System to implement the potential function.</p>
+<p>This is invoked by MLPotential.createSystem().  Subclasses must implement
+it to create the requested potential function.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>topology</strong> (<em>openmm.app.Topology</em>) – The topology of the system.</p></li>
-<li><p><strong>system</strong> (<em>openmm.System</em>) – The system to which the force will be added.</p></li>
-<li><p><strong>atoms</strong> (<em>iterable</em><em> of </em><em>int</em>) – The indices of the atoms to include in the model. If <code class="docutils literal notranslate"><span class="pre">None</span></code>, all atoms are included.</p></li>
-<li><p><strong>forceGroup</strong> (<em>int</em>) – The force group to which the force should be assigned.</p></li>
-<li><p><strong>precision</strong> (<em>str</em><em>, </em><em>optional</em>) – The precision of the model. Supported options are ‘single’ and ‘double’.
-If <code class="docutils literal notranslate"><span class="pre">None</span></code>, the default precision of the model is used. This is the
-recommended option. Models deployed before NequIP v0.6.0 don’t contain
-information about their precision, so <code class="docutils literal notranslate"><span class="pre">precision='double'</span></code> should only be
-used if the model was explicitly trained with <code class="docutils literal notranslate"><span class="pre">default_dtype=float64</span></code>,
-as by default the model is trained with <code class="docutils literal notranslate"><span class="pre">default_dtype=float32</span></code>.</p></li>
-<li><p><strong>atomTypes</strong> (<em>List</em><em>[</em><em>int</em><em>]</em><em>, </em><em>optional</em>) – A list of integers corresponding to the nequip atom type for each ML atom in the system.
-This is only required if the model was trained with custom atom types. If <code class="docutils literal notranslate"><span class="pre">None</span></code>,
-the atomic number is used to determine the atom type. This list should have the same
-length as the number of ML atoms in the system.</p></li>
+<li><p><strong>topology</strong> (<em>Topology</em>) – the Topology from which the System is being created</p></li>
+<li><p><strong>system</strong> (<em>System</em>) – the System that is being created</p></li>
+<li><p><strong>atoms</strong> (<em>Optional</em><em>[</em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em>) – the indices of atoms the potential should be applied to, or None if
+it should be applied to the entire System</p></li>
+<li><p><strong>forceGroup</strong> (<em>int</em>) – the force group that any newly added Forces should be in</p></li>
+<li><p><strong>args</strong> – any additional keyword arguments that were provided to createSystem()
+are passed to this method.  This allows subclasses to customize their
+behavior based on extra arguments.</p></li>
 </ul>
 </dd>
 </dl>
@@ -540,13 +497,22 @@ length as the number of ML atoms in the system.</p></li>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="openmmml.models.macepotential.MACEPotentialImpl.html"
+       href="openmmml.mlpotential.MLPotentialImpl.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">openmmml.models.macepotential.MACEPotentialImpl</p>
+        <p class="prev-next-title">openmmml.mlpotential.MLPotentialImpl</p>
       </div>
+    </a>
+    <a class="right-next"
+       href="openmmml.models.anipotential.ANIPotentialImpl.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">openmmml.models.anipotential.ANIPotentialImpl</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
     </a>
 </div>
                 </footer>
@@ -567,9 +533,9 @@ length as the number of ML atoms in the system.</p></li>
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#openmmml.models.nequippotential.NequIPPotentialImpl"><code class="docutils literal notranslate"><span class="pre">NequIPPotentialImpl</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#openmmml.models.nequippotential.NequIPPotentialImpl.__init__"><code class="docutils literal notranslate"><span class="pre">NequIPPotentialImpl.__init__()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#openmmml.models.nequippotential.NequIPPotentialImpl.addForces"><code class="docutils literal notranslate"><span class="pre">NequIPPotentialImpl.addForces()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#openmmml.models.aimnet2potential.AIMNet2PotentialImpl"><code class="docutils literal notranslate"><span class="pre">AIMNet2PotentialImpl</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#openmmml.models.aimnet2potential.AIMNet2PotentialImpl.__init__"><code class="docutils literal notranslate"><span class="pre">AIMNet2PotentialImpl.__init__()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#openmmml.models.aimnet2potential.AIMNet2PotentialImpl.addForces"><code class="docutils literal notranslate"><span class="pre">AIMNet2PotentialImpl.addForces()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -579,7 +545,7 @@ length as the number of ML atoms in the system.</p></li>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
-      <li><a href="../_sources/generated/openmmml.models.nequippotential.NequIPPotentialImpl.rst.txt"
+      <li><a href="../_sources/generated/openmmml.models.aimnet2potential.AIMNet2PotentialImpl.rst.txt"
             rel="nofollow">Show Source</a></li>
     </ul>
    </div></div>

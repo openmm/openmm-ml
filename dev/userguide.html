@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>User Guide &#8212; OpenMM ML 1.3dev_6e53ed3 documentation</title>
+    <title>User Guide &#8212; OpenMM ML 1.3dev_f7698ba documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=e7e336b0"></script>
+    <script src="_static/documentation_options.js?v=4605e66e"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'userguide';</script>
@@ -527,8 +527,44 @@ are supported.</p>
 </table>
 </div>
 </section>
-<section id="id3">
-<h3>NequIP<a class="headerlink" href="#id3" title="Link to this heading">#</a></h3>
+<section id="aimnet2">
+<h3>AIMNet2<a class="headerlink" href="#aimnet2" title="Link to this heading">#</a></h3>
+<p>The <a class="reference external" href="https://github.com/isayevlab/aimnetcentral">aimnet</a> package can be used to create models using the pretrained
+<a class="reference external" href="https://doi.org/10.1039/D4SC08572H">AIMNet2</a> potential.  The following model names
+are supported.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Model</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">aimnet2</span></code></p></td>
+<td><p>Pretrained AIMNet2 models</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>When using AIMNet2 models, the following extra keyword arguments to <code class="docutils literal notranslate"><span class="pre">createSystem()</span></code> and <code class="docutils literal notranslate"><span class="pre">createMixedSystem()</span></code> are supported.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Argument</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">charge</span></code></p></td>
+<td><p>The total charge of the system.  If omitted, it is assumed to be 0.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">multiplicity</span></code></p></td>
+<td><p>The spin multiplicity of the system.  If omitted, it is assumed to be 1.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="id4">
+<h3>NequIP<a class="headerlink" href="#id4" title="Link to this heading">#</a></h3>
 <p>The <a class="reference external" href="https://github.com/mir-group/nequip">NequIP</a> package can be used to create models based on the <a class="reference external" href="https://www.nature.com/articles/s41467-022-29939-5">NequIP architecture</a>.
 That includes models created with <a class="reference external" href="https://github.com/mir-group/allegro">Allegro</a>, which is an extension
 package for NequIP.  The following model names are supported.</p>
@@ -583,8 +619,8 @@ package for NequIP.  The following model names are supported.</p>
 </table>
 </div>
 </section>
-<section id="id5">
-<h3>TorchANI<a class="headerlink" href="#id5" title="Link to this heading">#</a></h3>
+<section id="id6">
+<h3>TorchANI<a class="headerlink" href="#id6" title="Link to this heading">#</a></h3>
 <p>The <a class="reference external" href="https://github.com/aiqm/torchani">TorchANI</a> package can be used to create models using the pretrained
 <a class="reference external" href="https://www.nature.com/articles/s41467-019-10827-4">ANI-1ccx</a> and <a class="reference external" href="https://pubs.acs.org/doi/full/10.1021/acs.jctc.0c00121">ANI-2x</a>
 potentials.  The  <a class="reference external" href="https://github.com/openmm/NNPOps">NNPOps</a> package can optionally be used to accelerate model
@@ -748,8 +784,9 @@ Consult the documentation for other packages to see whether they provide interfa
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#usage">Usage</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#supported-models">Supported Models</a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">MACE</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id3">NequIP</a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id5">TorchANI</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#aimnet2">AIMNet2</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id4">NequIP</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id6">TorchANI</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#deepmd-kit">DeePMD-kit</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#other-packages">Other Packages</a></li>
 </ul>
