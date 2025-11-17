@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>openmmml.mlpotential.MLPotentialImpl &#8212; OpenMM ML 1.4_de434cf documentation</title>
+    <title>openmmml.models.aimnet2potential.AIMNet2PotentialImpl &#8212; OpenMM ML 1.4_de434cf documentation</title>
   
   
   
@@ -41,7 +41,7 @@
     <script src="../_static/documentation_options.js?v=825cd0ff"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'generated/openmmml.mlpotential.MLPotentialImpl';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'generated/openmmml.models.aimnet2potential.AIMNet2PotentialImpl';</script>
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://openmm.github.io/openmm-ml/dev/_static/versions.json';
@@ -51,8 +51,8 @@
         </script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="openmmml.models.aimnet2potential.AIMNet2PotentialImpl" href="openmmml.models.aimnet2potential.AIMNet2PotentialImpl.html" />
-    <link rel="prev" title="openmmml.mlpotential.MLPotentialImplFactory" href="openmmml.mlpotential.MLPotentialImplFactory.html" />
+    <link rel="next" title="openmmml.models.anipotential.ANIPotentialImpl" href="openmmml.models.anipotential.ANIPotentialImpl.html" />
+    <link rel="prev" title="openmmml.mlpotential.MLPotentialImpl" href="openmmml.mlpotential.MLPotentialImpl.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="1.4" />
@@ -362,12 +362,12 @@
   <div class="bd-toc-item navbar-nav"><ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="openmmml.MLPotential.html">openmmml.MLPotential</a></li>
 </ul>
-<ul class="current nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="openmmml.mlpotential.MLPotentialImplFactory.html">openmmml.mlpotential.MLPotentialImplFactory</a></li>
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">openmmml.mlpotential.MLPotentialImpl</a></li>
-</ul>
 <ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="openmmml.models.aimnet2potential.AIMNet2PotentialImpl.html">openmmml.models.aimnet2potential.AIMNet2PotentialImpl</a></li>
+<li class="toctree-l1"><a class="reference internal" href="openmmml.mlpotential.MLPotentialImplFactory.html">openmmml.mlpotential.MLPotentialImplFactory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="openmmml.mlpotential.MLPotentialImpl.html">openmmml.mlpotential.MLPotentialImpl</a></li>
+</ul>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">openmmml.models.aimnet2potential.AIMNet2PotentialImpl</a></li>
 <li class="toctree-l1"><a class="reference internal" href="openmmml.models.anipotential.ANIPotentialImpl.html">openmmml.models.anipotential.ANIPotentialImpl</a></li>
 <li class="toctree-l1"><a class="reference internal" href="openmmml.models.deepmdpotential.DeepmdPotentialImpl.html">openmmml.models.deepmdpotential.DeepmdPotentialImpl</a></li>
 <li class="toctree-l1"><a class="reference internal" href="openmmml.models.macepotential.MACEPotentialImpl.html">openmmml.models.macepotential.MACEPotentialImpl</a></li>
@@ -415,7 +415,7 @@
     
     <li class="breadcrumb-item"><a href="../api.html" class="nav-link">API</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">openmmml.mlpotential.MLPotentialImpl</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">openmmml.models.aimnet2potential.AIMNet2PotentialImpl</span></li>
   </ul>
 </nav>
 </div>
@@ -432,37 +432,37 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="openmmml-mlpotential-mlpotentialimpl">
-<h1>openmmml.mlpotential.MLPotentialImpl<a class="headerlink" href="#openmmml-mlpotential-mlpotentialimpl" title="Link to this heading">#</a></h1>
+  <section id="openmmml-models-aimnet2potential-aimnet2potentialimpl">
+<h1>openmmml.models.aimnet2potential.AIMNet2PotentialImpl<a class="headerlink" href="#openmmml-models-aimnet2potential-aimnet2potentialimpl" title="Link to this heading">#</a></h1>
 <dl class="py class">
-<dt class="sig sig-object py" id="openmmml.mlpotential.MLPotentialImpl">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">openmmml.mlpotential.</span></span><span class="sig-name descname"><span class="pre">MLPotentialImpl</span></span><a class="headerlink" href="#openmmml.mlpotential.MLPotentialImpl" title="Link to this definition">#</a></dt>
-<dd><p>Abstract interface for classes that implement potential functions.</p>
-<p>If you are defining a new potential function, you need to create subclasses
-of MLPotentialImpl and MLPotentialImplFactory.  When a user creates a
-MLPotential and specifies a name for the potential to use, it looks up the
-factory that has been registered for that name and uses it to create a
-MLPotentialImpl of the appropriate subclass.</p>
+<dt class="sig sig-object py" id="openmmml.models.aimnet2potential.AIMNet2PotentialImpl">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">openmmml.models.aimnet2potential.</span></span><span class="sig-name descname"><span class="pre">AIMNet2PotentialImpl</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#openmmml.models.aimnet2potential.AIMNet2PotentialImpl" title="Link to this definition">#</a></dt>
+<dd><p>This is the MLPotentialImpl implementing the AIMNet2 potential.</p>
+<p>The AIMNet2 potential is constructed using <cite>aimnet</cite> to build a PyTorch model,
+and then integrated into the OpenMM System using a TorchForce.  To use it, specify the model by name:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">potential</span> <span class="o">=</span> <span class="n">MLPotential</span><span class="p">(</span><span class="s1">&#39;aimnet2&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
 <dl class="py method">
-<dt class="sig sig-object py" id="openmmml.mlpotential.MLPotentialImpl.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#openmmml.mlpotential.MLPotentialImpl.__init__" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="openmmml.models.aimnet2potential.AIMNet2PotentialImpl.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#openmmml.models.aimnet2potential.AIMNet2PotentialImpl.__init__" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <p class="rubric">Methods</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#openmmml.mlpotential.MLPotentialImpl.__init__" title="openmmml.mlpotential.MLPotentialImpl.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#openmmml.models.aimnet2potential.AIMNet2PotentialImpl.__init__" title="openmmml.models.aimnet2potential.AIMNet2PotentialImpl.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(name)</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#openmmml.mlpotential.MLPotentialImpl.addForces" title="openmmml.mlpotential.MLPotentialImpl.addForces"><code class="xref py py-obj docutils literal notranslate"><span class="pre">addForces</span></code></a>(topology, system, atoms, ...)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#openmmml.models.aimnet2potential.AIMNet2PotentialImpl.addForces" title="openmmml.models.aimnet2potential.AIMNet2PotentialImpl.addForces"><code class="xref py py-obj docutils literal notranslate"><span class="pre">addForces</span></code></a>(topology, system, atoms, ...)</p></td>
 <td><p>Add Force objects to a System to implement the potential function.</p></td>
 </tr>
 </tbody>
 </table>
 </div>
 <dl class="py method">
-<dt class="sig sig-object py" id="openmmml.mlpotential.MLPotentialImpl.addForces">
-<span class="sig-name descname"><span class="pre">addForces</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">topology</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Topology</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">system</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">System</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atoms</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">forceGroup</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#openmmml.mlpotential.MLPotentialImpl.addForces" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="openmmml.models.aimnet2potential.AIMNet2PotentialImpl.addForces">
+<span class="sig-name descname"><span class="pre">addForces</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">topology</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Topology</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">system</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">System</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atoms</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">forceGroup</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#openmmml.models.aimnet2potential.AIMNet2PotentialImpl.addForces" title="Link to this definition">#</a></dt>
 <dd><p>Add Force objects to a System to implement the potential function.</p>
 <p>This is invoked by MLPotential.createSystem().  Subclasses must implement
 it to create the requested potential function.</p>
@@ -497,20 +497,20 @@ behavior based on extra arguments.</p></li>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="openmmml.mlpotential.MLPotentialImplFactory.html"
+       href="openmmml.mlpotential.MLPotentialImpl.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">openmmml.mlpotential.MLPotentialImplFactory</p>
+        <p class="prev-next-title">openmmml.mlpotential.MLPotentialImpl</p>
       </div>
     </a>
     <a class="right-next"
-       href="openmmml.models.aimnet2potential.AIMNet2PotentialImpl.html"
+       href="openmmml.models.anipotential.ANIPotentialImpl.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">openmmml.models.aimnet2potential.AIMNet2PotentialImpl</p>
+        <p class="prev-next-title">openmmml.models.anipotential.ANIPotentialImpl</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -533,9 +533,9 @@ behavior based on extra arguments.</p></li>
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#openmmml.mlpotential.MLPotentialImpl"><code class="docutils literal notranslate"><span class="pre">MLPotentialImpl</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#openmmml.mlpotential.MLPotentialImpl.__init__"><code class="docutils literal notranslate"><span class="pre">MLPotentialImpl.__init__()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#openmmml.mlpotential.MLPotentialImpl.addForces"><code class="docutils literal notranslate"><span class="pre">MLPotentialImpl.addForces()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#openmmml.models.aimnet2potential.AIMNet2PotentialImpl"><code class="docutils literal notranslate"><span class="pre">AIMNet2PotentialImpl</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#openmmml.models.aimnet2potential.AIMNet2PotentialImpl.__init__"><code class="docutils literal notranslate"><span class="pre">AIMNet2PotentialImpl.__init__()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#openmmml.models.aimnet2potential.AIMNet2PotentialImpl.addForces"><code class="docutils literal notranslate"><span class="pre">AIMNet2PotentialImpl.addForces()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -545,7 +545,7 @@ behavior based on extra arguments.</p></li>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
-      <li><a href="../_sources/generated/openmmml.mlpotential.MLPotentialImpl.rst.txt"
+      <li><a href="../_sources/generated/openmmml.models.aimnet2potential.AIMNet2PotentialImpl.rst.txt"
             rel="nofollow">Show Source</a></li>
     </ul>
    </div></div>
