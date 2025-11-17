@@ -110,5 +110,3 @@ class AIMNet2PotentialImpl(MLPotentialImpl):
         force = openmmtorch.TorchForce(module)
         force.setForceGroup(forceGroup)
         system.addForce(force)
-
-MLPotential.registerImplFactory('aimnet2', AIMNet2PotentialImplFactory())
