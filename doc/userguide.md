@@ -78,7 +78,10 @@ are supported.
 
 | Name | Model |
 | --- | --- |
-| `mace-off23-small`<br>`mace-off23-medium`<br>`mace-off23-large` | Pretrained [MACE-OFF23](https://arxiv.org/abs/2312.15211) models |
+| `mace-off23-small`<br>`mace-off23-medium`<br>`mace-off23-large`<br>`mace-off24-medium` | Pretrained [MACE-OFF](https://pubs.acs.org/doi/10.1021/jacs.4c07099) models |
+| `mace-mpa-0-medium` | Pretrained [MACE-MPA-0](https://github.com/ACEsuit/mace-foundations) model |
+| `mace-omat-0-small`<br>`mace-omat-0-medium` | Pretrained [MACE-OMAT-0](https://github.com/ACEsuit/mace-foundations) models |
+| `mace-omol-0-extra-large` | Pretrained MACE-OMOL-0 model |
 | `mace` | Custom MACE models specified with the `modelPath` argument |
 
 When creating MACE models, the following keyword arguments to the `MLPotential` constructor are supported.
@@ -92,7 +95,9 @@ When using MACE models, the following extra keyword arguments to `createSystem()
 | Argument | Description |
 | --- | --- |
 | `precision` | The numerical precision of the model. Supported options are `'single'` and `'double'`.  If `None`, the default precision of the model is used. |
- | `returnEnergyType` | Whether to return the interaction energy or the energy including the self-energy.  The default is `'interaction_energy'`. Supported options are `'interaction_energy'` and `'energy'`. |
+| `returnEnergyType` | Whether to return the interaction energy or the energy including the self-energy.  The default is `'interaction_energy'`. Supported options are `'interaction_energy'` and `'energy'`. |
+| `charge` | The total charge of the system.  If omitted, it is assumed to be 0.  This is used only by MACE-OMOL-0. |
+| `multiplicity` | The spin multiplicity of the system.  If omitted, it is assumed to be 1.  This is used only by MACE-OMOL-0. |
 
 ### AIMNet2
 
@@ -106,9 +111,9 @@ are supported.
 
 When using AIMNet2 models, the following extra keyword arguments to `createSystem()` and `createMixedSystem()` are supported.
 
-| Argument       | Description |
+| Argument | Description |
 | --- | --- |
-| `charge`       | The total charge of the system.  If omitted, it is assumed to be 0. |
+| `charge` | The total charge of the system.  If omitted, it is assumed to be 0. |
 | `multiplicity` | The spin multiplicity of the system.  If omitted, it is assumed to be 1. |
 
 ### NequIP

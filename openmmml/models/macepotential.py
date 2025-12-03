@@ -47,13 +47,13 @@ class MACEPotentialImpl(MLPotentialImpl):
 
     The MACE potential is constructed using MACE to build a PyTorch model,
     and then integrated into the OpenMM System using a TorchForce.
-    This implementation supports both MACE-OFF23 and locally trained MACE models.
+    This implementation supports both foundation models and locally trained MACE models.
 
-    To use one of the pre-trained MACE-OFF23 models, specify the model name. For example:
+    To use one of the pre-trained MACE foundation models, specify the model name. For example:
 
     >>> potential = MLPotential('mace-off23-small')
 
-    Other available MACE-OFF23 models include 'mace-off23-medium' and 'mace-off23-large'.
+    Other available models include 'mace-off23-medium', 'mace-off23-large', and 'mace-off24-medium'.
 
     To use a locally trained MACE model, provide the path to the model file. For example:
 
@@ -93,7 +93,8 @@ class MACEPotentialImpl(MLPotentialImpl):
         ----------
         name : str
             The name of the MACE model.
-            Options include 'mace-off23-small', 'mace-off23-medium', 'mace-off23-large', and 'mace'.
+            Options include 'mace-off23-small', 'mace-off23-medium', 'mace-off23-large',
+            'mace-off24-medium', and 'mace'.
         modelPath : str, optional
             The path to the locally trained MACE model if ``name`` is 'mace'.
         """
@@ -135,7 +136,7 @@ class MACEPotentialImpl(MLPotentialImpl):
 
         try:
             from mace.tools import utils, to_one_hot, atomic_numbers_to_indices
-            from mace.calculators.foundations_models import mace_off
+            from mace.calculators.foundations_models import mace_off, mace_mp, mace_omol
         except ImportError as e:
             raise ImportError(
                 f"Failed to import mace with error: {e}. "
@@ -161,13 +162,24 @@ class MACEPotentialImpl(MLPotentialImpl):
             "energy",
         ], f"Unsupported returnEnergyType: '{returnEnergyType}'. Supported options are 'interaction_energy' or 'energy'."
 
+        models = {
+            'mace-off23-small': (mace_off, 'small', True),
+            'mace-off23-medium': (mace_off, 'medium', True),
+            'mace-off23-large': (mace_off, 'large', True),
+            'mace-off24-medium': (mace_off, 'https://github.com/ACEsuit/mace-off/blob/main/mace_off24/MACE-OFF24_medium.model?raw=true', True),
+            'mace-mpa-0-medium': (mace_mp, 'medium-mpa-0', False),
+            'mace-omat-0-small': (mace_mp, 'small-omat-0', True),
+            'mace-omat-0-medium': (mace_mp, 'medium-omat-0', True),
+            'mace-omol-0-extra-large': (mace_omol, 'MACE-omol-0-extra-large', True)
+        }
+
         # Load the model to the CPU (OpenMM-Torch takes care of loading to the right devices)
-        if self.name.startswith("mace-off23"):
-            size = self.name.split("-")[-1]
-            assert (
-                size in ["small", "medium", "large"]
-            ), f"Unsupported MACE model: '{self.name}'. Available MACE-OFF23 models are 'mace-off23-small', 'mace-off23-medium', 'mace-off23-large'"
-            model = mace_off(model=size, device="cpu", return_raw_model=True)
+        if self.name in models:
+            fn, name, warn = models[self.name]
+            model = fn(model=name, device="cpu", return_raw_model=True)
+            if warn:
+                import logging
+                logging.warning(f'The model {self.name} is distributed under the restrictive ASL license.  Commercial use is not permitted.')
         elif self.name == "mace":
             if self.modelPath is not None:
                 model = torch.load(self.modelPath, map_location="cpu")
@@ -231,6 +243,10 @@ class MACEPotentialImpl(MLPotentialImpl):
                 Conversion factor for the length, viz. nm to Angstrom.
             indices : torch.Tensor
                 The indices of the atoms to calculate the energy for.
+            charge : float
+                Total charge of the system
+            multiplicity : float
+                Spin multiplicity of the system
             returnEnergyType : str
                 Whether to return the interaction energy or the energy including the self-energy.
             inputDict : dict
@@ -242,6 +258,8 @@ class MACEPotentialImpl(MLPotentialImpl):
                 model: torch.jit._script.RecursiveScriptModule,
                 nodeAttrs: torch.Tensor,
                 atoms: Optional[Iterable[int]],
+                charge: float,
+                multiplicity: float,
                 periodic: bool,
                 dtype: torch.dtype,
                 returnEnergyType: str,
@@ -282,6 +300,8 @@ class MACEPotentialImpl(MLPotentialImpl):
                 self.register_buffer("node_attrs", nodeAttrs.to(self.dtype))
                 self.register_buffer("batch", torch.zeros(nodeAttrs.shape[0], dtype=torch.long, requires_grad=False))
                 self.register_buffer("pbc", torch.tensor([periodic, periodic, periodic], dtype=torch.bool, requires_grad=False))
+                self.register_buffer("charge", torch.tensor([charge], dtype=dtype, requires_grad=False))
+                self.register_buffer("multiplicity", torch.tensor([multiplicity], dtype=dtype, requires_grad=False))
 
             def _getNeighborPairs(
                 self, positions: torch.Tensor, cell: Optional[torch.Tensor]
@@ -371,6 +391,8 @@ class MACEPotentialImpl(MLPotentialImpl):
                     "edge_index": edgeIndex,
                     "shifts": shifts,
                     "cell": cell if cell is not None else torch.zeros(3, 3, dtype=self.dtype),
+                    "total_charge": self.charge,
+                    "total_spin": self.multiplicity
                 }                    
 
                 # Predict the energy.
@@ -392,6 +414,8 @@ class MACEPotentialImpl(MLPotentialImpl):
             model,
             nodeAttrs,
             atoms,
+            float(args.get('charge', 0)),
+            float(args.get('multiplicity', 1)),
             isPeriodic,
             dtype,
             returnEnergyType,

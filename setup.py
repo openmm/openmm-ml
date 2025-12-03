@@ -48,9 +48,13 @@ setup(
             'mace-off23-small = openmmml.models.macepotential:MACEPotentialImplFactory',
             'mace-off23-medium = openmmml.models.macepotential:MACEPotentialImplFactory',
             'mace-off23-large = openmmml.models.macepotential:MACEPotentialImplFactory',
+            'mace-off24-large = openmmml.models.macepotential:MACEPotentialImplFactory',
+            'mace-mpa-0-medium = openmmml.models.macepotential:MACEPotentialImplFactory',
+            'mace-omat-0-small = openmmml.models.macepotential:MACEPotentialImplFactory',
+            'mace-omat-0-medium = openmmml.models.macepotential:MACEPotentialImplFactory',
+            'mace-omol-0-extra-large = openmmml.models.macepotential:MACEPotentialImplFactory',
             'nequip = openmmml.models.nequippotential:NequIPPotentialImplFactory',
             'deepmd = openmmml.models.deepmdpotential:DeepmdPotentialImplFactory',
         ]
     }
 )
-
