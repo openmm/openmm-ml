@@ -170,7 +170,7 @@ class MACEPotentialImpl(MLPotentialImpl):
             'mace-mpa-0-medium': (mace_mp, 'medium-mpa-0', False),
             'mace-omat-0-small': (mace_mp, 'small-omat-0', True),
             'mace-omat-0-medium': (mace_mp, 'medium-omat-0', True),
-            'mace-omol-0-extra-large': (mace_omol, 'MACE-omol-0-extra-large', True)
+            'mace-omol-0-extra-large': (mace_omol, 'extra_large', True)
         }
 
         # Load the model to the CPU (OpenMM-Torch takes care of loading to the right devices)
@@ -393,7 +393,7 @@ class MACEPotentialImpl(MLPotentialImpl):
                     "cell": cell if cell is not None else torch.zeros(3, 3, dtype=self.dtype),
                     "total_charge": self.charge,
                     "total_spin": self.multiplicity
-                }                    
+                }
 
                 # Predict the energy.
                 energy = self.model(inputDict, compute_force=False)[
