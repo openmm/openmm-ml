@@ -186,6 +186,40 @@ When using DeePMD-kit models, the following extra keyword arguments to `createSy
 | `lambdaName` | The name of a lambda parameter to use for alchemical calculations.  The default value is `None`, which does not create a lambda parameter. |
  | `lambdaValue` | The initial value of the lambda parameter |
 
+### TorchMD-Net
+
+The [TorchMD-Net](https://github.com/torchmd/torchmd-net) package can be used to create models.
+
+Pretrained and your own local models are supported.
+
+| Name | Model |
+| ---- | ----- |
+| `aceff-1.0` | Pretrained [AceFF-1.0](https://huggingface.co/Acellera/AceFF-1.0) [TensorNet](https://doi.org/10.48550/arXiv.2306.06482) model. |
+| `aceff-1.1` | Pretrained [AceFF-1.1](https://huggingface.co/Acellera/AceFF-1.0) [TensorNet](https://doi.org/10.48550/arXiv.2306.06482) model. |
+| `torchmdnet` |  Custom TorchMD-Net models specified with the `modelPath` argument. |
+
+
+When creating TorchMD-Net models, the following keyword arguments to the `MLPotential` constructor are supported.
+
+| Argument | Description |
+| --- | --- |
+| `modelPath` | The path to the file containing the model. |
+| `lengthScale` | The conversion factor from the model's length units to nanometers (e.g. 0.1 if the model uses Angstroms). If omitted the default is 0.1 (model in Angstroms). |
+| `energyScale` | The conversion factor from the model's energy units to kJ/mol (e.g. 4.184 if the model uses kcal/mol). If omitted the default is 96.4916 (model in eV). |
+
+When using TorchMD-Net models, the following extra keyword arguments to `createSystem()` and `createMixedSystem()` are supported.
+
+| Argument       | Description |
+| --- | --- |
+| `charge`       | The total charge of the system.  If omitted, it is assumed to be 0. |
+| `useCudagraphs` | Flag to enable CUDA graphs. If omitted it is set to `True` if the TorchMD-Net model is TensorNet, and `False` otherwise. |
+| `remove_ref_energy` | Argument passed to the TorchMD-Net model, please see [here](https://torchmd-net.readthedocs.io/en/latest/). Default is `True`.  |
+| `max_num_neighbors` | Argument passed to the TorchMD-Net model, please see [here](https://torchmd-net.readthedocs.io/en/latest/). Default is the minimum of 64 or the number of atoms in the molecule.
+
+
+
+
+
 ### Other Packages
 
 OpenMM-ML is based on a plugin architecture, allowing other packages to provide their own interfaces to it.  The
