@@ -212,9 +212,10 @@ When using TorchMD-Net models, the following extra keyword arguments to `createS
 | Argument       | Description |
 | --- | --- |
 | `charge`       | The total charge of the system.  If omitted, it is assumed to be 0. |
-| `useCudagraphs` | Flag to enable CUDA graphs. If omitted it is set to `True` if the TorchMD-Net model is TensorNet, and `False` otherwise. |
+| `cudaGraphs` | Flag to enable CUDA graphs. If omitted it is set to `True` if the TorchMD-Net model is TensorNet, and `False` otherwise. |
 | `remove_ref_energy` | Argument passed to the TorchMD-Net model, please see [here](https://torchmd-net.readthedocs.io/en/latest/). Default is `True`.  |
 | `max_num_neighbors` | Argument passed to the TorchMD-Net model, please see [here](https://torchmd-net.readthedocs.io/en/latest/). Default is the minimum of 64 or the number of atoms in the molecule.
+| `batch` | Argument passed to the forward call of the TorchMD-Net model, please see [here](https://torchmd-net.readthedocs.io/en/latest/). With this argument you can denote different atoms to be in different batches. The format should be a 1d list containing the batch index of each atom. e.g. for two molecules each with three atoms to be treated as seperate batches you would pass `batch = [0, 0, 0, 1, 1, 1]`.
 
 
 

@@ -28,11 +28,9 @@ DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
-
-from openmmml.mlpotential import MLPotential, MLPotentialImpl, MLPotentialImplFactory
 import openmm
-from openmm import unit
-from typing import Iterable, Optional, Union
+from openmmml.mlpotential import MLPotentialImpl, MLPotentialImplFactory
+from typing import Iterable, Optional
 
 class TorchMDNetPotentialImplFactory(MLPotentialImplFactory):
     """This is the factory that creates TorchMDNetPotentialImpl objects."""
@@ -45,7 +43,6 @@ class TorchMDNetPotentialImplFactory(MLPotentialImplFactory):
         energyScale: float = 96.4916,  # eV -> kJ/mol
     ) -> MLPotentialImpl:
         return TorchMDNetPotentialImpl(name, modelPath, lengthScale, energyScale)
-
 
 class TorchMDNetPotentialImpl(MLPotentialImpl):
     """This is the MLPotentialImpl implementing the TorchMDNet potential.
@@ -67,17 +64,19 @@ class TorchMDNetPotentialImpl(MLPotentialImpl):
     During system creation you can enable CUDA graphs for a speed-up for small molecules:
 
     >>>  system = potential.createSystem(pdb.topology, cudaGraphs=True)
-    The default is to enable this for TensorNet models.
 
+    The default is to enable this for TensorNet models.
 
     You can also specify the molecule's total charge:
 
     >>>  system = potential.createSystem(pdb.topology, charge=0)
 
-    Pretained AceFF models can be created directly:
+    Pretained AceFF models can be used directly:
 
     >>> potential = MLPotential('aceff-1.0')
+
     >>> potential = MLPotential('aceff-1.1')
+
     """
 
     def __init__(self, 
@@ -116,8 +115,6 @@ class TorchMDNetPotentialImpl(MLPotentialImpl):
                   forceGroup: int,
                   **args):
         # Load the TorchMDNet model.
-
-
         try:
             import torchmdnet
             from torchmdnet.models.model import load_model
@@ -132,13 +129,15 @@ class TorchMDNetPotentialImpl(MLPotentialImpl):
         numbers = torch.tensor([atom.element.atomic_number for atom in includedAtoms])
         charge = torch.tensor([args.get('charge', 0)], dtype=torch.float32)
 
-
         if self.name == 'torchmdnet':
             # a local path to a torchmdnet checkpoint must be provided 
             model_file_path = self.modelPath
         else:
-            from huggingface_hub import hf_hub_download
-
+            try:
+                from huggingface_hub import hf_hub_download
+            except ImportError as e:
+                raise ImportError(f"Failed to import huggingface_hub please install from https://huggingface.co/docs/huggingface_hub/en/installation")
+            
             if self.name == 'aceff-1.0':
                 repo_id="Acellera/AceFF-1.0"
                 filename="aceff_v1.0.ckpt"
@@ -148,12 +147,10 @@ class TorchMDNetPotentialImpl(MLPotentialImpl):
             else:
                 raise ValueError(f'Model name {self.name} does not exist.')
 
-
             model_file_path = hf_hub_download(
                 repo_id=repo_id,
                 filename=filename,
             )
-
 
         model = load_model(
             model_file_path,
@@ -166,22 +163,16 @@ class TorchMDNetPotentialImpl(MLPotentialImpl):
         for parameter in model.parameters():
             parameter.requires_grad = False
 
-
-        
-        _batch = args.get('batch', None)
-        if _batch is None:
-            _batch = torch.zeros_like(numbers)
+        batch = args.get('batch', None)
+        if batch is None:
+            batch = torch.zeros_like(numbers)
         else:
-            assert _batch.dtype == torch.long and _batch.dim()==1
-
-        batch = _batch
+            batch = torch.tensor(batch, dtype=torch.long)
 
         # TensorNet models can use CUDA graphs and the default is to use them.
         use_cudagraphs = args.get('cudaGraphs', True if isinstance(model.representation_model, torchmdnet.models.tensornet.TensorNet) else False)
 
-
         class TorchMDNetForce(torch.nn.Module):
-
             def __init__(self, model, numbers, charge, atoms, batch, lengthScale, energyScale):
                 super(TorchMDNetForce, self).__init__()
                 self.model = model
@@ -197,7 +188,6 @@ class TorchMDNetPotentialImpl(MLPotentialImpl):
                     self.subset = True
                     self.indices = torch.nn.Parameter(torch.tensor(sorted(atoms), dtype=torch.int64), requires_grad=False)
                     
-
             def forward(self, positions: torch.Tensor, boxvectors: Optional[torch.Tensor] = None):
                 positions = positions.to(torch.float32).to(self.numbers.device)
                 if self.subset:
