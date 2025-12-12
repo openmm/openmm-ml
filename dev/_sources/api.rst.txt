@@ -35,3 +35,5 @@ Models
     
       openmmml.models.nequippotential.NequIPPotentialImpl
     
+      openmmml.models.torchmdnetpotential.TorchMDNetPotentialImpl
+    

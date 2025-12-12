@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>openmmml.models.aimnet2potential.AIMNet2PotentialImpl &#8212; OpenMM ML 1.4dev_bbf86e6 documentation</title>
+    <title>openmmml.models.torchmdnetpotential.TorchMDNetPotentialImpl &#8212; OpenMM ML 1.4dev_bbf86e6 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
     <script src="../_static/documentation_options.js?v=1b4d696e"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'generated/openmmml.models.aimnet2potential.AIMNet2PotentialImpl';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'generated/openmmml.models.torchmdnetpotential.TorchMDNetPotentialImpl';</script>
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://openmm.github.io/openmm-ml/dev/_static/versions.json';
@@ -51,8 +51,7 @@
         </script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="openmmml.models.anipotential.ANIPotentialImpl" href="openmmml.models.anipotential.ANIPotentialImpl.html" />
-    <link rel="prev" title="openmmml.mlpotential.MLPotentialImpl" href="openmmml.mlpotential.MLPotentialImpl.html" />
+    <link rel="prev" title="openmmml.models.nequippotential.NequIPPotentialImpl" href="openmmml.models.nequippotential.NequIPPotentialImpl.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="dev" />
@@ -367,12 +366,12 @@
 <li class="toctree-l1"><a class="reference internal" href="openmmml.mlpotential.MLPotentialImpl.html">openmmml.mlpotential.MLPotentialImpl</a></li>
 </ul>
 <ul class="current nav bd-sidenav">
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">openmmml.models.aimnet2potential.AIMNet2PotentialImpl</a></li>
+<li class="toctree-l1"><a class="reference internal" href="openmmml.models.aimnet2potential.AIMNet2PotentialImpl.html">openmmml.models.aimnet2potential.AIMNet2PotentialImpl</a></li>
 <li class="toctree-l1"><a class="reference internal" href="openmmml.models.anipotential.ANIPotentialImpl.html">openmmml.models.anipotential.ANIPotentialImpl</a></li>
 <li class="toctree-l1"><a class="reference internal" href="openmmml.models.deepmdpotential.DeepmdPotentialImpl.html">openmmml.models.deepmdpotential.DeepmdPotentialImpl</a></li>
 <li class="toctree-l1"><a class="reference internal" href="openmmml.models.macepotential.MACEPotentialImpl.html">openmmml.models.macepotential.MACEPotentialImpl</a></li>
 <li class="toctree-l1"><a class="reference internal" href="openmmml.models.nequippotential.NequIPPotentialImpl.html">openmmml.models.nequippotential.NequIPPotentialImpl</a></li>
-<li class="toctree-l1"><a class="reference internal" href="openmmml.models.torchmdnetpotential.TorchMDNetPotentialImpl.html">openmmml.models.torchmdnetpotential.TorchMDNetPotentialImpl</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">openmmml.models.torchmdnetpotential.TorchMDNetPotentialImpl</a></li>
 </ul>
 </div>
 </nav></div>
@@ -416,7 +415,7 @@
     
     <li class="breadcrumb-item"><a href="../api.html" class="nav-link">API</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">openmmml.models.aimnet2potential.AIMNet2PotentialImpl</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">openmmml.models.torchmdnetpotential.TorchMDNetPotentialImpl</span></li>
   </ul>
 </nav>
 </div>
@@ -433,37 +432,76 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="openmmml-models-aimnet2potential-aimnet2potentialimpl">
-<h1>openmmml.models.aimnet2potential.AIMNet2PotentialImpl<a class="headerlink" href="#openmmml-models-aimnet2potential-aimnet2potentialimpl" title="Link to this heading">#</a></h1>
+  <section id="openmmml-models-torchmdnetpotential-torchmdnetpotentialimpl">
+<h1>openmmml.models.torchmdnetpotential.TorchMDNetPotentialImpl<a class="headerlink" href="#openmmml-models-torchmdnetpotential-torchmdnetpotentialimpl" title="Link to this heading">#</a></h1>
 <dl class="py class">
-<dt class="sig sig-object py" id="openmmml.models.aimnet2potential.AIMNet2PotentialImpl">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">openmmml.models.aimnet2potential.</span></span><span class="sig-name descname"><span class="pre">AIMNet2PotentialImpl</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#openmmml.models.aimnet2potential.AIMNet2PotentialImpl" title="Link to this definition">#</a></dt>
-<dd><p>This is the MLPotentialImpl implementing the AIMNet2 potential.</p>
-<p>The AIMNet2 potential is constructed using <cite>aimnet</cite> to build a PyTorch model,
-and then integrated into the OpenMM System using a TorchForce.  To use it, specify the model by name:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">potential</span> <span class="o">=</span> <span class="n">MLPotential</span><span class="p">(</span><span class="s1">&#39;aimnet2&#39;</span><span class="p">)</span>
+<dt class="sig sig-object py" id="openmmml.models.torchmdnetpotential.TorchMDNetPotentialImpl">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">openmmml.models.torchmdnetpotential.</span></span><span class="sig-name descname"><span class="pre">TorchMDNetPotentialImpl</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modelPath</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lengthScale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">energyScale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#openmmml.models.torchmdnetpotential.TorchMDNetPotentialImpl" title="Link to this definition">#</a></dt>
+<dd><p>This is the MLPotentialImpl implementing the TorchMDNet potential.</p>
+<p>The TorchMDNet potential is constructed using <cite>torchmdnet</cite> to build a PyTorch model,
+and then integrated into the OpenMM System using a TorchForce.  To use it, specify the model by name
+and provide the path to a model.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">potential</span> <span class="o">=</span> <span class="n">MLPotential</span><span class="p">(</span><span class="s1">&#39;torchmdnet&#39;</span><span class="p">,</span> <span class="n">modelPath</span><span class="o">=&lt;</span><span class="n">model_file_path</span><span class="o">&gt;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The default energy and length scales assume a model is trained with positions in angstroms and energies in eV.
+If this is not the case you can specify the length and energy scales by passing the factors that convert the model
+distance to nm and the energy to kJ/mol, for example:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">potential</span> <span class="o">=</span> <span class="n">MLPotential</span><span class="p">(</span><span class="s1">&#39;torchmdnet&#39;</span><span class="p">,</span> <span class="n">modelPath</span><span class="o">=&lt;</span><span class="n">model_file_path</span><span class="o">&gt;</span><span class="p">,</span>
+<span class="go">                            lengthScale=0.1 # angstrom to nm,</span>
+<span class="go">                            energyScale=4.184 # kcal/mol to kJ/mol)</span>
+</pre></div>
+</div>
+<p>During system creation you can enable CUDA graphs for a speed-up for small molecules:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span> <span class="n">system</span> <span class="o">=</span> <span class="n">potential</span><span class="o">.</span><span class="n">createSystem</span><span class="p">(</span><span class="n">pdb</span><span class="o">.</span><span class="n">topology</span><span class="p">,</span> <span class="n">cudaGraphs</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The default is to enable this for TensorNet models.</p>
+<p>You can also specify the molecule’s total charge:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span> <span class="n">system</span> <span class="o">=</span> <span class="n">potential</span><span class="o">.</span><span class="n">createSystem</span><span class="p">(</span><span class="n">pdb</span><span class="o">.</span><span class="n">topology</span><span class="p">,</span> <span class="n">charge</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Pretained AceFF models can be used directly:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">potential</span> <span class="o">=</span> <span class="n">MLPotential</span><span class="p">(</span><span class="s1">&#39;aceff-1.0&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">potential</span> <span class="o">=</span> <span class="n">MLPotential</span><span class="p">(</span><span class="s1">&#39;aceff-1.1&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 <dl class="py method">
-<dt class="sig sig-object py" id="openmmml.models.aimnet2potential.AIMNet2PotentialImpl.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#openmmml.models.aimnet2potential.AIMNet2PotentialImpl.__init__" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dt class="sig sig-object py" id="openmmml.models.torchmdnetpotential.TorchMDNetPotentialImpl.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modelPath</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lengthScale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">energyScale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#openmmml.models.torchmdnetpotential.TorchMDNetPotentialImpl.__init__" title="Link to this definition">#</a></dt>
+<dd><p>Initialize the TorchMDNetPotentialImpl.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<em>str</em>) – The name of the model.
+‘torchmdnet’ for a local model file, or pretrained models are available: ‘aceff-1.0’ or ‘aceff-1.1’.</p></li>
+<li><p><strong>modelPath</strong> (<em>str</em><em>, </em><em>optional</em>) – The path to the locally trained torchmdnet model if <code class="docutils literal notranslate"><span class="pre">name</span></code> is ‘torchmdnet’.</p></li>
+<li><p><strong>lengthScale</strong> (<em>float</em>) – The length conversion factor from the model units to nanometers.
+If not specified the default is 0.1 which corresponds to a model in angstrom</p></li>
+<li><p><strong>energyScale</strong> (<em>float</em>) – The energy conversion factor from the model units to kJ/mol.
+If not specified the default is 96.4916 which corresponds to a model in eV.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 <p class="rubric">Methods</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#openmmml.models.aimnet2potential.AIMNet2PotentialImpl.__init__" title="openmmml.models.aimnet2potential.AIMNet2PotentialImpl.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(name)</p></td>
-<td><p></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#openmmml.models.torchmdnetpotential.TorchMDNetPotentialImpl.__init__" title="openmmml.models.torchmdnetpotential.TorchMDNetPotentialImpl.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(name, modelPath, lengthScale, ...)</p></td>
+<td><p>Initialize the TorchMDNetPotentialImpl.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#openmmml.models.aimnet2potential.AIMNet2PotentialImpl.addForces" title="openmmml.models.aimnet2potential.AIMNet2PotentialImpl.addForces"><code class="xref py py-obj docutils literal notranslate"><span class="pre">addForces</span></code></a>(topology, system, atoms, ...)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#openmmml.models.torchmdnetpotential.TorchMDNetPotentialImpl.addForces" title="openmmml.models.torchmdnetpotential.TorchMDNetPotentialImpl.addForces"><code class="xref py py-obj docutils literal notranslate"><span class="pre">addForces</span></code></a>(topology, system, atoms, ...)</p></td>
 <td><p>Add Force objects to a System to implement the potential function.</p></td>
 </tr>
 </tbody>
 </table>
 </div>
 <dl class="py method">
-<dt class="sig sig-object py" id="openmmml.models.aimnet2potential.AIMNet2PotentialImpl.addForces">
-<span class="sig-name descname"><span class="pre">addForces</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">topology</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Topology</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">system</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">System</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atoms</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">forceGroup</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#openmmml.models.aimnet2potential.AIMNet2PotentialImpl.addForces" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="openmmml.models.torchmdnetpotential.TorchMDNetPotentialImpl.addForces">
+<span class="sig-name descname"><span class="pre">addForces</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">topology</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Topology</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">system</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">System</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atoms</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">forceGroup</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#openmmml.models.torchmdnetpotential.TorchMDNetPotentialImpl.addForces" title="Link to this definition">#</a></dt>
 <dd><p>Add Force objects to a System to implement the potential function.</p>
 <p>This is invoked by MLPotential.createSystem().  Subclasses must implement
 it to create the requested potential function.</p>
@@ -498,22 +536,13 @@ behavior based on extra arguments.</p></li>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="openmmml.mlpotential.MLPotentialImpl.html"
+       href="openmmml.models.nequippotential.NequIPPotentialImpl.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">openmmml.mlpotential.MLPotentialImpl</p>
+        <p class="prev-next-title">openmmml.models.nequippotential.NequIPPotentialImpl</p>
       </div>
-    </a>
-    <a class="right-next"
-       href="openmmml.models.anipotential.ANIPotentialImpl.html"
-       title="next page">
-      <div class="prev-next-info">
-        <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">openmmml.models.anipotential.ANIPotentialImpl</p>
-      </div>
-      <i class="fa-solid fa-angle-right"></i>
     </a>
 </div>
                 </footer>
@@ -534,9 +563,9 @@ behavior based on extra arguments.</p></li>
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#openmmml.models.aimnet2potential.AIMNet2PotentialImpl"><code class="docutils literal notranslate"><span class="pre">AIMNet2PotentialImpl</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#openmmml.models.aimnet2potential.AIMNet2PotentialImpl.__init__"><code class="docutils literal notranslate"><span class="pre">AIMNet2PotentialImpl.__init__()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#openmmml.models.aimnet2potential.AIMNet2PotentialImpl.addForces"><code class="docutils literal notranslate"><span class="pre">AIMNet2PotentialImpl.addForces()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#openmmml.models.torchmdnetpotential.TorchMDNetPotentialImpl"><code class="docutils literal notranslate"><span class="pre">TorchMDNetPotentialImpl</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#openmmml.models.torchmdnetpotential.TorchMDNetPotentialImpl.__init__"><code class="docutils literal notranslate"><span class="pre">TorchMDNetPotentialImpl.__init__()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#openmmml.models.torchmdnetpotential.TorchMDNetPotentialImpl.addForces"><code class="docutils literal notranslate"><span class="pre">TorchMDNetPotentialImpl.addForces()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -546,7 +575,7 @@ behavior based on extra arguments.</p></li>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
-      <li><a href="../_sources/generated/openmmml.models.aimnet2potential.AIMNet2PotentialImpl.rst.txt"
+      <li><a href="../_sources/generated/openmmml.models.torchmdnetpotential.TorchMDNetPotentialImpl.rst.txt"
             rel="nofollow">Show Source</a></li>
     </ul>
    </div></div>

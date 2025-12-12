@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>User Guide &#8212; OpenMM ML 1.4dev_de434cf documentation</title>
+    <title>User Guide &#8212; OpenMM ML 1.4dev_bbf86e6 documentation</title>
   
   
   
@@ -38,9 +38,9 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=4c5083fe"></script>
-    <script src="_static/doctools.js?v=9bcbadda"></script>
-    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/documentation_options.js?v=1b4d696e"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'userguide';</script>
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
@@ -721,6 +721,76 @@ speed at the cost of a small decrease in accuracy.</p>
 </table>
 </div>
 </section>
+<section id="torchmd-net">
+<h3>TorchMD-Net<a class="headerlink" href="#torchmd-net" title="Link to this heading">#</a></h3>
+<p>The <a class="reference external" href="https://github.com/torchmd/torchmd-net">TorchMD-Net</a> package can be used to create models.</p>
+<p>Pretrained and your own local models are supported.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Model</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">aceff-1.0</span></code></p></td>
+<td><p>Pretrained <a class="reference external" href="https://huggingface.co/Acellera/AceFF-1.0">AceFF-1.0</a> <a class="reference external" href="https://doi.org/10.48550/arXiv.2306.06482">TensorNet</a> model.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">aceff-1.1</span></code></p></td>
+<td><p>Pretrained <a class="reference external" href="https://huggingface.co/Acellera/AceFF-1.0">AceFF-1.1</a> <a class="reference external" href="https://doi.org/10.48550/arXiv.2306.06482">TensorNet</a> model.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">torchmdnet</span></code></p></td>
+<td><p>Custom TorchMD-Net models specified with the <code class="docutils literal notranslate"><span class="pre">modelPath</span></code> argument.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>When creating TorchMD-Net models, the following keyword arguments to the <code class="docutils literal notranslate"><span class="pre">MLPotential</span></code> constructor are supported.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Argument</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">modelPath</span></code></p></td>
+<td><p>The path to the file containing the model.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">lengthScale</span></code></p></td>
+<td><p>The conversion factor from the model’s length units to nanometers (e.g. 0.1 if the model uses Angstroms). If omitted the default is 0.1 (model in Angstroms).</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">energyScale</span></code></p></td>
+<td><p>The conversion factor from the model’s energy units to kJ/mol (e.g. 4.184 if the model uses kcal/mol). If omitted the default is 96.4916 (model in eV).</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>When using TorchMD-Net models, the following extra keyword arguments to <code class="docutils literal notranslate"><span class="pre">createSystem()</span></code> and <code class="docutils literal notranslate"><span class="pre">createMixedSystem()</span></code> are supported.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Argument</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">charge</span></code></p></td>
+<td><p>The total charge of the system.  If omitted, it is assumed to be 0.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">cudaGraphs</span></code></p></td>
+<td><p>Flag to enable CUDA graphs. If omitted it is set to <code class="docutils literal notranslate"><span class="pre">True</span></code> if the TorchMD-Net model is TensorNet, and <code class="docutils literal notranslate"><span class="pre">False</span></code> otherwise.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">remove_ref_energy</span></code></p></td>
+<td><p>Argument passed to the TorchMD-Net model, please see <a class="reference external" href="https://torchmd-net.readthedocs.io/en/latest/">here</a>. Default is <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">max_num_neighbors</span></code></p></td>
+<td><p>Argument passed to the TorchMD-Net model, please see <a class="reference external" href="https://torchmd-net.readthedocs.io/en/latest/">here</a>. Default is the minimum of 64 or the number of atoms in the molecule.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">batch</span></code></p></td>
+<td><p>Argument passed to the forward call of the TorchMD-Net model, please see <a class="reference external" href="https://torchmd-net.readthedocs.io/en/latest/">here</a>. With this argument you can denote different atoms to be in different batches. The format should be a 1d list containing the batch index of each atom. e.g. for two molecules each with three atoms to be treated as seperate batches you would pass <code class="docutils literal notranslate"><span class="pre">batch</span> <span class="pre">=</span> <span class="pre">[0,</span> <span class="pre">0,</span> <span class="pre">0,</span> <span class="pre">1,</span> <span class="pre">1,</span> <span class="pre">1]</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
 <section id="other-packages">
 <h3>Other Packages<a class="headerlink" href="#other-packages" title="Link to this heading">#</a></h3>
 <p>OpenMM-ML is based on a plugin architecture, allowing other packages to provide their own interfaces to it.  The
@@ -788,6 +858,7 @@ Consult the documentation for other packages to see whether they provide interfa
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id4">NequIP</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#id6">TorchANI</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#deepmd-kit">DeePMD-kit</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#torchmd-net">TorchMD-Net</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#other-packages">Other Packages</a></li>
 </ul>
 </li>
@@ -837,7 +908,7 @@ Consult the documentation for other packages to see whether they provide interfa
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.0.4.
     <br/>
   </p>
 </div>

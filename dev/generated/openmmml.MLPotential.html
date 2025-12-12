@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>openmmml.MLPotential &#8212; OpenMM ML 1.4dev_de434cf documentation</title>
+    <title>openmmml.MLPotential &#8212; OpenMM ML 1.4dev_bbf86e6 documentation</title>
   
   
   
@@ -38,9 +38,9 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=4c5083fe"></script>
-    <script src="../_static/doctools.js?v=9bcbadda"></script>
-    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/documentation_options.js?v=1b4d696e"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'generated/openmmml.MLPotential';</script>
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
@@ -372,6 +372,7 @@
 <li class="toctree-l1"><a class="reference internal" href="openmmml.models.deepmdpotential.DeepmdPotentialImpl.html">openmmml.models.deepmdpotential.DeepmdPotentialImpl</a></li>
 <li class="toctree-l1"><a class="reference internal" href="openmmml.models.macepotential.MACEPotentialImpl.html">openmmml.models.macepotential.MACEPotentialImpl</a></li>
 <li class="toctree-l1"><a class="reference internal" href="openmmml.models.nequippotential.NequIPPotentialImpl.html">openmmml.models.nequippotential.NequIPPotentialImpl</a></li>
+<li class="toctree-l1"><a class="reference internal" href="openmmml.models.torchmdnetpotential.TorchMDNetPotentialImpl.html">openmmml.models.torchmdnetpotential.TorchMDNetPotentialImpl</a></li>
 </ul>
 </div>
 </nav></div>
@@ -436,7 +437,7 @@
 <h1>openmmml.MLPotential<a class="headerlink" href="#openmmml-mlpotential" title="Link to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="openmmml.MLPotential">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">openmmml.</span></span><span class="sig-name descname"><span class="pre">MLPotential</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#openmmml.MLPotential" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">openmmml.</span></span><span class="sig-name descname"><span class="pre">MLPotential</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#openmmml.MLPotential" title="Link to this definition">#</a></dt>
 <dd><p>A potential function that can be used in simulations.</p>
 <p>To use this class, create a MLPotential, specifying the name of the potential
 function to use.  You can then call createSystem() to create a System object
@@ -572,7 +573,7 @@ potential functions for more information.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="openmmml.MLPotential.registerImplFactory">
-<em class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">registerImplFactory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">factory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="openmmml.mlpotential.MLPotentialImplFactory.html#openmmml.mlpotential.MLPotentialImplFactory" title="openmmml.mlpotential.MLPotentialImplFactory"><span class="pre">MLPotentialImplFactory</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#openmmml.MLPotential.registerImplFactory" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">registerImplFactory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">factory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="openmmml.mlpotential.MLPotentialImplFactory.html#openmmml.mlpotential.MLPotentialImplFactory" title="openmmml.mlpotential.MLPotentialImplFactory"><span class="pre">MLPotentialImplFactory</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#openmmml.MLPotential.registerImplFactory" title="Link to this definition">#</a></dt>
 <dd><p>Register a new potential function that can be used with MLPotential.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -688,7 +689,7 @@ potential functions for more information.</p></li>
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.0.4.
     <br/>
   </p>
 </div>

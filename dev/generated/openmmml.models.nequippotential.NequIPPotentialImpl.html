@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>openmmml.models.nequippotential.NequIPPotentialImpl &#8212; OpenMM ML 1.4dev_de434cf documentation</title>
+    <title>openmmml.models.nequippotential.NequIPPotentialImpl &#8212; OpenMM ML 1.4dev_bbf86e6 documentation</title>
   
   
   
@@ -38,9 +38,9 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=4c5083fe"></script>
-    <script src="../_static/doctools.js?v=9bcbadda"></script>
-    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/documentation_options.js?v=1b4d696e"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'generated/openmmml.models.nequippotential.NequIPPotentialImpl';</script>
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
@@ -51,6 +51,7 @@
         </script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="openmmml.models.torchmdnetpotential.TorchMDNetPotentialImpl" href="openmmml.models.torchmdnetpotential.TorchMDNetPotentialImpl.html" />
     <link rel="prev" title="openmmml.models.macepotential.MACEPotentialImpl" href="openmmml.models.macepotential.MACEPotentialImpl.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
@@ -371,6 +372,7 @@
 <li class="toctree-l1"><a class="reference internal" href="openmmml.models.deepmdpotential.DeepmdPotentialImpl.html">openmmml.models.deepmdpotential.DeepmdPotentialImpl</a></li>
 <li class="toctree-l1"><a class="reference internal" href="openmmml.models.macepotential.MACEPotentialImpl.html">openmmml.models.macepotential.MACEPotentialImpl</a></li>
 <li class="toctree-l1 current active"><a class="current reference internal" href="#">openmmml.models.nequippotential.NequIPPotentialImpl</a></li>
+<li class="toctree-l1"><a class="reference internal" href="openmmml.models.torchmdnetpotential.TorchMDNetPotentialImpl.html">openmmml.models.torchmdnetpotential.TorchMDNetPotentialImpl</a></li>
 </ul>
 </div>
 </nav></div>
@@ -435,7 +437,7 @@
 <h1>openmmml.models.nequippotential.NequIPPotentialImpl<a class="headerlink" href="#openmmml-models-nequippotential-nequippotentialimpl" title="Link to this heading">#</a></h1>
 <dl class="py class">
 <dt class="sig sig-object py" id="openmmml.models.nequippotential.NequIPPotentialImpl">
-<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">openmmml.models.nequippotential.</span></span><span class="sig-name descname"><span class="pre">NequIPPotentialImpl</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modelPath</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lengthScale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">energyScale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#openmmml.models.nequippotential.NequIPPotentialImpl" title="Link to this definition">#</a></dt>
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">openmmml.models.nequippotential.</span></span><span class="sig-name descname"><span class="pre">NequIPPotentialImpl</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modelPath</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lengthScale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">energyScale</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#openmmml.models.nequippotential.NequIPPotentialImpl" title="Link to this definition">#</a></dt>
 <dd><p>This is the MLPotentialImpl implementing support for E(3)-equivariant
 interatomic potentials generated by NequIP or Allegro.</p>
 <p>The potential must be constructed using the NequIP/Allegro code to build and
@@ -548,6 +550,15 @@ length as the number of ML atoms in the system.</p></li>
         <p class="prev-next-title">openmmml.models.macepotential.MACEPotentialImpl</p>
       </div>
     </a>
+    <a class="right-next"
+       href="openmmml.models.torchmdnetpotential.TorchMDNetPotentialImpl.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">openmmml.models.torchmdnetpotential.TorchMDNetPotentialImpl</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
 </div>
                 </footer>
               
@@ -618,7 +629,7 @@ length as the number of ML atoms in the system.</p></li>
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.2.3.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.0.4.
     <br/>
   </p>
 </div>
