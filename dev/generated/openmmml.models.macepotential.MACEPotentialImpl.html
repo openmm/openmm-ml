@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>openmmml.models.macepotential.MACEPotentialImpl &#8212; OpenMM ML 1.4dev_bbf86e6 documentation</title>
+    <title>openmmml.models.macepotential.MACEPotentialImpl &#8212; OpenMM ML 1.4dev_da2a26c documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="../_static/documentation_options.js?v=1b4d696e"></script>
+    <script src="../_static/documentation_options.js?v=a8c1377e"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'generated/openmmml.models.macepotential.MACEPotentialImpl';</script>
@@ -441,12 +441,12 @@
 <dd><p>This is the MLPotentialImpl implementing the MACE potential.</p>
 <p>The MACE potential is constructed using MACE to build a PyTorch model,
 and then integrated into the OpenMM System using a TorchForce.
-This implementation supports both MACE-OFF23 and locally trained MACE models.</p>
-<p>To use one of the pre-trained MACE-OFF23 models, specify the model name. For example:</p>
+This implementation supports both foundation models and locally trained MACE models.</p>
+<p>To use one of the pre-trained MACE foundation models, specify the model name. For example:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">potential</span> <span class="o">=</span> <span class="n">MLPotential</span><span class="p">(</span><span class="s1">&#39;mace-off23-small&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Other available MACE-OFF23 models include ‘mace-off23-medium’ and ‘mace-off23-large’.</p>
+<p>Other available models include ‘mace-off23-medium’, ‘mace-off23-large’, and ‘mace-off24-medium’.</p>
 <p>To use a locally trained MACE model, provide the path to the model file. For example:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">potential</span> <span class="o">=</span> <span class="n">MLPotential</span><span class="p">(</span><span class="s1">&#39;mace&#39;</span><span class="p">,</span> <span class="n">modelPath</span><span class="o">=</span><span class="s1">&#39;MACE.model&#39;</span><span class="p">)</span>
 </pre></div>
@@ -497,7 +497,8 @@ self-energy, instead of the default interaction energy, by setting <code class="
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>name</strong> (<em>str</em>) – The name of the MACE model.
-Options include ‘mace-off23-small’, ‘mace-off23-medium’, ‘mace-off23-large’, and ‘mace’.</p></li>
+Options include ‘mace-off23-small’, ‘mace-off23-medium’, ‘mace-off23-large’,
+‘mace-off24-medium’, and ‘mace’.</p></li>
 <li><p><strong>modelPath</strong> (<em>str</em><em>, </em><em>optional</em>) – The path to the locally trained MACE model if <code class="docutils literal notranslate"><span class="pre">name</span></code> is ‘mace’.</p></li>
 </ul>
 </dd>
