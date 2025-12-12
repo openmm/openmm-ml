@@ -50,6 +50,9 @@ setup(
             'mace-off23-large = openmmml.models.macepotential:MACEPotentialImplFactory',
             'nequip = openmmml.models.nequippotential:NequIPPotentialImplFactory',
             'deepmd = openmmml.models.deepmdpotential:DeepmdPotentialImplFactory',
+            'torchmdnet = openmmml.models.torchmdnetpotential:TorchMDNetPotentialImplFactory',
+            'aceff-1.0 = openmmml.models.torchmdnetpotential:TorchMDNetPotentialImplFactory',
+            'aceff-1.1 = openmmml.models.torchmdnetpotential:TorchMDNetPotentialImplFactory',
         ]
     }
 )
