@@ -63,7 +63,7 @@ class ANIPotentialImpl(MLPotentialImpl):
                   system: openmm.System,
                   atoms: Optional[Iterable[int]],
                   forceGroup: int,
-                  implementation: str = 'nnpops',
+                  implementation: str = 'torchani',
                   modelIndex: Optional[int] = None,
                   **args):
         # Create the TorchANI model.
