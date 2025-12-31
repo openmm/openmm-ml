@@ -73,9 +73,11 @@ class TorchMDNetPotentialImpl(MLPotentialImpl):
 
     Pretained AceFF models can be used directly:
 
-    >>> potential = MLPotential('aceff-1.0')
+    >>> potential = MLPotential('aceff-2.0')
 
     >>> potential = MLPotential('aceff-1.1')
+
+    >>> potential = MLPotential('aceff-1.0')
 
     """
 
@@ -144,6 +146,9 @@ class TorchMDNetPotentialImpl(MLPotentialImpl):
             elif self.name == 'aceff-1.1':
                 repo_id="Acellera/AceFF-1.1"
                 filename="aceff_v1.1.ckpt"
+            elif self.name == 'aceff-2.0':
+                repo_id="Acellera/AceFF-2.0"
+                filename="aceff_v2.0.ckpt"
             else:
                 raise ValueError(f'Model name {self.name} does not exist.')
 
@@ -170,7 +175,11 @@ class TorchMDNetPotentialImpl(MLPotentialImpl):
             batch = torch.tensor(batch, dtype=torch.long)
 
         # TensorNet models can use CUDA graphs and the default is to use them.
-        use_cudagraphs = args.get('cudaGraphs', True if isinstance(model.representation_model, torchmdnet.models.tensornet.TensorNet) else False)
+        use_cudagraphs = args.get('cudaGraphs', 
+                                True if (isinstance(model.representation_model, torchmdnet.models.tensornet.TensorNet)
+                                or isinstance(model.representation_model, torchmdnet.models.tensornet2.TensorNet2))
+                                else False
+                            )
 
         class TorchMDNetForce(torch.nn.Module):
             def __init__(self, model, numbers, charge, atoms, batch, lengthScale, energyScale):
