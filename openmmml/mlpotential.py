@@ -314,6 +314,8 @@ class MLPotential(object):
                     internalNonbonded.addPerBondParameter('chargeProd')
                     internalNonbonded.addPerBondParameter('sigma')
                     internalNonbonded.addPerBondParameter('epsilon')
+                    if force.usesPeriodicBoundaryConditions():
+                        internalNonbonded.setUsesPeriodicBoundaryConditions(True)
                     numParticles = system.getNumParticles()
                     atomCharge = [0]*numParticles
                     atomSigma = [0]*numParticles
