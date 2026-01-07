@@ -198,7 +198,7 @@ Pretrained and your own local models are supported.
 | ---- | ----- |
 | `aceff-1.0` | Pretrained [AceFF-1.0](https://huggingface.co/Acellera/AceFF-1.0) [TensorNet](https://doi.org/10.48550/arXiv.2306.06482) model. |
 | `aceff-1.1` | Pretrained [AceFF-1.1](https://huggingface.co/Acellera/AceFF-1.0) [TensorNet](https://doi.org/10.48550/arXiv.2306.06482) model. |
-| `aceff-2.0` | Pretrained [AceFF-2.0](https://huggingface.co/Acellera/AceFF-2.0) [TensorNet](https://doi.org/10.48550/arXiv.2306.06482) model. |
+| `aceff-2.0` | Pretrained [AceFF-2.0](https://huggingface.co/Acellera/AceFF-2.0) [TensorNet2](https://arxiv.org/abs/2601.00581) model. |
 | `torchmdnet` |  Custom TorchMD-Net models specified with the `modelPath` argument. |
 
 
