@@ -1,0 +1,23 @@
+﻿openmmml.models.aimnet2potential.AIMNet2PotentialImpl
+=====================================================
+
+.. currentmodule:: openmmml.models.aimnet2potential
+
+.. autoclass:: AIMNet2PotentialImpl
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~AIMNet2PotentialImpl.__init__
+      ~AIMNet2PotentialImpl.addForces
+   
+   
+
+   
+   
+   
