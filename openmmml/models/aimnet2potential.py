@@ -80,24 +80,29 @@ class AIMNet2PotentialImpl(MLPotentialImpl):
         numbers = torch.tensor([[atom.element.atomic_number for atom in includedAtoms]])
         charge = torch.tensor([args.get('charge', 0)], dtype=torch.float32)
         multiplicity = torch.tensor([args.get('multiplicity', 1)], dtype=torch.float32)
+        periodic = topology.getPeriodicBoxVectors() is not None
 
         # Create the PythonForce and add it to the System.
 
-        compute = partial(_computeAIMNet2, model=model, numbers=numbers, charge=charge, multiplicity=multiplicity, indices=indices)
+        compute = partial(_computeAIMNet2, model=model, numbers=numbers, charge=charge, multiplicity=multiplicity, indices=indices, periodic=periodic)
         force = openmm.PythonForce(compute)
         force.setForceGroup(forceGroup)
+        force.setUsesPeriodicBoundaryConditions(periodic)
         system.addForce(force)
 
 
-def _computeAIMNet2(state, model, numbers, charge, multiplicity, indices):
+def _computeAIMNet2(state, model, numbers, charge, multiplicity, indices, periodic):
     import torch
-    positions = torch.tensor(state.getPositions(asNumpy=True), device=numbers.device)
+    positions = torch.tensor(state.getPositions(asNumpy=True).value_in_unit(unit.angstrom), device=numbers.device)
     if indices is not None:
         positions = positions[indices]
-    args = {'coord': 10.0*positions.unsqueeze(0),
+    args = {'coord': positions.unsqueeze(0),
             'numbers': numbers,
             'charge': charge,
             'mult': multiplicity}
+    if periodic:
+        cell = torch.tensor(state.getPeriodicBoxVectors(asNumpy=True).value_in_unit(unit.angstrom), device=numbers.device)
+        args['cell'] = cell
     result = model(args, forces=True)
     energyScale = (unit.ev/unit.item).conversion_factor_to(unit.kilojoules_per_mole)
     energy = float(energyScale*result["energy"].sum().detach())
