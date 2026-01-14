@@ -68,6 +68,8 @@ class AIMNet2PotentialImpl(MLPotentialImpl):
             raise ImportError(f"Failed to import aimnet with error: {e}. Install from https://github.com/isayevlab/aimnetcentral.")
         import torch
         model = AIMNet2Calculator('aimnet2')
+        device = torch.device(model.device)
+        model.device = device
 
         # Create the PyTorch model that will be invoked by OpenMM.
 
@@ -76,10 +78,10 @@ class AIMNet2PotentialImpl(MLPotentialImpl):
             indices = None
         else:
             includedAtoms = [includedAtoms[i] for i in atoms]
-            indices = torch.tensor(sorted(atoms), dtype=torch.int64)
-        numbers = torch.tensor([[atom.element.atomic_number for atom in includedAtoms]])
-        charge = torch.tensor([args.get('charge', 0)], dtype=torch.float32)
-        multiplicity = torch.tensor([args.get('multiplicity', 1)], dtype=torch.float32)
+            indices = torch.tensor(sorted(atoms), dtype=torch.int64, device=device)
+        numbers = torch.tensor([[atom.element.atomic_number for atom in includedAtoms]], device=device)
+        charge = torch.tensor([args.get('charge', 0)], dtype=torch.float32, device=device)
+        multiplicity = torch.tensor([args.get('multiplicity', 1)], dtype=torch.float32, device=device)
         periodic = topology.getPeriodicBoxVectors() is not None
 
         # Create the PythonForce and add it to the System.
@@ -93,7 +95,7 @@ class AIMNet2PotentialImpl(MLPotentialImpl):
 
 def _computeAIMNet2(state, model, numbers, charge, multiplicity, indices, periodic):
     import torch
-    positions = torch.tensor(state.getPositions(asNumpy=True).value_in_unit(unit.angstrom), device=numbers.device)
+    positions = torch.tensor(state.getPositions(asNumpy=True).value_in_unit(unit.angstrom), dtype=torch.float32, device=numbers.device)
     if indices is not None:
         positions = positions[indices]
     args = {'coord': positions.unsqueeze(0),
@@ -101,7 +103,7 @@ def _computeAIMNet2(state, model, numbers, charge, multiplicity, indices, period
             'charge': charge,
             'mult': multiplicity}
     if periodic:
-        cell = torch.tensor(state.getPeriodicBoxVectors(asNumpy=True).value_in_unit(unit.angstrom), device=numbers.device)
+        cell = torch.tensor(state.getPeriodicBoxVectors(asNumpy=True).value_in_unit(unit.angstrom), dtype=torch.float32, device=numbers.device)
         args['cell'] = cell
     result = model(args, forces=True)
     energyScale = (unit.ev/unit.item).conversion_factor_to(unit.kilojoules_per_mole)
