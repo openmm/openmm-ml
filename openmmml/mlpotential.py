@@ -115,6 +115,20 @@ class MLPotentialImpl(object):
         """
         raise NotImplementedError('Subclasses must implement addForces()')
 
+    def _getTorchDevice(self, args):
+        """This is a utility routine for use by subclasses that are implemented with PyTorch.  It selects what device
+        to use, which can either by specified by the user with the 'device' argument, or chosen automatically based on
+        the available hardware."""
+        import torch
+        if 'device' in args:
+            device = args['device']
+            if isinstance(device, str):
+                device = torch.device(device)
+            return device
+        if torch.cuda.is_available():
+            return torch.device('cuda')
+        return torch.device('cpu')
+
 
 class MLPotential(object):
     """A potential function that can be used in simulations.
