@@ -235,6 +235,7 @@ def _computeMACE(state, model, ptr, node_attrs, batch, pbc, returnEnergyType, ch
     energyScale = 96.4853
     lengthScale = 10.0
     positions = state.getPositions(asNumpy=True).value_in_unit(unit.angstrom)
+    numAtoms = positions.shape[0]
     if indices is not None:
         positions = positions[indices]
     if periodic:
@@ -259,4 +260,8 @@ def _computeMACE(state, model, ptr, node_attrs, batch, pbc, returnEnergyType, ch
     results = model(inputDict, compute_force=True)
     energy = float(results[returnEnergyType].detach())*energyScale
     forces = (results["forces"]*energyScale*lengthScale).detach().cpu().numpy()
+    if indices is not None:
+        f = np.zeros((numAtoms, 3), dtype=(np.float64 if dtype == torch.float64 else np.float32))
+        f[indices] = forces
+        forces = f
     return energy, forces
