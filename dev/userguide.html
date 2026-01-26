@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>User Guide &#8212; OpenMM ML 1.5dev_cc19b74 documentation</title>
+    <title>User Guide &#8212; OpenMM ML 1.5dev_3c1e9d3 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=f287ea78"></script>
+    <script src="_static/documentation_options.js?v=a798d136"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'userguide';</script>
@@ -495,7 +495,10 @@ are supported.</p>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">mace-omat-0-small</span></code><span class="raw-html-m2r"><br></span><code class="docutils literal notranslate"><span class="pre">mace-omat-0-medium</span></code></p></td>
 <td><p>Pretrained <a class="reference external" href="https://github.com/ACEsuit/mace-foundations">MACE-OMAT-0</a> models</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">mace</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">mace-omol-0-extra-large</span></code></p></td>
+<td><p>Pretrained MACE-OMOL-0 model</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">mace</span></code></p></td>
 <td><p>Custom MACE models specified with the <code class="docutils literal notranslate"><span class="pre">modelPath</span></code> argument</p></td>
 </tr>
 </tbody>
@@ -528,6 +531,15 @@ are supported.</p>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">returnEnergyType</span></code></p></td>
 <td><p>Whether to return the interaction energy or the energy including the self-energy.  The default is <code class="docutils literal notranslate"><span class="pre">'interaction_energy'</span></code>. Supported options are <code class="docutils literal notranslate"><span class="pre">'interaction_energy'</span></code> and <code class="docutils literal notranslate"><span class="pre">'energy'</span></code>.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">device</span></code></p></td>
+<td><p>The PyTorch device to perform calculations on, either a <code class="docutils literal notranslate"><span class="pre">torch.device</span></code> object or a string (such as <code class="docutils literal notranslate"><span class="pre">'cuda'</span></code> or <code class="docutils literal notranslate"><span class="pre">'cpu'</span></code>.)  If omitted, a device is chosen automatically.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">charge</span></code></p></td>
+<td><p>The total charge of the system.  If omitted, it is assumed to be 0.  This is only used by MACE-OMOL-0.  For other models it is ignored.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">multiplicity</span></code></p></td>
+<td><p>The spin multiplicity of the system.  If omitted, it is assumed to be 1.  This is only used by MACE-OMOL-0.  For other models it is ignored.</p></td>
 </tr>
 </tbody>
 </table>
