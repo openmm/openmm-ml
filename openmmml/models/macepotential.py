@@ -163,13 +163,13 @@ class MACEPotentialImpl(MLPotentialImpl):
         device = self._getTorchDevice(args)
         if self.name in models:
             fn, name, warn = models[self.name]
-            model = fn(model=name, device=device, return_raw_model=True)
+            model = fn(model=name, device=device, return_raw_model=True).to(device)
             if warn:
                 import logging
                 logging.warning(f'The model {self.name} is distributed under the restrictive ASL license.  Commercial use is not permitted.')
         elif self.name == "mace":
             if self.modelPath is not None:
-                model = torch.load(self.modelPath, map_location="cpu")
+                model = torch.load(self.modelPath, map_location=device)
             else:
                 raise ValueError("No modelPath provided for local MACE model.")
         else:
