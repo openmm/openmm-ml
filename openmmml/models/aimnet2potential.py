@@ -95,7 +95,9 @@ class AIMNet2PotentialImpl(MLPotentialImpl):
 
 def _computeAIMNet2(state, model, numbers, charge, multiplicity, indices, periodic):
     import torch
+    import numpy as np
     positions = torch.tensor(state.getPositions(asNumpy=True).value_in_unit(unit.angstrom), dtype=torch.float32, device=numbers.device)
+    numAtoms = positions.shape[0]
     if indices is not None:
         positions = positions[indices]
     args = {'coord': positions.unsqueeze(0),
@@ -109,4 +111,8 @@ def _computeAIMNet2(state, model, numbers, charge, multiplicity, indices, period
     energyScale = (unit.ev/unit.item).conversion_factor_to(unit.kilojoules_per_mole)
     energy = float(energyScale*result["energy"].sum().detach())
     forces = (10.0*energyScale*result["forces"]).detach().cpu().numpy()[0]
+    if indices is not None:
+        f = np.zeros((numAtoms, 3), dtype=np.float32)
+        f[indices] = forces
+        forces = f
     return energy, forces
