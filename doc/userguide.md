@@ -205,7 +205,6 @@ Pretrained and your own local models are supported.
 | `aceff-2.0` | Pretrained [AceFF-2.0](https://huggingface.co/Acellera/AceFF-2.0) [TensorNet2](https://arxiv.org/abs/2601.00581) model. |
 | `torchmdnet` |  Custom TorchMD-Net models specified with the `modelPath` argument. |
 
-
 When creating TorchMD-Net models, the following keyword arguments to the `MLPotential` constructor are supported.
 
 | Argument | Description |
@@ -216,17 +215,55 @@ When creating TorchMD-Net models, the following keyword arguments to the `MLPote
 
 When using TorchMD-Net models, the following extra keyword arguments to `createSystem()` and `createMixedSystem()` are supported.
 
-| Argument       | Description |
+| Argument | Description |
 | --- | --- |
-| `charge`       | The total charge of the system.  If omitted, it is assumed to be 0. |
+| `charge` | The total charge of the system.  If omitted, it is assumed to be 0. |
 | `cudaGraphs` | Flag to enable CUDA graphs. If omitted it is set to `True` if the TorchMD-Net model is TensorNet, and `False` otherwise. |
 | `remove_ref_energy` | Argument passed to the TorchMD-Net model, please see [here](https://torchmd-net.readthedocs.io/en/latest/). Default is `True`.  |
 | `max_num_neighbors` | Argument passed to the TorchMD-Net model, please see [here](https://torchmd-net.readthedocs.io/en/latest/). Default is the minimum of 64 or the number of atoms in the molecule.
 | `batch` | Argument passed to the forward call of the TorchMD-Net model, please see [here](https://torchmd-net.readthedocs.io/en/latest/). With this argument you can denote different atoms to be in different batches. The format should be a 1d list containing the batch index of each atom. e.g. for two molecules each with three atoms to be treated as seperate batches you would pass `batch = [0, 0, 0, 1, 1, 1]`.
 
+### ASE
 
+OpenMM-ML can use an arbitrary [ASE](https://ase-lib.org/) Calculator to perform calculations.  This allows it to use
+any model or code for which a Calculator is available, including a wide variety of MLIPs and quantum chemistry programs.
+Simply pass the [Calculator](https://ase-lib.org/ase/calculators/calculators.html) to `createSystem()`:
 
+```python
+potential = MLPotential('ase')
+system = potential.createSystem(topology, calculator=calculator)
+```
 
+An ASE [Atoms](https://ase-lib.org/ase/atoms.html) object is created automatically based on the OpenMM Topology.  You
+can optionally provide values to add to its `info` dict.  Some Calculators use this as a mechanism to specify parameters
+like total charge and spin multiplicity:
+
+```python
+system = potential.createSystem(topology, calculator=calculator, info={'charge':2})
+```
+
+In cases where you need more direct control, you can instead create an Atoms object yourself and provide it directly:
+
+```python
+system = potential.createSystem(topology, aseAtoms=atoms)
+```
+
+In this case, the Atoms should already be fully configured, including having a Calculator set.  It is up to you to make
+sure the Atoms and Topology are fully consistent with each other.
+
+The following model names are supported.
+
+| Name | Model |
+| --- | --- |
+| `ase` | Custom models specified with either the `calculator` or `aseAtoms` argument |
+
+When using ASE models, the following extra keyword arguments to `createSystem()` and `createMixedSystem()` are supported.
+
+| Argument | Description |
+| --- | --- |
+| `calculator` | The Calculator to use for computations.  An Atoms object is created automatically. |
+| `aseAtoms` | An Atoms object to use for computations. |
+| `info` | Values that should be added to the `info` dict of the Atoms object. |
 
 ### Other Packages
 
