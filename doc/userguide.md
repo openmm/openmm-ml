@@ -141,6 +141,7 @@ When using NequIP models, the following extra keyword arguments to `createSystem
 | --- | --- |
 | `precision` | The numerical precision of the model. Supported options are `'single'` and `'double'`.  If `None`, the default precision of the model is used. |
  | `atomTypes` | A list of integers corresponding to the NequiIP atom type for each ML atom in the system.  This is only required if the model was trained with custom atom types. If `None`, the atomic number is used to determine the atom type. This list should have the same length as the number of ML atoms in the system. |
+| `device` | The PyTorch device to perform calculations on, either a `torch.device` object or a string (such as `'cuda'` or `'cpu'`.)  If omitted, a device is chosen automatically. |
 
 ### TorchANI
 
