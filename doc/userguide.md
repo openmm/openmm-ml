@@ -131,7 +131,7 @@ When creating NequIP models, the following keyword arguments to the `MLPotential
 
 | Argument | Description |
 | --- | --- |
-| `modelPath` | The path to the file containing the model |
+| `modelPath` | The path to the checkpoint file containing the model |
 | `lengthScale` | The conversion factor from the model's length units to nanometers (e.g. 0.1 if the model uses Angstroms) |
 | `energyScale` | The conversion factor from the model's energy units to kJ/mol (e.g. 4.184 if the model uses kcal/mol) |
 
