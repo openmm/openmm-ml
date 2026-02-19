@@ -188,6 +188,7 @@ class NequIPPotentialImpl(MLPotentialImpl):
                 f"Model dtype in metadata is {modelDefaultDtype} and requested dtype is {dtype}. "
                 "The model will be converted to the requested dtype. Make sure this is the precision the model was trained with."
             )
+            model.to(dtype)
 
         # Get the atom types
         if atomTypes is None:
@@ -228,7 +229,7 @@ def _computeNequIP(state, model, atomTypes, cutoff, lengthScale, energyScale, in
     from nequip.data._nl import compute_neighborlist_
     positions = state.getPositions(asNumpy=True).value_in_unit(unit.nanometer)/lengthScale
     numAtoms = positions.shape[0]
-    positions = torch.tensor(positions, dtype=torch.float32, device=atomTypes.device)
+    positions = torch.tensor(positions, dtype=torch.float64, device=atomTypes.device)
     if indices is not None:
         positions = positions[indices]
     inputDict = {
@@ -237,13 +238,13 @@ def _computeNequIP(state, model, atomTypes, cutoff, lengthScale, energyScale, in
         "pbc": pbc,
     }
     if periodic:
-        inputDict['cell'] = torch.tensor(state.getPeriodicBoxVectors(asNumpy=True).value_in_unit(unit.nanometer)/lengthScale, dtype=torch.float32, device=atomTypes.device)
+        inputDict['cell'] = torch.tensor(state.getPeriodicBoxVectors(asNumpy=True).value_in_unit(unit.nanometer)/lengthScale, dtype=torch.float64, device=atomTypes.device)
     compute_neighborlist_(inputDict, cutoff)
     out = model(inputDict)
     energy = out["total_energy"] * energyScale
     forces = out["forces"].detach().cpu().numpy()
     if indices is not None:
-        f = np.zeros((numAtoms, 3), dtype=np.float32)
+        f = np.zeros((numAtoms, 3), dtype=np.float64)
         f[indices] = forces
         forces = f
     return energy, forces*energyScale/lengthScale
