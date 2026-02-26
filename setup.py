@@ -44,6 +44,7 @@ setup(
             'aimnet2 = openmmml.models.aimnet2potential:AIMNet2PotentialImplFactory',
             'ani1ccx = openmmml.models.anipotential:ANIPotentialImplFactory',
             'ani2x = openmmml.models.anipotential:ANIPotentialImplFactory',
+            'ase = openmmml.models.asepotential:ASEPotentialImplFactory',
             'mace = openmmml.models.macepotential:MACEPotentialImplFactory',
             'mace-off23-small = openmmml.models.macepotential:MACEPotentialImplFactory',
             'mace-off23-medium = openmmml.models.macepotential:MACEPotentialImplFactory',

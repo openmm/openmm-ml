@@ -31,6 +31,20 @@ class TestAIMNet2:
             energyML = context.getState(getEnergy=True).getPotentialEnergy().value_in_unit(unit.kilojoules_per_mole)
             assert np.isclose(energyRef, energyML, rtol=rtol)
 
+    def testPeriodicSystem(self, platform_int):
+        pdb = app.PDBFile(os.path.join(test_data_dir, "alanine-dipeptide", "alanine-dipeptide-explicit.pdb"))
+        potential = MLPotential("aimnet2", charge=0, multiplicity=1)
+        system = potential.createSystem(pdb.topology)
+        platform = mm.Platform.getPlatform(platform_int)
+        context = mm.Context(system, mm.VerletIntegrator(0.001), platform)
+        positionsOriginal = pdb.getPositions(asNumpy=True)
+        energyRef = -151663232.67206445 # in kJ/mol, calculated using the AIMNet2ASE
+        for i in range(3):
+            positions = positionsOriginal + i * 0.9 * unit.nanometers # translate molecule to test PBC
+            context.setPositions(positions)
+            energyML = context.getState(getEnergy=True).getPotentialEnergy().value_in_unit(unit.kilojoules_per_mole)
+            assert np.isclose(energyRef, energyML, rtol=rtol)
+
     def testCreateMixedSystem(self, platform_int):
         prmtop = app.AmberPrmtopFile(os.path.join(test_data_dir, "toluene", "toluene-explicit.prm7"))
         inpcrd = app.AmberInpcrdFile(os.path.join(test_data_dir, "toluene", "toluene-explicit.rst7"))

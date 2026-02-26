@@ -6,7 +6,7 @@ Simbios, the NIH National Center for Physics-Based Simulation of
 Biological Structures at Stanford, funded under the NIH Roadmap for
 Medical Research, grant U54 GM072970. See https://simtk.org.
 
-Portions copyright (c) 2021-2023 Stanford University and the Authors.
+Portions copyright (c) 2021-2026 Stanford University and the Authors.
 Authors: Peter Eastman
 Contributors:
 
@@ -32,7 +32,8 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 from openmmml.mlpotential import MLPotential, MLPotentialImpl, MLPotentialImplFactory
 import openmm
 from openmm import unit
-from typing import Iterable, Optional, Union
+from typing import Iterable, Optional
+from functools import partial
 
 class AIMNet2PotentialImplFactory(MLPotentialImplFactory):
     """This is the factory that creates AIMNet2PotentialImpl objects."""
@@ -66,47 +67,52 @@ class AIMNet2PotentialImpl(MLPotentialImpl):
         except ImportError as e:
             raise ImportError(f"Failed to import aimnet with error: {e}. Install from https://github.com/isayevlab/aimnetcentral.")
         import torch
-        import openmmtorch
         model = AIMNet2Calculator('aimnet2')
+        device = torch.device(model.device)
+        model.device = device
 
         # Create the PyTorch model that will be invoked by OpenMM.
 
         includedAtoms = list(topology.atoms())
-        if atoms is not None:
+        if atoms is None:
+            indices = None
+        else:
             includedAtoms = [includedAtoms[i] for i in atoms]
-        numbers = torch.tensor([[atom.element.atomic_number for atom in includedAtoms]])
-        charge = torch.tensor([args.get('charge', 0)], dtype=torch.float32)
-        multiplicity = torch.tensor([args.get('multiplicity', 1)], dtype=torch.float32)
+            indices = torch.tensor(sorted(atoms), dtype=torch.int64, device=device)
+        numbers = torch.tensor([[atom.element.atomic_number for atom in includedAtoms]], device=device)
+        charge = torch.tensor([args.get('charge', 0)], dtype=torch.float32, device=device)
+        multiplicity = torch.tensor([args.get('multiplicity', 1)], dtype=torch.float32, device=device)
+        periodic = topology.getPeriodicBoxVectors() is not None
 
-        class AIMNet2Force(torch.nn.Module):
+        # Create the PythonForce and add it to the System.
 
-            def __init__(self, calc, numbers, charge, atoms):
-                super(AIMNet2Force, self).__init__()
-                self.model = calc.model
-                self.numbers = torch.nn.Parameter(numbers, requires_grad=False)
-                self.charge = torch.nn.Parameter(charge, requires_grad=False)
-                self.multiplicity = torch.nn.Parameter(multiplicity, requires_grad=False)
-                self.energyScale = (unit.ev/unit.item).conversion_factor_to(unit.kilojoules_per_mole)
-                if atoms is None:
-                    self.indices = None
-                else:
-                    self.indices = torch.tensor(sorted(atoms), dtype=torch.int64)
-
-            def forward(self, positions: torch.Tensor, boxvectors: Optional[torch.Tensor] = None):
-                positions = positions.to(torch.float32).to(self.numbers.device)
-                if self.indices is not None:
-                    positions = positions[self.indices]
-                args = {'coord': 10.0*positions.unsqueeze(0),
-                        'numbers': self.numbers,
-                        'charge': self.charge,
-                        'mult': self.multiplicity}
-                result = self.model(args)
-                energy = result["energy"].sum()
-                return self.energyScale*energy
-
-        # Create the TorchForce and add it to the System.
-
-        module = torch.jit.script(AIMNet2Force(model, numbers, charge, atoms)).to(torch.device('cpu'))
-        force = openmmtorch.TorchForce(module)
+        compute = partial(_computeAIMNet2, model=model, numbers=numbers, charge=charge, multiplicity=multiplicity, indices=indices, periodic=periodic)
+        force = openmm.PythonForce(compute)
         force.setForceGroup(forceGroup)
+        force.setUsesPeriodicBoundaryConditions(periodic)
         system.addForce(force)
+
+
+def _computeAIMNet2(state, model, numbers, charge, multiplicity, indices, periodic):
+    import torch
+    import numpy as np
+    positions = torch.tensor(state.getPositions(asNumpy=True).value_in_unit(unit.angstrom), dtype=torch.float32, device=numbers.device)
+    numAtoms = positions.shape[0]
+    if indices is not None:
+        positions = positions[indices]
+    args = {'coord': positions.unsqueeze(0),
+            'numbers': numbers,
+            'charge': charge,
+            'mult': multiplicity}
+    if periodic:
+        cell = torch.tensor(state.getPeriodicBoxVectors(asNumpy=True).value_in_unit(unit.angstrom), dtype=torch.float32, device=numbers.device)
+        args['cell'] = cell
+    result = model(args, forces=True)
+    energyScale = (unit.ev/unit.item).conversion_factor_to(unit.kilojoules_per_mole)
+    energy = float(energyScale*result["energy"].sum().detach())
+    forces = (10.0*energyScale*result["forces"]).detach().cpu().numpy()[0]
+    if indices is not None:
+        f = np.zeros((numAtoms, 3), dtype=np.float32)
+        f[indices] = forces
+        forces = f
+    return energy, forces
