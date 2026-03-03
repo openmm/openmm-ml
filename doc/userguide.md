@@ -224,6 +224,33 @@ When using TorchMD-Net models, the following extra keyword arguments to `createS
 | `max_num_neighbors` | Argument passed to the TorchMD-Net model, please see [here](https://torchmd-net.readthedocs.io/en/latest/). Default is the minimum of 64 or the number of atoms in the molecule.
 | `batch` | Argument passed to the forward call of the TorchMD-Net model, please see [here](https://torchmd-net.readthedocs.io/en/latest/). With this argument you can denote different atoms to be in different batches. The format should be a 1d list containing the batch index of each atom. e.g. for two molecules each with three atoms to be treated as seperate batches you would pass `batch = [0, 0, 0, 1, 1, 1]`.
 
+### FeNNix
+
+OpenMM-ML has an interface to the [FeNNol](https://github.com/FeNNol-tools/FeNNol)
+package for simulating [FeNNix](https://github.com/FeNNol-tools/FeNNol-PMC) models.
+The following model names are supported.
+
+| Argument | Description |
+| --- | --- |
+| `fennix-bio1S` | Pretrained [FeNNix-Bio1(S)](https://github.com/FeNNol-tools/FeNNol-PMC/tree/main/FENNIX-BIO1) model. |
+| `fennix-bio1M` | Pretrained [FeNNix-Bio1(M)](https://github.com/FeNNol-tools/FeNNol-PMC/tree/main/FENNIX-BIO1) model. |
+| `fennix-bio1S-finetuneIons` | Pretrained [FeNNix-Bio1(S)](https://github.com/FeNNol-tools/FeNNol-PMC/tree/main/FENNIX-BIO1) model finetuned to AMOEBA03 ions. |
+| `fennix-bio1M-finetuneIons` | Pretrained [FeNNix-Bio1(M)](https://github.com/FeNNol-tools/FeNNol-PMC/tree/main/FENNIX-BIO1) model finetuned to AMOEBA03 ions. |
+| `fennix` | Use a custom FeNNix model loaded from a local file. |
+
+When creating FeNNix models, the following keyword arguments to the `MLPotential` constructor are supported.
+
+| Argument | Description |
+| --- | --- |
+| `modelPath` | The path to the file containing the model: required for `fennix`, ignored for all other models. |
+
+When using FeNNix models, the following extra keyword arguments to `createSystem()` and `createMixedSystem()` are supported.
+
+| Argument | Description |
+| --- | --- |
+| `charge` | The total charge of the system.  If omitted, it is assumed to be 0. |
+| `precision` | `'single'` for single precision (the default if not specified) or `'double'` for double precision. |
+
 ### ASE
 
 OpenMM-ML can use an arbitrary [ASE](https://ase-lib.org/) Calculator to perform calculations.  This allows it to use
