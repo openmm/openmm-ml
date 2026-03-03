@@ -131,4 +131,4 @@ def _computeASE(state, atoms, indices):
         f = np.zeros((numAtoms, 3), dtype=np.float32)
         f[indices] = forces
         forces = f
-    return energy/(ase.units.kJ/ase.units.mol), forces/(10*ase.units.kJ/ase.units.mol)
+    return energy/(ase.units.kJ/ase.units.mol), forces*10/(ase.units.kJ/ase.units.mol)
