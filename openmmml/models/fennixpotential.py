@@ -126,7 +126,7 @@ class FeNNixPotentialImpl(MLPotentialImpl):
         # Load the model.
         model = fennol.FENNIX.load(modelPath, **args)
         energyScale = (unit.hartree / model.Ha_to_model_energy * unit.AVOGADRO_CONSTANT_NA).value_in_unit(unit.kilojoule_per_mole)
-        forceScale = (energyScale * unit.angstrom).value_in_unit(unit.nanometer)
+        forceScale = (energyScale / unit.angstrom).value_in_unit(unit.nanometer ** -1)
 
         # Get the atoms that should be included.
         includedAtoms = list(topology.atoms())
