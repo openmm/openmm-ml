@@ -151,7 +151,7 @@ class MLPotentialImpl(object):
                 # end up with a partially downloaded file at targetPath and we
                 # do not create temporary files directly in the cache directory.
                 with tempfile.TemporaryDirectory(dir=cacheDir) as tempDir:
-                    tempPath = os.path.join(tempDir, targetPath)
+                    tempPath = os.path.join(tempDir, name)
                     with open(tempPath, "wb") as localFile:
                         shutil.copyfileobj(remoteFile, localFile)
                     os.replace(tempPath, targetPath)
