@@ -232,10 +232,10 @@ The following model names are supported.
 
 | Argument | Description |
 | --- | --- |
-| `fennix-bio1S` | Pretrained [FeNNix-Bio1(S)](https://github.com/FeNNol-tools/FeNNol-PMC/tree/main/FENNIX-BIO1) model. |
-| `fennix-bio1M` | Pretrained [FeNNix-Bio1(M)](https://github.com/FeNNol-tools/FeNNol-PMC/tree/main/FENNIX-BIO1) model. |
-| `fennix-bio1S-finetuneIons` | Pretrained [FeNNix-Bio1(S)](https://github.com/FeNNol-tools/FeNNol-PMC/tree/main/FENNIX-BIO1) model finetuned to AMOEBA03 ions. |
-| `fennix-bio1M-finetuneIons` | Pretrained [FeNNix-Bio1(M)](https://github.com/FeNNol-tools/FeNNol-PMC/tree/main/FENNIX-BIO1) model finetuned to AMOEBA03 ions. |
+| `fennix-bio1-small` | Pretrained [FeNNix-Bio1(S)](https://github.com/FeNNol-tools/FeNNol-PMC/tree/main/FENNIX-BIO1) model. |
+| `fennix-bio1-medium` | Pretrained [FeNNix-Bio1(M)](https://github.com/FeNNol-tools/FeNNol-PMC/tree/main/FENNIX-BIO1) model. |
+| `fennix-bio1-small-finetune-ions` | Pretrained [FeNNix-Bio1(S)](https://github.com/FeNNol-tools/FeNNol-PMC/tree/main/FENNIX-BIO1) model finetuned to AMOEBA03 ions. |
+| `fennix-bio1-medium-finetune-ions` | Pretrained [FeNNix-Bio1(M)](https://github.com/FeNNol-tools/FeNNol-PMC/tree/main/FENNIX-BIO1) model finetuned to AMOEBA03 ions. |
 | `fennix` | Use a custom FeNNix model loaded from a local file. |
 
 When creating FeNNix models, the following keyword arguments to the `MLPotential` constructor are supported.

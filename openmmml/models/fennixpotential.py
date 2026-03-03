@@ -29,7 +29,6 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 
-from functools import partial
 from typing import Iterable
 import openmm
 from openmm import unit
@@ -51,9 +50,9 @@ class FeNNixPotentialImpl(MLPotentialImpl):
 
     To use one of the pre-trained FeNNix models, specify it by name.  For example:
 
-    >>> potential = MLPotential('fennix-bio1S')
+    >>> potential = MLPotential('fennix-bio1-small')
 
-    Other available models include 'fennix-bio1M', 'fennix-bio1S-finetuneIons', and 'fennix-bio1M-finetuneIons'.
+    Other available models include 'fennix-bio1-medium', 'fennix-bio1-small-finetune-ions', and 'fennix-bio1-medium-finetune-ions'.
 
     To use a local `.fnx` file, specify 'fennix' as the model name, and supply the `modelPath` argument, *e.g.*,
 
@@ -61,10 +60,10 @@ class FeNNixPotentialImpl(MLPotentialImpl):
     """
 
     KNOWN_MODELS = {
-        "fennix-bio1S": ("https://github.com/FeNNol-tools/FeNNol-PMC/raw/refs/heads/main/FENNIX-BIO1/v1.0/fennix-bio1S.fnx", True),
-        "fennix-bio1M": ("https://github.com/FeNNol-tools/FeNNol-PMC/raw/refs/heads/main/FENNIX-BIO1/v1.0/fennix-bio1M.fnx", True),
-        "fennix-bio1S-finetuneIons": ("https://github.com/FeNNol-tools/FeNNol-PMC/raw/refs/heads/main/FENNIX-BIO1/v1.0-finetuneIons/fennix-bio1S-finetuneIons.fnx", True),
-        "fennix-bio1M-finetuneIons": ("https://github.com/FeNNol-tools/FeNNol-PMC/raw/refs/heads/main/FENNIX-BIO1/v1.0-finetuneIons/fennix-bio1M-finetuneIons.fnx", True),
+        "fennix-bio1-small": ("https://github.com/FeNNol-tools/FeNNol-PMC/raw/refs/heads/main/FENNIX-BIO1/v1.0/fennix-bio1S.fnx", True),
+        "fennix-bio1-medium": ("https://github.com/FeNNol-tools/FeNNol-PMC/raw/refs/heads/main/FENNIX-BIO1/v1.0/fennix-bio1M.fnx", True),
+        "fennix-bio1-small-finetune-ions": ("https://github.com/FeNNol-tools/FeNNol-PMC/raw/refs/heads/main/FENNIX-BIO1/v1.0-finetuneIons/fennix-bio1S-finetuneIons.fnx", True),
+        "fennix-bio1-medium-finetune-ions": ("https://github.com/FeNNol-tools/FeNNol-PMC/raw/refs/heads/main/FENNIX-BIO1/v1.0-finetuneIons/fennix-bio1M-finetuneIons.fnx", True),
     }
 
     def __init__(self, name: str, modelPath: str | None) -> None:
@@ -75,8 +74,8 @@ class FeNNixPotentialImpl(MLPotentialImpl):
         ----------
         name : str
             The name of the model.  Options include the pre-trained models
-            'fennix-bio1S', 'fennix-bio1M', 'fennix-bio1S-finetuneIons', and
-            'fennix-bio1M-finetuneIons', or 'fennix' to load a local model file.
+            'fennix-bio1-small', 'fennix-bio1-medium', 'fennix-bio1-small-finetune-ions', and
+            'fennix-bio1-medium-finetune-ions', or 'fennix' to load a local model file.
         modelPath : str, optional
             A path to the model file to load.
         """
@@ -121,7 +120,8 @@ class FeNNixPotentialImpl(MLPotentialImpl):
                 raise ValueError("No modelPath provided for local FeNNix model.")
             modelPath = self.modelPath
         else:
-            raise ValueError(f"Unsupported FeNNix model: {self.name} (options are {", ".join(FeNNixPotentialImpl.KNOWN_MODELS)})")
+            supported_options = ", ".join(list(FeNNixPotentialImpl.KNOWN_MODELS) + ["fennix"])
+            raise ValueError(f"Unsupported FeNNix model: {self.name} (options are {supported_options})")
 
         # Load the model.
         model = fennol.FENNIX.load(modelPath, **args)

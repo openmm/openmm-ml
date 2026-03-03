@@ -15,7 +15,7 @@ test_data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
 
 @pytest.mark.parametrize("platform_int", list(platform_ints))
 class TestFeNNix:
-    @pytest.mark.parametrize("model", ["fennix-bio1S", "fennix-bio1M"])
+    @pytest.mark.parametrize("model", ["fennix-bio1-small", "fennix-bio1-medium"])
     def testCreatePureMLSystem(self, platform_int, model):
         pdb = app.PDBFile(os.path.join(test_data_dir, "toluene", "toluene.pdb"))
         potential = MLPotential(model)
@@ -25,11 +25,11 @@ class TestFeNNix:
         context.setPositions(pdb.getPositions(asNumpy=True))
         energyML = context.getState(energy=True).getPotentialEnergy().value_in_unit(unit.kilojoules_per_mole)
         # Reference energies are calculated with FENNIXCalculator
-        refEnergy = {"fennix-bio1S": -5.200859421605564,
-                     "fennix-bio1M": -2.3028696986989523}
+        refEnergy = {"fennix-bio1-small": -5.200859421605564,
+                     "fennix-bio1-medium": -2.3028696986989523}
         assert np.isclose(refEnergy[model], energyML, rtol=1e-5)
 
-    @pytest.mark.parametrize("model", ["fennix-bio1S", "fennix-bio1M", "fennix-bio1S-finetuneIons", "fennix-bio1M-finetuneIons"])
+    @pytest.mark.parametrize("model", ["fennix-bio1-small", "fennix-bio1-medium", "fennix-bio1-small-finetune-ions", "fennix-bio1-medium-finetune-ions"])
     def testChargedSystem(self, platform_int, model):
         pdb = app.PDBFile(os.path.join(test_data_dir, "methanol-ions", "methanol-ions.pdb"))
         potential = MLPotential(model)
@@ -39,15 +39,15 @@ class TestFeNNix:
         context.setPositions(pdb.getPositions(asNumpy=True))
         energyML = context.getState(energy=True).getPotentialEnergy().value_in_unit(unit.kilojoules_per_mole)
         # Reference energies are calculated with FENNIXCalculator
-        refEnergy = {"fennix-bio1S": -599.6015619222414,
-                     "fennix-bio1M": -1109.2088074881058,
-                     "fennix-bio1S-finetuneIons": -560.4959154537397,
-                     "fennix-bio1M-finetuneIons": -1068.5316655421075}
+        refEnergy = {"fennix-bio1-small": -599.6015619222414,
+                     "fennix-bio1-medium": -1109.2088074881058,
+                     "fennix-bio1-small-finetune-ions": -560.4959154537397,
+                     "fennix-bio1-medium-finetune-ions": -1068.5316655421075}
         assert np.isclose(refEnergy[model], energyML, rtol=1e-5)
 
     def testPeriodicSystem(self, platform_int):
         pdb = app.PDBFile(os.path.join(test_data_dir, "alanine-dipeptide", "alanine-dipeptide-explicit.pdb"))
-        potential = MLPotential("fennix-bio1S")
+        potential = MLPotential("fennix-bio1-small")
         system = potential.createSystem(pdb.topology, precision="double")
         platform = mm.Platform.getPlatform(platform_int)
         context = mm.Context(system, mm.VerletIntegrator(0.001), platform)
@@ -64,7 +64,7 @@ class TestFeNNix:
         inpcrd = app.AmberInpcrdFile(os.path.join(test_data_dir, "toluene", "toluene-explicit.rst7"))
         mlAtoms = list(range(15))
         mmSystem = prmtop.createSystem(nonbondedMethod=app.PME)
-        potential = MLPotential("fennix-bio1S")
+        potential = MLPotential("fennix-bio1-small")
         mixedSystem = potential.createMixedSystem(prmtop.topology, mmSystem, mlAtoms, interpolate=False)
         interpSystem = potential.createMixedSystem(prmtop.topology, mmSystem, mlAtoms, interpolate=True)
         platform = mm.Platform.getPlatform(platform_int)
