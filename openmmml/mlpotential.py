@@ -6,7 +6,7 @@ Simbios, the NIH National Center for Physics-Based Simulation of
 Biological Structures at Stanford, funded under the NIH Roadmap for
 Medical Research, grant U54 GM072970. See https://simtk.org.
 
-Portions copyright (c) 2021-2024 Stanford University and the Authors.
+Portions copyright (c) 2021-2026 Stanford University and the Authors.
 Authors: Peter Eastman
 Contributors:
 
@@ -34,6 +34,10 @@ import openmm.app
 import openmm.unit as unit
 from copy import deepcopy
 from typing import Dict, Iterable, Optional
+import os
+import shutil
+import tempfile
+import urllib.request
 import sys
 if sys.version_info < (3, 10):
     from importlib_metadata import entry_points
@@ -129,6 +133,29 @@ class MLPotentialImpl(object):
             return torch.device('cuda')
         return torch.device('cpu')
 
+    def _getCacheDir(self):
+        """This is a utility routine returning a cache directory for use by subclasses that need to download their own
+        models.  Before returning, it will create the directory and any parent directories if they do not already exist."""
+        path = os.path.expanduser("~/.cache/openmm-ml")
+        os.makedirs(path, exist_ok=True)
+        return path
+
+    def _downloadOrFindFile(self, name: str, url: str):
+        """Downloads a file at the requested URL and saves it in a cache directory under the specified name.  If a file
+        with the specified name already exists in the cache, the path to it will be returned without downloading it again."""
+        cacheDir = self._getCacheDir()
+        targetPath = os.path.join(cacheDir, name)
+        if not os.path.isfile(targetPath):
+            with urllib.request.urlopen(url) as remoteFile:
+                # Download into a temporary directory first so that we do not
+                # end up with a partially downloaded file at targetPath and we
+                # do not create temporary files directly in the cache directory.
+                with tempfile.TemporaryDirectory(dir=cacheDir) as tempDir:
+                    tempPath = os.path.join(tempDir, name)
+                    with open(tempPath, "wb") as localFile:
+                        shutil.copyfileobj(remoteFile, localFile)
+                    os.replace(tempPath, targetPath)
+        return targetPath
 
 class MLPotential(object):
     """A potential function that can be used in simulations.

@@ -1,0 +1,21 @@
+REMARK   1 CREATED WITH OPENMM 8.5, 2026-03-03
+HETATM    1  CB  MEO A   1       0.043   0.687  -0.287  1.00  0.00           C  
+HETATM    2  OG  MEO A   1       0.071  -0.341   0.708  1.00  0.00           O  
+HETATM    3  HG1 MEO A   1       0.950  -0.752   0.638  1.00  0.00           H  
+HETATM    4  HB1 MEO A   1       0.826   1.453  -0.080  1.00  0.00           H  
+HETATM    5  HB2 MEO A   1      -0.947   1.197  -0.305  1.00  0.00           H  
+HETATM    6  HB3 MEO A   1       0.231   0.258  -1.299  1.00  0.00           H  
+TER       7      MEO A   1
+HETATM    8 SOD  SOD B   1      -1.917  -0.548   1.851  1.00  0.00          Na  
+HETATM    9 SOD  SOD B   2      -6.915  -0.628   2.696  1.00  0.00          Na  
+HETATM   10 SOD  SOD B   3     -11.955  -0.687   3.173  1.00  0.00          Na  
+HETATM   11 CLA  CLA B   4      -9.455  -0.649   2.968  1.00  0.00          Cl  
+HETATM   12 CLA  CLA B   5      -4.403  -0.571   2.271  1.00  0.00          Cl  
+TER      13      CLA B   5
+CONECT    1    2    4    5    6
+CONECT    2    1    3
+CONECT    3    2
+CONECT    4    1
+CONECT    5    1
+CONECT    6    1
+END
