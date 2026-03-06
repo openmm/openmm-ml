@@ -24,10 +24,10 @@ class TestTorchMDNetPotential:
         context = mm.Context(system, mm.VerletIntegrator(0.001), platform)
         context.setPositions(pdb.getPositions(asNumpy=True))
         energyML = context.getState(energy=True).getPotentialEnergy().value_in_unit(unit.kilojoules_per_mole)
-        # Reference energies are calculated with AceFFCalculator
+        # Reference energies are calculated with TMDNETCalculator
         refEnergy = {'aceff-1.0': -6974.530920833134,
                      'aceff-1.1': -6976.570722280534,
-                     'aceff-2.0': -379.76050374928167}
+                     'aceff-2.0': -362.46139008480094}
         assert np.isclose(refEnergy[model], energyML, rtol=1e-4)
 
     def testPeriodicSystem(self, platform_int):
@@ -37,7 +37,7 @@ class TestTorchMDNetPotential:
         platform = mm.Platform.getPlatform(platform_int)
         context = mm.Context(system, mm.VerletIntegrator(0.001), platform)
         positionsOriginal = pdb.getPositions(asNumpy=True)
-        energyRef = -68502.38921154902 # Calculated with AceFFCalculator
+        energyRef = -72195.51487910068 # Calculated with TMDNETCalculator
         for i in range(3):
             positions = positionsOriginal + i * 0.9 * unit.nanometers # translate molecule to test PBC
             context.setPositions(positions)

@@ -32,7 +32,6 @@ import openmm
 from openmm import unit
 from openmmml.mlpotential import MLPotentialImpl, MLPotentialImplFactory
 from typing import Iterable, Optional
-from functools import partial
 
 class TorchMDNetPotentialImplFactory(MLPotentialImplFactory):
     """This is the factory that creates TorchMDNetPotentialImpl objects."""
@@ -132,6 +131,9 @@ class TorchMDNetPotentialImpl(MLPotentialImpl):
         device = self._getTorchDevice(args)
         numbers = torch.tensor([atom.element.atomic_number for atom in includedAtoms], device=device, requires_grad=False)
         charge = torch.tensor([args.get('charge', 0)], dtype=torch.float32, device=device, requires_grad=False)
+        cutoff = 10*args.get('coulomb_cutoff', 1.2)
+        if unit.is_quantity(cutoff):
+            cutoff = cutoff.value_in_unit(unit.angstrom)
 
         if self.name == 'torchmdnet':
             # a local path to a torchmdnet checkpoint must be provided 
@@ -164,12 +166,12 @@ class TorchMDNetPotentialImpl(MLPotentialImpl):
             derivative=False,
             remove_ref_energy = args.get('remove_ref_energy', True),
             max_num_neighbors = min(args.get('max_num_neighbors', 64), numbers.shape[0]),
+            coulomb_cutoff = cutoff,
             static_shapes = True,
             check_errors = False
         ).to(device)
         for parameter in model.parameters():
             parameter.requires_grad = False
-
         batch = args.get('batch', None)
         if batch is None:
             batch = torch.zeros_like(numbers, requires_grad=False)
@@ -183,39 +185,56 @@ class TorchMDNetPotentialImpl(MLPotentialImpl):
 
         # Create the PythonForce and add it to the System.
 
-        compute = partial(_computeTorchMDNet,
-                          model=model,
-                          numbers=numbers,
-                          charge=charge,
-                          batch=batch,
-                          lengthScale=self.lengthScale,
-                          energyScale=self.energyScale,
-                          indices=indices,
-                          periodic=periodic)
+        compute = _ComputeTorchMDNet(model=model,
+                                     numbers=numbers,
+                                     charge=charge,
+                                     batch=batch,
+                                     lengthScale=self.lengthScale,
+                                     energyScale=self.energyScale,
+                                     indices=indices,
+                                     periodic=periodic)
         force = openmm.PythonForce(compute)
         force.setForceGroup(forceGroup)
         force.setUsesPeriodicBoundaryConditions(periodic)
         system.addForce(force)
 
 
-def _computeTorchMDNet(state, model, numbers, charge, batch, lengthScale, energyScale, indices, periodic):
-    import torch
-    import numpy as np
-    positions = state.getPositions(asNumpy=True).value_in_unit(unit.nanometer)
-    numAtoms = positions.shape[0]
-    positions = torch.tensor(positions, dtype=torch.float32, device=numbers.device)
-    if indices is not None:
-        positions = positions[indices]
-    positions.requires_grad_(True)
-    if periodic:
-        cell = torch.tensor(state.getPeriodicBoxVectors(asNumpy=True).value_in_unit(unit.nanometer), dtype=torch.float32, device=numbers.device)/lengthScale
-    else:
-        cell = None
-    energy = model(z=numbers, pos=positions/lengthScale, batch=batch, q=charge, box=cell)[0]*energyScale
-    energy.backward()
-    forces = (-positions.grad).detach().cpu().numpy()
-    if indices is not None:
-        f = np.zeros((numAtoms, 3), dtype=np.float32)
-        f[indices] = forces
-        forces = f
-    return energy, forces
+class _ComputeTorchMDNet(object):
+    def __init__(self, model, numbers, charge, batch, lengthScale, energyScale, indices, periodic):
+        self.model = model
+        self.compiled_model = None
+        self.numbers = numbers
+        self.charge = charge
+        self.batch = batch
+        self.lengthScale = lengthScale
+        self.energyScale = energyScale
+        self.indices = indices
+        self.periodic = periodic
+
+    def __call__(self, state):
+        import torch
+        import numpy as np
+        positions = state.getPositions(asNumpy=True).value_in_unit(unit.nanometer)
+        numAtoms = positions.shape[0]
+        positions = torch.tensor(positions, dtype=torch.float32, device=self.numbers.device)
+        if self.indices is not None:
+            positions = positions[self.indices]
+        positions.requires_grad_(True)
+        if self.periodic:
+            cell = torch.tensor(state.getPeriodicBoxVectors(asNumpy=True).value_in_unit(unit.nanometer), dtype=torch.float32, device=self.numbers.device)/self.lengthScale
+        else:
+            cell = None
+        if self.compiled_model is None:
+            # The model can't be compiled until after it has been invoked once.
+
+            energy = self.model(z=self.numbers, pos=positions/self.lengthScale, batch=self.batch, q=self.charge, box=cell)[0]*self.energyScale
+            self.compiled_model = torch.compile(self.model, backend="inductor", dynamic=False, fullgraph=True, mode="reduce-overhead")
+        else:
+            energy = self.compiled_model(z=self.numbers, pos=positions/self.lengthScale, batch=self.batch, q=self.charge, box=cell)[0]*self.energyScale
+        energy.backward()
+        forces = (-positions.grad).detach().cpu().numpy()
+        if self.indices is not None:
+            f = np.zeros((numAtoms, 3), dtype=np.float32)
+            f[self.indices] = forces
+            forces = f
+        return energy, forces
