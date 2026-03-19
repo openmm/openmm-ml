@@ -34,6 +34,7 @@ import openmm
 from openmm import unit
 from typing import Iterable, Optional
 from functools import partial
+import numpy as np
 
 class ASEPotentialImplFactory(MLPotentialImplFactory):
     """This is the factory that creates ASEPotentialImpl objects."""
@@ -85,7 +86,7 @@ class ASEPotentialImpl(MLPotentialImpl):
             indices = None
         else:
             includedAtoms = [includedAtoms[i] for i in atoms]
-            indices = sorted(atoms)
+            indices = np.array(sorted(atoms))
         if 'aseAtoms' in args:
             # The user provided an Atoms object.
 
@@ -117,7 +118,6 @@ class ASEPotentialImpl(MLPotentialImpl):
 
 def _computeASE(state, atoms, indices):
     import ase.units
-    import numpy as np
     positions = state.getPositions(asNumpy=True).value_in_unit(unit.angstrom)
     numAtoms = positions.shape[0]
     if indices is not None:
