@@ -2,8 +2,7 @@
 
 import os
 import sys
-import openmmml
-import pkg_resources
+import importlib.metadata
 import git
 
 
@@ -11,7 +10,7 @@ sys.path.append(os.path.abspath("../"))
 
 
 # version specified in ../setup.py
-version = pkg_resources.require("openmmml")[0].version
+version = importlib.metadata.version("openmmml")
 
 repo = git.Repo(search_parent_directories=True)
 short_sha = hash = repo.git.rev_parse(repo.head, short=True)
