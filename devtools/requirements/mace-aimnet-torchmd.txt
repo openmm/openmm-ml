@@ -1,5 +1,5 @@
 pytest
 mace-torch
-aimnet2
+aimnet
 torchmd-net
 ase
