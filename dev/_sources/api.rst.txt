@@ -29,7 +29,11 @@ Models
     
       openmmml.models.anipotential.ANIPotentialImpl
     
+      openmmml.models.asepotential.ASEPotentialImpl
+    
       openmmml.models.deepmdpotential.DeepmdPotentialImpl
+    
+      openmmml.models.fennixpotential.FeNNixPotentialImpl
     
       openmmml.models.macepotential.MACEPotentialImpl
     

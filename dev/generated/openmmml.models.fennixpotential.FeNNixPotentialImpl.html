@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>openmmml.models.anipotential.ANIPotentialImpl &#8212; OpenMM ML 1.5dev_95232a5 documentation</title>
+    <title>openmmml.models.fennixpotential.FeNNixPotentialImpl &#8212; OpenMM ML 1.5dev_95232a5 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
     <script src="../_static/documentation_options.js?v=a65ee709"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'generated/openmmml.models.anipotential.ANIPotentialImpl';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'generated/openmmml.models.fennixpotential.FeNNixPotentialImpl';</script>
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.16.1';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://openmm.github.io/openmm-ml/dev/_static/versions.json';
@@ -51,8 +51,8 @@
         </script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="openmmml.models.asepotential.ASEPotentialImpl" href="openmmml.models.asepotential.ASEPotentialImpl.html" />
-    <link rel="prev" title="openmmml.models.aimnet2potential.AIMNet2PotentialImpl" href="openmmml.models.aimnet2potential.AIMNet2PotentialImpl.html" />
+    <link rel="next" title="openmmml.models.macepotential.MACEPotentialImpl" href="openmmml.models.macepotential.MACEPotentialImpl.html" />
+    <link rel="prev" title="openmmml.models.deepmdpotential.DeepmdPotentialImpl" href="openmmml.models.deepmdpotential.DeepmdPotentialImpl.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="dev" />
@@ -368,10 +368,10 @@
 </ul>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="openmmml.models.aimnet2potential.AIMNet2PotentialImpl.html">openmmml.models.aimnet2potential.AIMNet2PotentialImpl</a></li>
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">openmmml.models.anipotential.ANIPotentialImpl</a></li>
+<li class="toctree-l1"><a class="reference internal" href="openmmml.models.anipotential.ANIPotentialImpl.html">openmmml.models.anipotential.ANIPotentialImpl</a></li>
 <li class="toctree-l1"><a class="reference internal" href="openmmml.models.asepotential.ASEPotentialImpl.html">openmmml.models.asepotential.ASEPotentialImpl</a></li>
 <li class="toctree-l1"><a class="reference internal" href="openmmml.models.deepmdpotential.DeepmdPotentialImpl.html">openmmml.models.deepmdpotential.DeepmdPotentialImpl</a></li>
-<li class="toctree-l1"><a class="reference internal" href="openmmml.models.fennixpotential.FeNNixPotentialImpl.html">openmmml.models.fennixpotential.FeNNixPotentialImpl</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">openmmml.models.fennixpotential.FeNNixPotentialImpl</a></li>
 <li class="toctree-l1"><a class="reference internal" href="openmmml.models.macepotential.MACEPotentialImpl.html">openmmml.models.macepotential.MACEPotentialImpl</a></li>
 <li class="toctree-l1"><a class="reference internal" href="openmmml.models.nequippotential.NequIPPotentialImpl.html">openmmml.models.nequippotential.NequIPPotentialImpl</a></li>
 <li class="toctree-l1"><a class="reference internal" href="openmmml.models.torchmdnetpotential.TorchMDNetPotentialImpl.html">openmmml.models.torchmdnetpotential.TorchMDNetPotentialImpl</a></li>
@@ -418,7 +418,7 @@
     
     <li class="breadcrumb-item"><a href="../api.html" class="nav-link">API</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">openmmml.models.anipotential.ANIPotentialImpl</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">openmmml.models.fennixpotential.FeNNixPotentialImpl</span></li>
   </ul>
 </nav>
 </div>
@@ -435,40 +435,64 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="openmmml-models-anipotential-anipotentialimpl">
-<h1>openmmml.models.anipotential.ANIPotentialImpl<a class="headerlink" href="#openmmml-models-anipotential-anipotentialimpl" title="Link to this heading">#</a></h1>
+  <section id="openmmml-models-fennixpotential-fennixpotentialimpl">
+<h1>openmmml.models.fennixpotential.FeNNixPotentialImpl<a class="headerlink" href="#openmmml-models-fennixpotential-fennixpotentialimpl" title="Link to this heading">#</a></h1>
 <dl class="py class">
-<dt class="sig sig-object py" id="openmmml.models.anipotential.ANIPotentialImpl">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">openmmml.models.anipotential.</span></span><span class="sig-name descname"><span class="pre">ANIPotentialImpl</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#openmmml.models.anipotential.ANIPotentialImpl" title="Link to this definition">#</a></dt>
-<dd><p>This is the MLPotentialImpl implementing the ANI potential.</p>
-<p>The potential is implemented using TorchANI to build a PyTorch model.  A
-TorchForce is used to add it to the OpenMM System.  The ANI1ccx and ANI2x
-versions are currently supported.</p>
-<p>Both ANI1ccx and ANI2x are ensembles of eight models.  Averaging over all eight
-models leads to slightly more accurate results than any one individually.  You
-can optionally use only a single model by specifying the modelIndex argument to
-select which one to use.  This leads to a large improvement in speed, at the
-cost of a small decrease in accuracy.</p>
+<dt class="sig sig-object py" id="openmmml.models.fennixpotential.FeNNixPotentialImpl">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">openmmml.models.fennixpotential.</span></span><span class="sig-name descname"><span class="pre">FeNNixPotentialImpl</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modelPath</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#openmmml.models.fennixpotential.FeNNixPotentialImpl" title="Link to this definition">#</a></dt>
+<dd><p>Implementation of FeNNix potentials for OpenMM.</p>
+<p>The FeNNol library is used to load FeNNix models and evaluate energies and
+forces.  This implementation can use local files for models or automatically
+download them from the FeNNol-PMC repository.</p>
+<p>To use one of the pre-trained FeNNix models, specify it by name.  For example:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">potential</span> <span class="o">=</span> <span class="n">MLPotential</span><span class="p">(</span><span class="s1">&#39;fennix-bio1-small&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Other available models include ‘fennix-bio1-medium’, ‘fennix-bio1-small-finetune-ions’, and ‘fennix-bio1-medium-finetune-ions’.</p>
+<p>To use a local <cite>.fnx</cite> file, specify ‘fennix’ as the model name, and supply the <cite>modelPath</cite> argument, <em>e.g.</em>,</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">potential</span> <span class="o">=</span> <span class="n">MLPotential</span><span class="p">(</span><span class="s1">&#39;fennix&#39;</span><span class="p">,</span> <span class="n">modelPath</span><span class="o">=</span><span class="s1">&#39;custom_fennix_model.fnx&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
 <dl class="py method">
-<dt class="sig sig-object py" id="openmmml.models.anipotential.ANIPotentialImpl.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#openmmml.models.anipotential.ANIPotentialImpl.__init__" title="Link to this definition">#</a></dt>
-<dd></dd></dl>
+<dt class="sig sig-object py" id="openmmml.models.fennixpotential.FeNNixPotentialImpl.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modelPath</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#openmmml.models.fennixpotential.FeNNixPotentialImpl.__init__" title="Link to this definition">#</a></dt>
+<dd><p>Initialize the <cite>FeNNixPotentialImpl</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<em>str</em>) – The name of the model.  Options include the pre-trained models
+‘fennix-bio1-small’, ‘fennix-bio1-medium’, ‘fennix-bio1-small-finetune-ions’, and
+‘fennix-bio1-medium-finetune-ions’, or ‘fennix’ to load a local model file.</p></li>
+<li><p><strong>modelPath</strong> (<em>str</em><em>, </em><em>optional</em>) – A path to the model file to load.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
 
 <p class="rubric">Methods</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#openmmml.models.anipotential.ANIPotentialImpl.__init__" title="openmmml.models.anipotential.ANIPotentialImpl.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(name)</p></td>
-<td><p></p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#openmmml.models.fennixpotential.FeNNixPotentialImpl.__init__" title="openmmml.models.fennixpotential.FeNNixPotentialImpl.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(name, modelPath)</p></td>
+<td><p>Initialize the <cite>FeNNixPotentialImpl</cite>.</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#openmmml.models.anipotential.ANIPotentialImpl.addForces" title="openmmml.models.anipotential.ANIPotentialImpl.addForces"><code class="xref py py-obj docutils literal notranslate"><span class="pre">addForces</span></code></a>(topology, system, atoms, forceGroup)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#openmmml.models.fennixpotential.FeNNixPotentialImpl.addForces" title="openmmml.models.fennixpotential.FeNNixPotentialImpl.addForces"><code class="xref py py-obj docutils literal notranslate"><span class="pre">addForces</span></code></a>(topology, system, atoms, forceGroup)</p></td>
 <td><p>Add Force objects to a System to implement the potential function.</p></td>
 </tr>
 </tbody>
 </table>
 </div>
+<p class="rubric">Attributes</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">KNOWN_MODELS</span></code></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</div>
 <dl class="py method">
-<dt class="sig sig-object py" id="openmmml.models.anipotential.ANIPotentialImpl.addForces">
-<span class="sig-name descname"><span class="pre">addForces</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">topology</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Topology</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">system</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">System</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atoms</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">forceGroup</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">implementation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'torchani'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modelIndex</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#openmmml.models.anipotential.ANIPotentialImpl.addForces" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="openmmml.models.fennixpotential.FeNNixPotentialImpl.addForces">
+<span class="sig-name descname"><span class="pre">addForces</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">topology</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Topology</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">system</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">System</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atoms</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">forceGroup</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">charge</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">precision</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'single'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#openmmml.models.fennixpotential.FeNNixPotentialImpl.addForces" title="Link to this definition">#</a></dt>
 <dd><p>Add Force objects to a System to implement the potential function.</p>
 <p>This is invoked by MLPotential.createSystem().  Subclasses must implement
 it to create the requested potential function.</p>
@@ -503,20 +527,20 @@ behavior based on extra arguments.</p></li>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="openmmml.models.aimnet2potential.AIMNet2PotentialImpl.html"
+       href="openmmml.models.deepmdpotential.DeepmdPotentialImpl.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">openmmml.models.aimnet2potential.AIMNet2PotentialImpl</p>
+        <p class="prev-next-title">openmmml.models.deepmdpotential.DeepmdPotentialImpl</p>
       </div>
     </a>
     <a class="right-next"
-       href="openmmml.models.asepotential.ASEPotentialImpl.html"
+       href="openmmml.models.macepotential.MACEPotentialImpl.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">openmmml.models.asepotential.ASEPotentialImpl</p>
+        <p class="prev-next-title">openmmml.models.macepotential.MACEPotentialImpl</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -539,9 +563,9 @@ behavior based on extra arguments.</p></li>
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#openmmml.models.anipotential.ANIPotentialImpl"><code class="docutils literal notranslate"><span class="pre">ANIPotentialImpl</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#openmmml.models.anipotential.ANIPotentialImpl.__init__"><code class="docutils literal notranslate"><span class="pre">ANIPotentialImpl.__init__()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#openmmml.models.anipotential.ANIPotentialImpl.addForces"><code class="docutils literal notranslate"><span class="pre">ANIPotentialImpl.addForces()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#openmmml.models.fennixpotential.FeNNixPotentialImpl"><code class="docutils literal notranslate"><span class="pre">FeNNixPotentialImpl</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#openmmml.models.fennixpotential.FeNNixPotentialImpl.__init__"><code class="docutils literal notranslate"><span class="pre">FeNNixPotentialImpl.__init__()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#openmmml.models.fennixpotential.FeNNixPotentialImpl.addForces"><code class="docutils literal notranslate"><span class="pre">FeNNixPotentialImpl.addForces()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -551,7 +575,7 @@ behavior based on extra arguments.</p></li>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
-      <li><a href="../_sources/generated/openmmml.models.anipotential.ANIPotentialImpl.rst.txt"
+      <li><a href="../_sources/generated/openmmml.models.fennixpotential.FeNNixPotentialImpl.rst.txt"
             rel="nofollow">Show Source</a></li>
     </ul>
    </div></div>
