@@ -226,15 +226,18 @@ class _ComputeTorchMDNet(object):
             cell = None
 
         if self.compiled_model is None:
-            # Reset compilation caches to avoid conflicts with CUDA graphs
-            # recorded by a previous compilation (e.g. a different molecule).
+            # Reset dynamo caches to avoid conflicts with compiled state
+            # from a previous molecule's model.
             torch._dynamo.reset()
             # Warmup pass to set dim_size before compilation.
             # torch.compile doesn't support .item() calls used internally.
             self.model.to(self.numbers.device)
             with torch.no_grad():
                 self.model(z=self.numbers, pos=positions/self.lengthScale, batch=self.batch, q=self.charge, box=cell)
-            self.compiled_model = torch.compile(self.model, backend="inductor", dynamic=False, fullgraph=True, mode="reduce-overhead")
+            # Use mode="default" instead of "reduce-overhead" to avoid CUDA
+            # graph recordings that are shape-locked per process and cannot
+            # be properly reset when a different molecule is compiled.
+            self.compiled_model = torch.compile(self.model, backend="inductor", dynamic=False, fullgraph=True, mode="default")
 
         energy = self.compiled_model(z=self.numbers, pos=positions/self.lengthScale, batch=self.batch, q=self.charge, box=cell)[0]*self.energyScale
         energy.backward()
