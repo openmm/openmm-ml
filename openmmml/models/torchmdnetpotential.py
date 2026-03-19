@@ -211,6 +211,7 @@ class _ComputeTorchMDNet(object):
         self.energyScale = energyScale
         self.indices = indices
         self.periodic = periodic
+        self._last_num_atoms = None
 
     def __call__(self, state):
         import torch
@@ -224,11 +225,18 @@ class _ComputeTorchMDNet(object):
             cell = torch.tensor(state.getPeriodicBoxVectors(asNumpy=True).value_in_unit(unit.nanometer), dtype=torch.float32, device=self.numbers.device)/self.lengthScale
         else:
             cell = None
-        if self.compiled_model is None:
-            # The model can't be compiled until after it has been invoked once.
 
+        # Re-compile if number of atoms changes (torch.compile with
+        # reduce-overhead uses CUDA graphs which are shape-locked).
+        current_num_atoms = positions.shape[0]
+        if self.compiled_model is None or self._last_num_atoms != current_num_atoms:
+            # Reset dynamo cache to avoid conflicts with CUDA graphs
+            # recorded by a previous compilation (e.g. a different molecule).
+            torch._dynamo.reset()
+            # The model can't be compiled until after it has been invoked once.
             energy = self.model(z=self.numbers, pos=positions/self.lengthScale, batch=self.batch, q=self.charge, box=cell)[0]*self.energyScale
             self.compiled_model = torch.compile(self.model, backend="inductor", dynamic=False, fullgraph=True, mode="reduce-overhead")
+            self._last_num_atoms = current_num_atoms
         else:
             energy = self.compiled_model(z=self.numbers, pos=positions/self.lengthScale, batch=self.batch, q=self.charge, box=cell)[0]*self.energyScale
         energy.backward()
