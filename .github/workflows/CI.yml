@@ -1,0 +1,45 @@
+name: OpenMM-ML Continuous Integration Workflow
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build_test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.14"]
+        requirements: ["mace-aimnet-torchmd", "nequip", "fennix"]
+
+    steps:
+      - uses: actions/checkout@v2
+        name: "Checkout the source code"
+
+      - uses: mamba-org/setup-micromamba@v1
+        with:
+          environment-name: build-env
+          create-args: >-
+            python=${{ matrix.python-version }}
+          init-shell: bash
+
+      - name: "Install dependencies with pip"
+        shell: bash -l {0}
+        run: |
+          pip install --pre openmm
+          pip install -v -r devtools/requirements/${{ matrix.requirements }}.txt
+
+      - name: "Install OpenMM-ML"
+        shell: bash -l {0}
+        run: |
+          pip install .
+
+      - name: "Run tests"
+        shell: bash -l {0}
+        run: |
+          cd test
+          pytest -v *

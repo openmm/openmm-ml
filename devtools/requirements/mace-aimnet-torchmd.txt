@@ -1,0 +1,6 @@
+pytest
+mace-torch
+aimnet
+torchmd-net
+ase
+huggingface-hub
