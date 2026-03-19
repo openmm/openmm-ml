@@ -49,6 +49,12 @@ class TorchMDNetPotentialImplFactory(MLPotentialImplFactory):
 class TorchMDNetPotentialImpl(MLPotentialImpl):
     """This is the MLPotentialImpl implementing the TorchMDNet potential.
 
+    .. note::
+        The loaded model is cached at the class level so that sequential use
+        with different molecules reuses the same ``nn.Module`` object.  This
+        allows ``torch.compile`` with ``mode='reduce-overhead'`` to properly
+        replace its CUDA-graph recordings when the atom count changes.
+
     The TorchMDNet potential is constructed using `torchmdnet` to build a PyTorch model,
     and then integrated into the OpenMM System using a TorchForce.  To use it, specify the model by name
     and provide the path to a model.
@@ -112,6 +118,10 @@ class TorchMDNetPotentialImpl(MLPotentialImpl):
         self.lengthScale = lengthScale
         self.energyScale = energyScale
 
+    # Class-level model cache: reuse the same nn.Module across molecules so
+    # torch.compile with reduce-overhead can properly replace CUDA graphs.
+    _model_cache = {}  # model_file_path -> model
+
     def addForces(self,
                   topology: openmm.app.Topology,
                   system: openmm.System,
@@ -162,17 +172,25 @@ class TorchMDNetPotentialImpl(MLPotentialImpl):
                 filename=filename,
             )
 
-        model = load_model(
-            model_file_path,
-            derivative=False,
-            remove_ref_energy = args.get('remove_ref_energy', True),
-            max_num_neighbors = min(args.get('max_num_neighbors', 64), numbers.shape[0]),
-            coulomb_cutoff = cutoff,
-            static_shapes = True,
-            check_errors = False
-        ).to(device)
-        for parameter in model.parameters():
-            parameter.requires_grad = False
+        # Cache the model so the same nn.Module is reused for different
+        # molecules.  This lets torch.compile with reduce-overhead properly
+        # replace its CUDA-graph recordings when recompiled for a new shape.
+        if model_file_path not in TorchMDNetPotentialImpl._model_cache:
+            model = load_model(
+                model_file_path,
+                derivative=False,
+                remove_ref_energy = args.get('remove_ref_energy', True),
+                max_num_neighbors = args.get('max_num_neighbors', 64),
+                coulomb_cutoff = cutoff,
+                static_shapes = True,
+                check_errors = False
+            ).to(device)
+            for parameter in model.parameters():
+                parameter.requires_grad = False
+            TorchMDNetPotentialImpl._model_cache[model_file_path] = model
+        else:
+            model = TorchMDNetPotentialImpl._model_cache[model_file_path]
+            model.to(device)
         batch = args.get('batch', None)
         if batch is None:
             batch = torch.zeros_like(numbers, requires_grad=False)
@@ -226,18 +244,15 @@ class _ComputeTorchMDNet(object):
             cell = None
 
         if self.compiled_model is None:
-            # Reset dynamo caches to avoid conflicts with compiled state
-            # from a previous molecule's model.
+            # Reset dynamo caches so the recompilation of the (cached) model
+            # does not reuse stale guards from a previous molecule's shape.
             torch._dynamo.reset()
             # Warmup pass to set dim_size before compilation.
             # torch.compile doesn't support .item() calls used internally.
             self.model.to(self.numbers.device)
             with torch.no_grad():
                 self.model(z=self.numbers, pos=positions/self.lengthScale, batch=self.batch, q=self.charge, box=cell)
-            # Use mode="default" instead of "reduce-overhead" to avoid CUDA
-            # graph recordings that are shape-locked per process and cannot
-            # be properly reset when a different molecule is compiled.
-            self.compiled_model = torch.compile(self.model, backend="inductor", dynamic=False, fullgraph=True, mode="default")
+            self.compiled_model = torch.compile(self.model, backend="inductor", dynamic=False, fullgraph=True, mode="reduce-overhead")
 
         energy = self.compiled_model(z=self.numbers, pos=positions/self.lengthScale, batch=self.batch, q=self.charge, box=cell)[0]*self.energyScale
         energy.backward()
