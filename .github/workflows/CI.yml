@@ -14,7 +14,7 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.14"]
-        requirements: ["mace-aimnet-torchmd"]
+        requirements: ["mace-aimnet-torchmd", "nequip", "fennix"]
 
     steps:
       - uses: actions/checkout@v2
