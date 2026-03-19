@@ -219,9 +219,14 @@ class TorchMDNetPotentialImpl(MLPotentialImpl):
 
 
 class _ComputeTorchMDNet(object):
+    # Class-level compiled model cache.  Only ONE compiled wrapper may exist
+    # per raw model at any time so that CUDA graphs recorded by
+    # reduce-overhead can be properly freed before recording new ones when
+    # the atom count changes (mirrors torchmdnet's TMDNETCalculator pattern).
+    _compiled_state = {}  # id(model) -> (compiled_model, num_atoms)
+
     def __init__(self, model, numbers, charge, batch, lengthScale, energyScale, indices, periodic):
         self.model = model
-        self.compiled_model = None
         self.numbers = numbers
         self.charge = charge
         self.batch = batch
@@ -229,6 +234,39 @@ class _ComputeTorchMDNet(object):
         self.energyScale = energyScale
         self.indices = indices
         self.periodic = periodic
+
+    def _get_compiled_model(self, positions, cell):
+        """Return a compiled model, recompiling if the atom count changed."""
+        import gc
+        import torch
+        num_atoms = self.numbers.shape[0]
+        model_id = id(self.model)
+        cached = _ComputeTorchMDNet._compiled_state.get(model_id)
+
+        if cached is not None and cached[1] == num_atoms:
+            return cached[0]
+
+        # Atom count changed (or first compilation).  Tear down the old
+        # compiled wrapper so its CUDA graphs are freed before we record
+        # new ones.
+        if cached is not None:
+            del _ComputeTorchMDNet._compiled_state[model_id]
+            gc.collect()
+            torch.cuda.synchronize()
+        torch._dynamo.reset()
+
+        # Warmup: set dim_size before compilation (torch.compile does not
+        # support the .item() calls used internally by the model).
+        self.model.to(self.numbers.device)
+        with torch.no_grad():
+            self.model(z=self.numbers, pos=positions/self.lengthScale,
+                       batch=self.batch, q=self.charge, box=cell)
+
+        compiled_model = torch.compile(
+            self.model, backend="inductor", dynamic=False,
+            fullgraph=True, mode="reduce-overhead")
+        _ComputeTorchMDNet._compiled_state[model_id] = (compiled_model, num_atoms)
+        return compiled_model
 
     def __call__(self, state):
         import torch
@@ -243,18 +281,8 @@ class _ComputeTorchMDNet(object):
         else:
             cell = None
 
-        if self.compiled_model is None:
-            # Reset dynamo caches so the recompilation of the (cached) model
-            # does not reuse stale guards from a previous molecule's shape.
-            torch._dynamo.reset()
-            # Warmup pass to set dim_size before compilation.
-            # torch.compile doesn't support .item() calls used internally.
-            self.model.to(self.numbers.device)
-            with torch.no_grad():
-                self.model(z=self.numbers, pos=positions/self.lengthScale, batch=self.batch, q=self.charge, box=cell)
-            self.compiled_model = torch.compile(self.model, backend="inductor", dynamic=False, fullgraph=True, mode="reduce-overhead")
-
-        energy = self.compiled_model(z=self.numbers, pos=positions/self.lengthScale, batch=self.batch, q=self.charge, box=cell)[0]*self.energyScale
+        compiled_model = self._get_compiled_model(positions, cell)
+        energy = compiled_model(z=self.numbers, pos=positions/self.lengthScale, batch=self.batch, q=self.charge, box=cell)[0]*self.energyScale
         energy.backward()
         forces = (-positions.grad).detach().cpu().numpy()
         if self.indices is not None:
