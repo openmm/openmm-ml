@@ -9,6 +9,8 @@ import pytest
 
 from openmmml import MLPotential
 
+torchani = pytest.importorskip("torchani", reason="torchani is not installed")
+
 rtol = 1e-5
 platform_ints = range(mm.Platform.getNumPlatforms())
 # Get the path to the test data
@@ -16,7 +18,7 @@ test_data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
 
 
 @pytest.mark.parametrize("implementation,platform_int", list(itertools.product(['nnpops', 'torchani'], list(platform_ints))))
-class TestMLPotential:
+class TestANIPotential:
 
     def testCreateMixedSystem(self, implementation, platform_int):
         pdb = app.PDBFile(os.path.join(test_data_dir, 'alanine-dipeptide', 'alanine-dipeptide-explicit.pdb'))
