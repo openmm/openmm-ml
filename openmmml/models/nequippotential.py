@@ -34,6 +34,7 @@ import openmm
 from openmm import unit
 from openmmml.mlpotential import MLPotentialImpl, MLPotentialImplFactory
 from functools import partial
+import numpy as np
 
 
 class NequIPPotentialImplFactory(MLPotentialImplFactory):
@@ -201,7 +202,7 @@ class NequIPPotentialImpl(MLPotentialImpl):
         if atoms is None:
             indices = None
         else:
-            indices = torch.tensor(sorted(atoms), dtype=torch.int64, requires_grad=False, device=device)
+            indices = np.array(sorted(atoms))
         atomTypes = torch.tensor(atomTypes, dtype=torch.long, requires_grad=False, device=device)
         periodic = (topology.getPeriodicBoxVectors() is not None) or system.usesPeriodicBoundaryConditions()
         pbc = torch.tensor([periodic, periodic, periodic], dtype=torch.bool, requires_grad=False, device=device)
@@ -225,7 +226,6 @@ class NequIPPotentialImpl(MLPotentialImpl):
 
 def _computeNequIP(state, model, atomTypes, cutoff, lengthScale, energyScale, indices, periodic, pbc):
     import torch
-    import numpy as np
     from nequip.data._nl import compute_neighborlist_
     positions = state.getPositions(asNumpy=True).value_in_unit(unit.nanometer)/lengthScale
     numAtoms = positions.shape[0]

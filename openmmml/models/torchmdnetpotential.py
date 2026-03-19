@@ -32,6 +32,7 @@ import openmm
 from openmm import unit
 from openmmml.mlpotential import MLPotentialImpl, MLPotentialImplFactory
 from typing import Iterable, Optional
+import numpy as np
 
 class TorchMDNetPotentialImplFactory(MLPotentialImplFactory):
     """This is the factory that creates TorchMDNetPotentialImpl objects."""
@@ -180,7 +181,7 @@ class TorchMDNetPotentialImpl(MLPotentialImpl):
         if atoms is None:
             indices = None
         else:
-            indices = torch.tensor(sorted(atoms), dtype=torch.int64, requires_grad=False)
+            indices = np.array(sorted(atoms))
         periodic = (topology.getPeriodicBoxVectors() is not None) or system.usesPeriodicBoundaryConditions()
 
         # Create the PythonForce and add it to the System.
@@ -213,7 +214,6 @@ class _ComputeTorchMDNet(object):
 
     def __call__(self, state):
         import torch
-        import numpy as np
         positions = state.getPositions(asNumpy=True).value_in_unit(unit.nanometer)
         numAtoms = positions.shape[0]
         positions = torch.tensor(positions, dtype=torch.float32, device=self.numbers.device)

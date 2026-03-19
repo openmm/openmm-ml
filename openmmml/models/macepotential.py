@@ -33,6 +33,7 @@ from openmm import unit
 from openmmml.mlpotential import MLPotential, MLPotentialImpl, MLPotentialImplFactory
 from typing import Iterable, Optional
 from functools import partial
+import numpy as np
 
 
 class MACEPotentialImplFactory(MLPotentialImplFactory):
@@ -206,7 +207,7 @@ class MACEPotentialImpl(MLPotentialImpl):
         if atoms is None:
             indices = None
         else:
-            indices = torch.tensor(sorted(atoms), dtype=torch.int64)
+            indices = np.array(sorted(atoms))
         periodic = (topology.getPeriodicBoxVectors() is not None) or system.usesPeriodicBoundaryConditions()
 
         # Create the PythonForce and add it to the System.
@@ -230,7 +231,6 @@ class MACEPotentialImpl(MLPotentialImpl):
 
 def _computeMACE(state, model, ptr, node_attrs, batch, pbc, returnEnergyType, charge, multiplicity, indices, periodic):
     import torch
-    import numpy as np
     from mace.data.neighborhood import get_neighborhood
     energyScale = 96.4853
     lengthScale = 10.0

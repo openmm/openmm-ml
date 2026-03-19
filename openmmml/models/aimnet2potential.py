@@ -34,6 +34,7 @@ import openmm
 from openmm import unit
 from typing import Iterable, Optional
 from functools import partial
+import numpy as np
 
 class AIMNet2PotentialImplFactory(MLPotentialImplFactory):
     """This is the factory that creates AIMNet2PotentialImpl objects."""
@@ -78,7 +79,7 @@ class AIMNet2PotentialImpl(MLPotentialImpl):
             indices = None
         else:
             includedAtoms = [includedAtoms[i] for i in atoms]
-            indices = torch.tensor(sorted(atoms), dtype=torch.int64, device=device)
+            indices = np.array(sorted(atoms))
         numbers = torch.tensor([[atom.element.atomic_number for atom in includedAtoms]], device=device)
         charge = torch.tensor([args.get('charge', 0)], dtype=torch.float32, device=device)
         multiplicity = torch.tensor([args.get('multiplicity', 1)], dtype=torch.float32, device=device)
@@ -95,7 +96,6 @@ class AIMNet2PotentialImpl(MLPotentialImpl):
 
 def _computeAIMNet2(state, model, numbers, charge, multiplicity, indices, periodic):
     import torch
-    import numpy as np
     positions = torch.tensor(state.getPositions(asNumpy=True).value_in_unit(unit.angstrom), dtype=torch.float32, device=numbers.device)
     numAtoms = positions.shape[0]
     if indices is not None:
