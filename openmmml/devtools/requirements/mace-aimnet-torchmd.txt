@@ -1,0 +1,5 @@
+pytest
+mace-torch
+aimnet2
+torchmd-net
+ase
