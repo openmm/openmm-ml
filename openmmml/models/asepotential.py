@@ -86,7 +86,7 @@ class ASEPotentialImpl(MLPotentialImpl):
             indices = None
         else:
             includedAtoms = [includedAtoms[i] for i in atoms]
-            indices = np.array(sorted(atoms))
+            indices = np.array(atoms)
         if 'aseAtoms' in args:
             # The user provided an Atoms object.
 

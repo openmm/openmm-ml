@@ -207,7 +207,7 @@ class MACEPotentialImpl(MLPotentialImpl):
         if atoms is None:
             indices = None
         else:
-            indices = np.array(sorted(atoms))
+            indices = np.array(atoms)
         periodic = (topology.getPeriodicBoxVectors() is not None) or system.usesPeriodicBoundaryConditions()
 
         # Create the PythonForce and add it to the System.
