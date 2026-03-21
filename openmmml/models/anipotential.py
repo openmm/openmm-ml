@@ -113,7 +113,7 @@ class ANIPotentialImpl(MLPotentialImpl):
                 if atoms is None:
                     self.indices = None
                 else:
-                    self.indices = torch.tensor(sorted(atoms), dtype=torch.int64)
+                    self.indices = torch.tensor(atoms, dtype=torch.int64)
                 if periodic:
                     self.pbc = torch.nn.Parameter(torch.tensor([True, True, True], dtype=torch.bool), requires_grad=False)
                 else:

@@ -79,7 +79,7 @@ class AIMNet2PotentialImpl(MLPotentialImpl):
             indices = None
         else:
             includedAtoms = [includedAtoms[i] for i in atoms]
-            indices = np.array(sorted(atoms))
+            indices = np.array(atoms)
         numbers = torch.tensor([[atom.element.atomic_number for atom in includedAtoms]], device=device)
         charge = torch.tensor([args.get('charge', 0)], dtype=torch.float32, device=device)
         multiplicity = torch.tensor([args.get('multiplicity', 1)], dtype=torch.float32, device=device)

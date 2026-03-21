@@ -202,7 +202,7 @@ class NequIPPotentialImpl(MLPotentialImpl):
         if atoms is None:
             indices = None
         else:
-            indices = np.array(sorted(atoms))
+            indices = np.array(atoms)
         atomTypes = torch.tensor(atomTypes, dtype=torch.long, requires_grad=False, device=device)
         periodic = (topology.getPeriodicBoxVectors() is not None) or system.usesPeriodicBoundaryConditions()
         pbc = torch.tensor([periodic, periodic, periodic], dtype=torch.bool, requires_grad=False, device=device)
