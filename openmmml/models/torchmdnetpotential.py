@@ -211,6 +211,7 @@ class _ComputeTorchMDNet(object):
         self.energyScale = energyScale
         self.indices = indices
         self.periodic = periodic
+        self.has_recompiled = False
 
     def __call__(self, state):
         import torch
@@ -230,7 +231,18 @@ class _ComputeTorchMDNet(object):
             energy = self.model(z=self.numbers, pos=positions/self.lengthScale, batch=self.batch, q=self.charge, box=cell)[0]*self.energyScale
             self.compiled_model = torch.compile(self.model, backend="inductor", dynamic=False, fullgraph=True, mode="reduce-overhead")
         else:
-            energy = self.compiled_model(z=self.numbers, pos=positions/self.lengthScale, batch=self.batch, q=self.charge, box=cell)[0]*self.energyScale
+            try:
+                energy = self.compiled_model(z=self.numbers, pos=positions/self.lengthScale, batch=self.batch, q=self.charge, box=cell)[0]*self.energyScale
+            except AssertionError:
+                if self.has_recompiled:
+                    raise
+
+                # Workaround for https://github.com/openmm/openmm-ml/issues/128.  Threading bugs in torch.compile can cause it to
+                # incorrectly reuse cached components from earlier models.  The solution is to compile with mode="default".
+
+                self.has_recompiled = True
+                self.compiled_model = torch.compile(self.model, backend="inductor", dynamic=False, fullgraph=True, mode="default")
+                energy = self.compiled_model(z=self.numbers, pos=positions/self.lengthScale, batch=self.batch, q=self.charge, box=cell)[0]*self.energyScale
         energy.backward()
         forces = (-positions.grad).detach().cpu().numpy()
         if self.indices is not None:
