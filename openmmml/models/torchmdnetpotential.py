@@ -227,25 +227,10 @@ class _ComputeTorchMDNet(object):
         if self.compiled_model is None:
             # The model can't be compiled until after it has been invoked once.
 
-<<<<<<< HEAD
             energy = self.model(z=self.numbers, pos=positions/self.lengthScale, batch=self.batch, q=self.charge, box=cell)[0]*self.energyScale
             self.compiled_model = torch.compile(self.model, backend="inductor", dynamic=False, fullgraph=True, mode="default")
         else:
             energy = self.compiled_model(z=self.numbers, pos=positions/self.lengthScale, batch=self.batch, q=self.charge, box=cell)[0]*self.energyScale
-=======
-        if self.compiled_model is None:
-            # Reset dynamo caches to avoid conflicts with compiled state
-            # from a previous molecule's model.
-            torch._dynamo.reset()
-            # Warmup pass to set dim_size before compilation.
-            # torch.compile doesn't support .item() calls used internally.
-            self.model.to(self.numbers.device)
-            with torch.no_grad():
-                self.model(z=self.numbers, pos=positions/self.lengthScale, batch=self.batch, q=self.charge, box=cell)
-            self.compiled_model = torch.compile(self.model, backend="inductor", dynamic=False, fullgraph=True, mode="default")
-
-        energy = self.compiled_model(z=self.numbers, pos=positions/self.lengthScale, batch=self.batch, q=self.charge, box=cell)[0]*self.energyScale
->>>>>>> ac9b17d4615e5aad5ba94b4b8d284005782d2c7b
         energy.backward()
         forces = (-positions.grad).detach().cpu().numpy()
         if self.indices is not None:
