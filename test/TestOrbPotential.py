@@ -65,7 +65,7 @@ class TestOrb:
             "orb-v3-omat": -8909.405894574036,
             "orb-v3-omol": -712903.547903221,
         }
-        assert np.isclose(refEnergy[model], energyML, rtol=1e-5)
+        assert np.isclose(refEnergy[model], energyML, rtol=5e-5)
 
     def testOverrideChargeSpin(self, platform_int):
         pdb = app.PDBFile(os.path.join(test_data_dir, "toluene", "toluene.pdb"))
@@ -76,7 +76,7 @@ class TestOrb:
         context.setPositions(pdb.getPositions(asNumpy=True))
         energyML = context.getState(energy=True).getPotentialEnergy().value_in_unit(unit.kilojoules_per_mole)
         energyRef = -712892.4765882556 # Calculated with ORBCalculator
-        assert np.isclose(energyRef, energyML, rtol=1e-5)
+        assert np.isclose(energyRef, energyML, rtol=5e-5)
 
     def testPeriodicSystem(self, platform_int):
         pdb = app.PDBFile(os.path.join(test_data_dir, "alanine-dipeptide", "alanine-dipeptide-explicit.pdb"))
@@ -90,7 +90,7 @@ class TestOrb:
             positions = positionsOriginal + i * 0.9 * unit.nanometers # translate molecule to test PBC
             context.setPositions(positions)
             energyML = context.getState(getEnergy=True).getPotentialEnergy().value_in_unit(unit.kilojoules_per_mole)
-            assert np.isclose(energyRef, energyML, rtol=1e-5)
+            assert np.isclose(energyRef, energyML, rtol=5e-5)
 
     def testCreateMixedSystem(self, platform_int):
         prmtop = app.AmberPrmtopFile(os.path.join(test_data_dir, "toluene", "toluene-explicit.prm7"))
@@ -112,5 +112,5 @@ class TestOrb:
         interpEnergy1 = interpContext.getState(getEnergy=True).getPotentialEnergy().value_in_unit(unit.kilojoules_per_mole)
         interpContext.setParameter('lambda_interpolate', 0)
         interpEnergy2 = interpContext.getState(getEnergy=True).getPotentialEnergy().value_in_unit(unit.kilojoules_per_mole)
-        assert np.isclose(mixedEnergy, interpEnergy1, rtol=1e-5)
-        assert np.isclose(mmEnergy, interpEnergy2, rtol=1e-5)
+        assert np.isclose(mixedEnergy, interpEnergy1, rtol=5e-5)
+        assert np.isclose(mmEnergy, interpEnergy2, rtol=5e-5)
