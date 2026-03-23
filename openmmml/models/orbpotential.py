@@ -72,7 +72,6 @@ class OrbPotentialImpl(MLPotentialImpl):
         forceGroup: int,
         charge: int = 0,
         multiplicity: int = 1,
-        precision: str = "float32-high",
         **args
     ) -> None:
 
@@ -81,16 +80,17 @@ class OrbPotentialImpl(MLPotentialImpl):
             from orb_models.forcefield.models.conservative_regressor import ConservativeForcefieldRegressor
         except ImportError:
             raise ImportError("Failed to import orb-models: for installation instructions, visit https://github.com/orbital-materials/orb-models")
-        import ase
+        try:
+            import ase
+        except ImportError:
+            raise ImportError("Failed to import ASE.  Install it as described at https://ase-lib.org/install.html.")
         import numpy as np
 
         # Check arguments and load the model.
         if self.name not in orb.ORB_PRETRAINED_MODELS:
             raise ValueError(f"Unsupported Orb model: {self.name}")
-        if precision not in ("float32-high", "float32-highest", "float64"):
-            raise ValueError(f"Invalid precision {precision} (expected float32-high, float32-highest, or float64)")
         device = self._getTorchDevice(args)
-        model, adapter = orb.ORB_PRETRAINED_MODELS[self.name](device=device, precision=precision)
+        model, adapter = orb.ORB_PRETRAINED_MODELS[self.name](device=device, precision="float32-highest")
         conservative = isinstance(model, ConservativeForcefieldRegressor)
 
         # Get the atoms that should be included.

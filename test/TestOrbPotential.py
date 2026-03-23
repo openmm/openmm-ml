@@ -29,7 +29,7 @@ class TestOrb:
         energyML = context.getState(energy=True).getPotentialEnergy().value_in_unit(unit.kilojoules_per_mole)
         # Reference energies are calculated with ORBCalculator
         refEnergy = {
-            "orb-v3-conservative-inf-omat": -8909.405894574036,
+            "orb-v3-conservative-inf-omat": -8909.64071834225,
             "orb-v3-conservative-omol": -712903.547903221,
         }
         assert np.isclose(refEnergy[model], energyML, rtol=5e-5)

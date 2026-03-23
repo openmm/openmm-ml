@@ -267,7 +267,7 @@ When using Orb models, the following extra keyword arguments to `createSystem()`
 | --- | --- |
 | `charge` | The total charge of the system.  If omitted, it is assumed to be 0. |
 | `multiplicity` | The spin multiplicity of the system.  If omitted, it is assumed to be 1. |
-| `precision` | Precision mode to pass to the orb-models library.  Can be `'float32-high'` (the default if not specified), `'float32-highest'`, or `'float64'`.  For details, see the [orb-models documentation](https://github.com/orbital-materials/orb-models?tab=readme-ov-file#floating-point-precision). |
+| `device` | The PyTorch device to perform calculations on, either a `torch.device` object or a string (such as `'cuda'` or `'cpu'`.)  If omitted, a device is chosen automatically. |
 
 ### ASE
 

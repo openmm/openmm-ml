@@ -6,7 +6,7 @@ from orb_models.forcefield.inference.calculator import ORBCalculator
 from openmm.unit import kilojoules_per_mole, ev, item
 
 def make_calculator(name):
-    orbff, atoms_adapter = orb.ORB_PRETRAINED_MODELS[name]()
+    orbff, atoms_adapter = orb.ORB_PRETRAINED_MODELS[name](precision='float32-highest')
     return ORBCalculator(orbff, atoms_adapter=atoms_adapter)
 
 results = {}
