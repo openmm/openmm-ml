@@ -14,7 +14,10 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.14"]
-        requirements: ["mace-aimnet-torchmd", "nequip", "fennix", "orb"]
+        requirements: ["mace-aimnet-torchmd", "nequip", "fennix"]
+        include:
+          - python-version: "3.12"
+            requirements: "orb"
 
     steps:
       - uses: actions/checkout@v2
