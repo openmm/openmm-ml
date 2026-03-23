@@ -38,45 +38,32 @@ from openmmml.mlpotential import MLPotentialImpl, MLPotentialImplFactory
 class OrbPotentialImplFactory(MLPotentialImplFactory):
     """This is the factory that creates OrbPotentialImpl objects."""
 
-    def createImpl(self, name: str, modelName: str | None = None, **args) -> MLPotentialImpl:
-        return OrbPotentialImpl(name, modelName)
+    def createImpl(self, name: str, **args) -> MLPotentialImpl:
+        return OrbPotentialImpl(name)
 
 class OrbPotentialImpl(MLPotentialImpl):
     """
     Implementation of Orb potentials for OpenMM.
 
-    To use one of the latest recommended Orb models, specify it by name:
+    To use one of the recommended pretrained models, specify it by name:
 
-    >>> potential = MLPotential('orb-v3-omol')
+    >>> potential = MLPotential('orb-v3-conservative-omol')
 
-    Any Orb model available with the orb-models package, including older models
-    and those not recommended for standard use, can be loaded by specifying
-    'orb' as the model, and its full name with the `modelName` argument.
-
-    >>> potential = MLPotential('orb', modelName='orb-v3-conservative-inf-mpa')
+    This gives Orb-v3 (with conservative forces) trained on OMol25.  Orb-v3
+    trained on OMat24 is also available as `orb-v3-conservative-inf-omat`.
     """
 
-    KNOWN_MODELS = {
-        "orb-v3-omat": "orb-v3-conservative-inf-omat",
-        "orb-v3-omol": "orb-v3-conservative-omol",
-    }
-
-    def __init__(self, name: str, modelName: str | None) -> None:
+    def __init__(self, name: str) -> None:
         """
         Initialize the `OrbPotentialImpl`.
 
         Parameters
         ----------
         name : str
-            An abbreviated model name ('orb-v3-omat' or 'orb-v3-omol'), or
-            'orb' to load any model available in the orb-models package by its
-            full name.
-        modelName : str, optional
-            The full name of a model to load if `name` is 'orb'.
+            The full name of the Orb model to load.
         """
 
         self.name = name
-        self.modelName = modelName
 
     def addForces(self,
         topology: openmm.app.Topology,
@@ -97,27 +84,13 @@ class OrbPotentialImpl(MLPotentialImpl):
         import ase
         import numpy as np
 
-        # Check precision argument.
+        # Check arguments and load the model.
+        if self.name not in orb.ORB_PRETRAINED_MODELS:
+            raise ValueError(f"Unsupported Orb model: {self.name}")
         if precision not in ("float32-high", "float32-highest", "float64"):
             raise ValueError(f"Invalid precision {precision} (expected float32-high, float32-highest, or float64)")
-
-        # Resolve the model name options to the name of a known Orb model.
-        if self.name in OrbPotentialImpl.KNOWN_MODELS:
-            modelName = OrbPotentialImpl.KNOWN_MODELS[self.name]
-        elif self.name == "orb":
-            if self.modelName is None:
-                raise ValueError("No modelName provided for Orb model.")
-            if self.modelName not in orb.ORB_PRETRAINED_MODELS:
-                supported = ", ".join(list(orb.ORB_PRETRAINED_MODELS))
-                raise ValueError(f"Unsupported Orb model name: {self.modelName} (options are {supported})")
-            modelName = self.modelName
-        else:
-            supported = ", ".join(list(OrbPotentialImpl.KNOWN_MODELS) + ["orb"])
-            raise ValueError(f"Unsupported Orb model preset: {self.name} (options are {supported})")
-
-        # Load the model.
         device = self._getTorchDevice(args)
-        model, adapter = orb.ORB_PRETRAINED_MODELS[modelName](device=device, precision=precision)
+        model, adapter = orb.ORB_PRETRAINED_MODELS[self.name](device=device, precision=precision)
         conservative = isinstance(model, ConservativeForcefieldRegressor)
 
         # Get the atoms that should be included.

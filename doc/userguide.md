@@ -258,15 +258,8 @@ from Orbital Materials.  The following model names are supported.
 
 | Name | Model |
 | --- | --- |
-| `orb-v3-omat` | [Orb-v3](https://doi.org/10.48550/arXiv.2504.06231) model pretrained on [OMat24](https://doi.org/10.48550/arXiv.2410.12771) (specifically, `orb-v3-conservative-inf-omat`). |
-| `orb-v3-omol` | [Orb-v3](https://doi.org/10.48550/arXiv.2504.06231) model pretrained on [OMol25](https://doi.org/10.48550/arXiv.2505.08762) (specifically, `orb-v3-conservative-omol`). |
-| `orb` | Use any pretrained Orb model available in the orb-models package. |
-
-When creating Orb models, the following keyword arguments to the `MLPotential` constructor are supported.
-
-| Argument | Description |
-| --- | --- |
-| `modelName` | The name of the model: required for `orb`, ignored for all other models.  Must be a name in `orb_models.forcefield.pretrained.ORB_PRETRAINED_MODELS`. |
+| `orb-v3-conservative-inf-omat` | [Orb-v3](https://doi.org/10.48550/arXiv.2504.06231) model pretrained on [OMat24](https://doi.org/10.48550/arXiv.2410.12771). |
+| `orb-v3-conservative-omol` | [Orb-v3](https://doi.org/10.48550/arXiv.2504.06231) model pretrained on [OMol25](https://doi.org/10.48550/arXiv.2505.08762). |
 
 When using Orb models, the following extra keyword arguments to `createSystem()` and `createMixedSystem()` are supported.
 

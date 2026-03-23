@@ -16,30 +16,12 @@ test_data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
 @pytest.mark.parametrize("platform_int", list(platform_ints))
 class TestOrb:
     @pytest.mark.parametrize("model", [
-        "orb-mptraj-only-v2",
-        "orb-v2",
-        "orb-d3-xs-v2",
-        "orb-d3-sm-v2",
-        "orb-d3-v2",
-        "orb-v3-direct-20-mpa",
-        "orb-v3-direct-inf-mpa",
-        "orb-v3-direct-20-omat",
-        "orb-v3-direct-inf-omat",
-        "orb-v3-direct-omol",
-        "orb-v3-conservative-20-mpa",
-        "orb-v3-conservative-inf-mpa",
-        "orb-v3-conservative-20-omat",
         "orb-v3-conservative-inf-omat",
         "orb-v3-conservative-omol",
-        "orb-v3-omat",
-        "orb-v3-omol",
     ])
     def testCreatePureMLSystem(self, platform_int, model):
         pdb = app.PDBFile(os.path.join(test_data_dir, "toluene", "toluene.pdb"))
-        if model in ("orb-v3-omat", "orb-v3-omol"):
-            potential = MLPotential(model)
-        else:
-            potential = MLPotential("orb", modelName=model)
+        potential = MLPotential(model)
         system = potential.createSystem(pdb.topology)
         platform = mm.Platform.getPlatform(platform_int)
         context = mm.Context(system, mm.VerletIntegrator(0.001), platform)
@@ -47,29 +29,14 @@ class TestOrb:
         energyML = context.getState(energy=True).getPotentialEnergy().value_in_unit(unit.kilojoules_per_mole)
         # Reference energies are calculated with ORBCalculator
         refEnergy = {
-            "orb-mptraj-only-v2": -8946.530869816459,
-            "orb-v2": -8945.339820108089,
-            "orb-d3-xs-v2": -8940.841362278761,
-            "orb-d3-sm-v2": -8931.112002578187,
-            "orb-d3-v2": -8930.495866233374,
-            "orb-v3-direct-20-mpa": -8919.63581904698,
-            "orb-v3-direct-inf-mpa": -8901.550708271181,
-            "orb-v3-direct-20-omat": -8941.013615450429,
-            "orb-v3-direct-inf-omat": -8907.524359929663,
-            "orb-v3-direct-omol": -712903.2181193709,
-            "orb-v3-conservative-20-mpa": -8940.646289242472,
-            "orb-v3-conservative-inf-mpa": -8917.839674863775,
-            "orb-v3-conservative-20-omat": -8934.64760934537,
             "orb-v3-conservative-inf-omat": -8909.405894574036,
             "orb-v3-conservative-omol": -712903.547903221,
-            "orb-v3-omat": -8909.405894574036,
-            "orb-v3-omol": -712903.547903221,
         }
         assert np.isclose(refEnergy[model], energyML, rtol=5e-5)
 
     def testOverrideChargeSpin(self, platform_int):
         pdb = app.PDBFile(os.path.join(test_data_dir, "toluene", "toluene.pdb"))
-        potential = MLPotential("orb-v3-omol")
+        potential = MLPotential("orb-v3-conservative-omol")
         system = potential.createSystem(pdb.topology, charge=-1, multiplicity=3)
         platform = mm.Platform.getPlatform(platform_int)
         context = mm.Context(system, mm.VerletIntegrator(0.001), platform)
@@ -80,7 +47,7 @@ class TestOrb:
 
     def testPeriodicSystem(self, platform_int):
         pdb = app.PDBFile(os.path.join(test_data_dir, "alanine-dipeptide", "alanine-dipeptide-explicit.pdb"))
-        potential = MLPotential("orb-v3-omol")
+        potential = MLPotential("orb-v3-conservative-omol")
         system = potential.createSystem(pdb.topology)
         platform = mm.Platform.getPlatform(platform_int)
         context = mm.Context(system, mm.VerletIntegrator(0.001), platform)
@@ -97,7 +64,7 @@ class TestOrb:
         inpcrd = app.AmberInpcrdFile(os.path.join(test_data_dir, "toluene", "toluene-explicit.rst7"))
         mlAtoms = list(range(15))
         mmSystem = prmtop.createSystem(nonbondedMethod=app.PME)
-        potential = MLPotential("orb-v3-omol")
+        potential = MLPotential("orb-v3-conservative-omol")
         mixedSystem = potential.createMixedSystem(prmtop.topology, mmSystem, mlAtoms, interpolate=False)
         interpSystem = potential.createMixedSystem(prmtop.topology, mmSystem, mlAtoms, interpolate=True)
         platform = mm.Platform.getPlatform(platform_int)

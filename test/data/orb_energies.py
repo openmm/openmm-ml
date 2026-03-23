@@ -15,23 +15,7 @@ atoms = ase.io.read('toluene/toluene.pdb')
 atoms.info['charge'] = 0
 atoms.info['spin'] = 1
 
-for name in [
-    'orb-mptraj-only-v2',
-    'orb-v2',
-    'orb-d3-xs-v2',
-    'orb-d3-sm-v2',
-    'orb-d3-v2',
-    'orb-v3-direct-20-mpa',
-    'orb-v3-direct-inf-mpa',
-    'orb-v3-direct-20-omat',
-    'orb-v3-direct-inf-omat',
-    'orb-v3-direct-omol',
-    'orb-v3-conservative-20-mpa',
-    'orb-v3-conservative-inf-mpa',
-    'orb-v3-conservative-20-omat',
-    'orb-v3-conservative-inf-omat',
-    'orb-v3-conservative-omol',
-]:
+for name in ['orb-v3-conservative-inf-omat', 'orb-v3-conservative-omol']:
     atoms.calc = make_calculator(name)
     results[name] = atoms.get_potential_energy()
 
