@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>User Guide &#8212; OpenMM ML 1.5dev_e2b3ed8 documentation</title>
+    <title>User Guide &#8212; OpenMM ML 1.5dev_4056fb3 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=9416c242"></script>
+    <script src="_static/documentation_options.js?v=8bc64f65"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'userguide';</script>
@@ -822,8 +822,8 @@ package for simulating <a class="reference external" href="https://github.com/Fe
 The following model names are supported.</p>
 <div class="pst-scrollable-table-container"><table class="table">
 <thead>
-<tr class="row-odd"><th class="head"><p>Argument</p></th>
-<th class="head"><p>Description</p></th>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Model</p></th>
 </tr>
 </thead>
 <tbody>
@@ -872,6 +872,47 @@ The following model names are supported.</p>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">precision</span></code></p></td>
 <td><p><code class="docutils literal notranslate"><span class="pre">'single'</span></code> for single precision (the default if not specified) or <code class="docutils literal notranslate"><span class="pre">'double'</span></code> for double precision.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<section id="orb">
+<h3>Orb<a class="headerlink" href="#orb" title="Link to this heading">#</a></h3>
+<p>OpenMM-ML supports the <a class="reference external" href="https://github.com/orbital-materials/orb-models">Orb models</a>
+from Orbital Materials.  The following model names are supported.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Model</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">orb-v3-conservative-inf-omat</span></code></p></td>
+<td><p><a class="reference external" href="https://doi.org/10.48550/arXiv.2504.06231">Orb-v3</a> model pretrained on <a class="reference external" href="https://doi.org/10.48550/arXiv.2410.12771">OMat24</a>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">orb-v3-conservative-omol</span></code></p></td>
+<td><p><a class="reference external" href="https://doi.org/10.48550/arXiv.2504.06231">Orb-v3</a> model pretrained on <a class="reference external" href="https://doi.org/10.48550/arXiv.2505.08762">OMol25</a>.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>When using Orb models, the following extra keyword arguments to <code class="docutils literal notranslate"><span class="pre">createSystem()</span></code> and <code class="docutils literal notranslate"><span class="pre">createMixedSystem()</span></code> are supported.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Argument</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">charge</span></code></p></td>
+<td><p>The total charge of the system.  If omitted, it is assumed to be 0.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">multiplicity</span></code></p></td>
+<td><p>The spin multiplicity of the system.  If omitted, it is assumed to be 1.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">device</span></code></p></td>
+<td><p>The PyTorch device to perform calculations on, either a <code class="docutils literal notranslate"><span class="pre">torch.device</span></code> object or a string (such as <code class="docutils literal notranslate"><span class="pre">'cuda'</span></code> or <code class="docutils literal notranslate"><span class="pre">'cpu'</span></code>.)  If omitted, a device is chosen automatically.</p></td>
 </tr>
 </tbody>
 </table>
@@ -1002,6 +1043,7 @@ Consult the documentation for other packages to see whether they provide interfa
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#deepmd-kit">DeePMD-kit</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#torchmd-net">TorchMD-Net</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#fennix">FeNNix</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#orb">Orb</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#ase">ASE</a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#other-packages">Other Packages</a></li>
 </ul>
