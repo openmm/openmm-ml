@@ -230,7 +230,7 @@ OpenMM-ML has an interface to the [FeNNol](https://github.com/FeNNol-tools/FeNNo
 package for simulating [FeNNix](https://github.com/FeNNol-tools/FeNNol-PMC) models.
 The following model names are supported.
 
-| Argument | Description |
+| Name | Model |
 | --- | --- |
 | `fennix-bio1-small` | Pretrained [FeNNix-Bio1(S)](https://github.com/FeNNol-tools/FeNNol-PMC/tree/main/FENNIX-BIO1) model. |
 | `fennix-bio1-medium` | Pretrained [FeNNix-Bio1(M)](https://github.com/FeNNol-tools/FeNNol-PMC/tree/main/FENNIX-BIO1) model. |
@@ -250,6 +250,24 @@ When using FeNNix models, the following extra keyword arguments to `createSystem
 | --- | --- |
 | `charge` | The total charge of the system.  If omitted, it is assumed to be 0. |
 | `precision` | `'single'` for single precision (the default if not specified) or `'double'` for double precision. |
+
+### Orb
+
+OpenMM-ML supports the [Orb models](https://github.com/orbital-materials/orb-models)
+from Orbital Materials.  The following model names are supported.
+
+| Name | Model |
+| --- | --- |
+| `orb-v3-conservative-inf-omat` | [Orb-v3](https://doi.org/10.48550/arXiv.2504.06231) model pretrained on [OMat24](https://doi.org/10.48550/arXiv.2410.12771). |
+| `orb-v3-conservative-omol` | [Orb-v3](https://doi.org/10.48550/arXiv.2504.06231) model pretrained on [OMol25](https://doi.org/10.48550/arXiv.2505.08762). |
+
+When using Orb models, the following extra keyword arguments to `createSystem()` and `createMixedSystem()` are supported.
+
+| Argument | Description |
+| --- | --- |
+| `charge` | The total charge of the system.  If omitted, it is assumed to be 0. |
+| `multiplicity` | The spin multiplicity of the system.  If omitted, it is assumed to be 1. |
+| `device` | The PyTorch device to perform calculations on, either a `torch.device` object or a string (such as `'cuda'` or `'cpu'`.)  If omitted, a device is chosen automatically. |
 
 ### ASE
 
