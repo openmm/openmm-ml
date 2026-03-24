@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>User Guide &#8212; OpenMM ML 1.5dev_d576c2a documentation</title>
+    <title>User Guide &#8212; OpenMM ML 1.5dev_86ce034 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=ebf3bf85"></script>
+    <script src="_static/documentation_options.js?v=d7c6006a"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'userguide';</script>
@@ -644,8 +644,7 @@ package for NequIP.  The following model names are supported.</p>
 <h3>TorchANI<a class="headerlink" href="#id6" title="Link to this heading">#</a></h3>
 <p>The <a class="reference external" href="https://github.com/aiqm/torchani">TorchANI</a> package can be used to create models using the pretrained
 <a class="reference external" href="https://www.nature.com/articles/s41467-019-10827-4">ANI-1ccx</a> and <a class="reference external" href="https://pubs.acs.org/doi/full/10.1021/acs.jctc.0c00121">ANI-2x</a>
-potentials.  The  <a class="reference external" href="https://github.com/openmm/NNPOps">NNPOps</a> package can optionally be used to accelerate model
-calculations.</p>
+potentials.</p>
 <p>Both ANI-1ccx and ANI-2x are ensembles of eight models.  Averaging over all eight  models leads to slightly more accurate
 results than any one individually.  You can optionally use only a single model, which leads to a large improvement in
 speed at the cost of a small decrease in accuracy.</p>
@@ -674,11 +673,11 @@ speed at the cost of a small decrease in accuracy.</p>
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">implementation</span></code></p></td>
-<td><p>Selects the implementation to use.  Supported options are <code class="docutils literal notranslate"><span class="pre">'nnpops'</span></code> (tends to be faster for small systems) and <code class="docutils literal notranslate"><span class="pre">'torchani'</span></code> (tends to be faster for large systems).</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">modelIndex</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">modelIndex</span></code></p></td>
 <td><p>The index of the model within the ensemble to use.  If it is <code class="docutils literal notranslate"><span class="pre">None</span></code>, the full ensemble of eight models is used.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">device</span></code></p></td>
+<td><p>The PyTorch device to perform calculations on, either a <code class="docutils literal notranslate"><span class="pre">torch.device</span></code> object or a string (such as <code class="docutils literal notranslate"><span class="pre">'cuda'</span></code> or <code class="docutils literal notranslate"><span class="pre">'cpu'</span></code>.)  If omitted, a device is chosen automatically.</p></td>
 </tr>
 </tbody>
 </table>
