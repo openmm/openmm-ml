@@ -6,7 +6,7 @@ from setuptools import setup, find_packages
 DOCLINES = __doc__.split("\n")
 
 ########################
-__version__ = '1.5'
+__version__ = '1.6'
 VERSION = __version__
 ISRELEASED = False
 ########################
