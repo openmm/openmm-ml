@@ -147,8 +147,7 @@ When using NequIP models, the following extra keyword arguments to `createSystem
 
 The [TorchANI](https://github.com/aiqm/torchani) package can be used to create models using the pretrained
 [ANI-1ccx](https://www.nature.com/articles/s41467-019-10827-4) and [ANI-2x](https://pubs.acs.org/doi/full/10.1021/acs.jctc.0c00121)
-potentials.  The  [NNPOps](https://github.com/openmm/NNPOps) package can optionally be used to accelerate model
-calculations.
+potentials.
 
 Both ANI-1ccx and ANI-2x are ensembles of eight models.  Averaging over all eight  models leads to slightly more accurate
 results than any one individually.  You can optionally use only a single model, which leads to a large improvement in
@@ -165,8 +164,8 @@ When using TorchANI models, the following extra keyword arguments to `createSyst
 
 | Argument | Description |
 | --- | --- |
-| `implementation` | Selects the implementation to use.  Supported options are `'nnpops'` (tends to be faster for small systems) and `'torchani'` (tends to be faster for large systems). |
- | `modelIndex` | The index of the model within the ensemble to use.  If it is `None`, the full ensemble of eight models is used. |
+| `modelIndex` | The index of the model within the ensemble to use.  If it is `None`, the full ensemble of eight models is used. |
+| `device` | The PyTorch device to perform calculations on, either a `torch.device` object or a string (such as `'cuda'` or `'cpu'`.)  If omitted, a device is chosen automatically. |
 
 ### DeePMD-kit
 
