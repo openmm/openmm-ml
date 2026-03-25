@@ -1,0 +1,23 @@
+﻿openmmml.models.torchmdnetpotential.TorchMDNetPotentialImpl
+===========================================================
+
+.. currentmodule:: openmmml.models.torchmdnetpotential
+
+.. autoclass:: TorchMDNetPotentialImpl
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~TorchMDNetPotentialImpl.__init__
+      ~TorchMDNetPotentialImpl.addForces
+   
+   
+
+   
+   
+   

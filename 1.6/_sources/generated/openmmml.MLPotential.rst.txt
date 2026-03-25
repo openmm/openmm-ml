@@ -1,0 +1,25 @@
+﻿openmmml.MLPotential
+====================
+
+.. currentmodule:: openmmml
+
+.. autoclass:: MLPotential
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~MLPotential.__init__
+      ~MLPotential.createMixedSystem
+      ~MLPotential.createSystem
+      ~MLPotential.registerImplFactory
+   
+   
+
+   
+   
+   

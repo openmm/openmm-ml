@@ -1,0 +1,23 @@
+﻿openmmml.mlpotential.MLPotentialImpl
+====================================
+
+.. currentmodule:: openmmml.mlpotential
+
+.. autoclass:: MLPotentialImpl
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~MLPotentialImpl.__init__
+      ~MLPotentialImpl.addForces
+   
+   
+
+   
+   
+   
