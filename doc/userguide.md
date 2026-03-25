@@ -12,16 +12,23 @@ provides a common interface for working with them, and handles all the details o
 
 ## Installation
 
-The stable version of OpenMM-ML can be installed with conda or mamba.
+The stable version of OpenMM-ML can be installed with pip.
+
+```
+pip install openmmml
+```
+
+This installs only OpenMM-ML itself, not the packages that provide specific models.  Those must be installed separately
+by following the instructions from the package developers.
+
+OpenMM-ML can also be installed with conda or mamba.
 
 ```bash
 mamba install -c conda-forge openmm-ml
 ```
 
-We recommend using mamba, since it is faster and less buggy than conda.
-
-This installs only OpenMM-ML itself, not the packages that provide specific models.  Those must be installed separately
-by following the instructions from the package developers.
+However, we generally recommend using pip because most of the packages that provide models are only available
+with pip, not conda.
 
 ## Usage
 
