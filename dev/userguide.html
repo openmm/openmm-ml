@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>User Guide &#8212; OpenMM ML 1.5dev_86ce034 documentation</title>
+    <title>User Guide &#8212; OpenMM ML 1.5dev_0b5f6c8 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=d7c6006a"></script>
+    <script src="_static/documentation_options.js?v=3b1b9836"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'userguide';</script>
@@ -428,13 +428,18 @@ provides a common interface for working with them, and handles all the details o
 </section>
 <section id="installation">
 <h2>Installation<a class="headerlink" href="#installation" title="Link to this heading">#</a></h2>
-<p>The stable version of OpenMM-ML can be installed with conda or mamba.</p>
+<p>The stable version of OpenMM-ML can be installed with pip.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">openmmml</span>
+</pre></div>
+</div>
+<p>This installs only OpenMM-ML itself, not the packages that provide specific models.  Those must be installed separately
+by following the instructions from the package developers.</p>
+<p>OpenMM-ML can also be installed with conda or mamba.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mamba<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>openmm-ml
 </pre></div>
 </div>
-<p>We recommend using mamba, since it is faster and less buggy than conda.</p>
-<p>This installs only OpenMM-ML itself, not the packages that provide specific models.  Those must be installed separately
-by following the instructions from the package developers.</p>
+<p>However, we generally recommend using pip because most of the packages that provide models are only available
+with pip, not conda.</p>
 </section>
 <section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Link to this heading">#</a></h2>
