@@ -136,7 +136,7 @@ def _computeANI(state, model, species, pbc, indices):
     _, energy = model((species, positions), cell=boxvectors, pbc=pbc)
     energy *= torchani.units.hartree2kjoulemol(1)
     energy.backward()
-    forces = (-positions.grad).detach().cpu().numpy()
+    forces = (-positions.grad[0]).detach().cpu().numpy()
     if indices is not None:
         f = np.zeros((numAtoms, 3), dtype=np.float32)
         f[indices] = forces
