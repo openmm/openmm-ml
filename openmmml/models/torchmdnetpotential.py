@@ -162,12 +162,13 @@ class TorchMDNetPotentialImpl(MLPotentialImpl):
                 filename=filename,
             )
 
+        periodic = (topology.getPeriodicBoxVectors() is not None) or system.usesPeriodicBoundaryConditions()  
         model = load_model(
             model_file_path,
             derivative=False,
             remove_ref_energy = args.get('remove_ref_energy', True),
             max_num_neighbors = min(args.get('max_num_neighbors', 64), numbers.shape[0]),
-            coulomb_cutoff = cutoff,
+            coulomb_cutoff = cutoff if periodic else None,
             static_shapes = True,
             check_errors = False
         ).to(device)
@@ -182,7 +183,6 @@ class TorchMDNetPotentialImpl(MLPotentialImpl):
             indices = None
         else:
             indices = np.array(atoms)
-        periodic = (topology.getPeriodicBoxVectors() is not None) or system.usesPeriodicBoundaryConditions()
 
         # Create the PythonForce and add it to the System.
 
@@ -227,7 +227,6 @@ class _ComputeTorchMDNet(object):
             cell = None
         if self.compiled_model is None:
             # The model can't be compiled until after it has been invoked once.
-
             energy = self.model(z=self.numbers, pos=positions/self.lengthScale, batch=self.batch, q=self.charge, box=cell)[0]*self.energyScale
             self.compiled_model = torch.compile(self.model, backend="inductor", dynamic=False, fullgraph=True, mode="reduce-overhead")
         else:
