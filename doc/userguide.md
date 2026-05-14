@@ -225,10 +225,28 @@ When using TorchMD-Net models, the following extra keyword arguments to `createS
 | Argument | Description |
 | --- | --- |
 | `charge` | The total charge of the system.  If omitted, it is assumed to be 0. |
-| `coulomb_cutoff` | The cutoff distance to apply to Coulomb interactions, in nanometers.  If omitted, it defaults to 1.2 nm.  For models without an explicit Coulomb term, this is ignored. |
+| `coulomb_cutoff` | The cutoff distance to apply to Coulomb interactions, in nanometers.  If omitted, it defaults to 1.2 nm.  For models without an explicit Coulomb term, this is ignored.  Whether the cutoff is actually applied depends on `useCoulombCutoff` (see below). |
+| `useCoulombCutoff` | Override whether the Coulomb cutoff is applied.  If omitted, the default is determined automatically (see *Coulomb cutoff behavior* below).  Pass `True` to always apply the cutoff or `False` to disable it. |
 | `remove_ref_energy` | Argument passed to the TorchMD-Net model, please see [here](https://torchmd-net.readthedocs.io/en/latest/). Default is `True`.  |
 | `max_num_neighbors` | Argument passed to the TorchMD-Net model, please see [here](https://torchmd-net.readthedocs.io/en/latest/). Default is the minimum of 64 or the number of atoms in the molecule.
 | `batch` | Argument passed to the forward call of the TorchMD-Net model, please see [here](https://torchmd-net.readthedocs.io/en/latest/). With this argument you can denote different atoms to be in different batches. The format should be a 1d list containing the batch index of each atom. e.g. for two molecules each with three atoms to be treated as seperate batches you would pass `batch = [0, 0, 0, 1, 1, 1]`.
+
+#### Coulomb cutoff behaviour
+
+The Coulomb cutoff in TorchMD-Net uses a reaction-field approximation.  Applying it to a non-periodic
+system introduces errors, so by default the cutoff is only used when the ML potential is evaluated
+under periodic boundary conditions:
+
+* **No PBCs on the topology/system:** the cutoff is disabled (in-vacuum evaluation).
+* **PBCs + `createMixedSystem()`:** mechanical embedding is assumed, the ML subset is treated as an
+  isolated cluster, and the cutoff is disabled.
+* **PBCs + `createSystem()` (full ML system):** the cutoff is applied.
+
+You can override this with the `useCoulombCutoff` argument if you know which behaviour you want:
+
+```python
+system = potential.createSystem(topology, useCoulombCutoff=False)
+```
 
 ### FeNNix
 

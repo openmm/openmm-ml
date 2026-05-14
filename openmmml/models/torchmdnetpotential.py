@@ -81,6 +81,22 @@ class TorchMDNetPotentialImpl(MLPotentialImpl):
 
     >>> potential = MLPotential('aceff-1.0')
 
+    Coulomb cutoff behavior
+    ------------------------
+    The Coulomb cutoff in TorchMD-Net uses a reaction-field approximation. Applying it to a
+    non-periodic system introduces errors, so by default the cutoff is only used when the ML
+    potential is evaluated under periodic boundary conditions:
+
+    * No PBCs on the topology/system: the cutoff is disabled (in-vacuum evaluation).
+    * PBCs and ``createMixedSystem`` is being used: mechanical embedding is assumed, the
+      ML subset is treated as an isolated cluster, and the cutoff is disabled.
+    * PBCs and ``createSystem`` (full ML system): the cutoff is applied.
+
+    You can override this with the ``useCoulombCutoff`` argument if you know which behavior
+    you want, for example:
+
+    >>>  system = potential.createSystem(pdb.topology, useCoulombCutoff=False)
+
     """
 
     def __init__(self, 
@@ -162,13 +178,20 @@ class TorchMDNetPotentialImpl(MLPotentialImpl):
                 filename=filename,
             )
 
-        periodic = (topology.getPeriodicBoxVectors() is not None) or system.usesPeriodicBoundaryConditions()  
+        # In createMixedSystem (atoms is not None) we assume mechanical embedding, so the ML
+        # subset is treated as an isolated cluster regardless of the surrounding system's PBCs.
+        system_periodic = (topology.getPeriodicBoxVectors() is not None) or system.usesPeriodicBoundaryConditions()
+        mixed_system = atoms is not None
+        periodic = system_periodic and not mixed_system
+        # Allow the caller to override whether the Coulomb cutoff is applied. By default it is
+        # only applied when the ML potential is being evaluated under PBCs (i.e. periodic=True).
+        use_coulomb_cutoff = args.get('useCoulombCutoff', periodic)
         model = load_model(
             model_file_path,
             derivative=False,
             remove_ref_energy = args.get('remove_ref_energy', True),
             max_num_neighbors = min(args.get('max_num_neighbors', 64), numbers.shape[0]),
-            coulomb_cutoff = cutoff if periodic else None,
+            coulomb_cutoff = cutoff if use_coulomb_cutoff else None,
             static_shapes = True,
             check_errors = False
         ).to(device)
