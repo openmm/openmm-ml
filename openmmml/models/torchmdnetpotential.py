@@ -84,13 +84,8 @@ class TorchMDNetPotentialImpl(MLPotentialImpl):
     Coulomb cutoff behavior
     ------------------------
     The Coulomb cutoff in TorchMD-Net uses a reaction-field approximation. Applying it to a
-    non-periodic system introduces errors, so by default the cutoff is only used when the ML
-    potential is evaluated under periodic boundary conditions:
-
-    * No PBCs on the topology/system: the cutoff is disabled (in-vacuum evaluation).
-    * PBCs and ``createMixedSystem`` is being used: mechanical embedding is assumed, the
-      ML subset is treated as an isolated cluster, and the cutoff is disabled.
-    * PBCs and ``createSystem`` (full ML system): the cutoff is applied.
+    non-periodic system introduces errors, so by default the cutoff is only used when the
+    system uses periodic boundary conditions.
 
     You can override this with the ``useCoulombCutoff`` argument if you know which behavior
     you want, for example:
@@ -178,13 +173,7 @@ class TorchMDNetPotentialImpl(MLPotentialImpl):
                 filename=filename,
             )
 
-        # In createMixedSystem (atoms is not None) we assume mechanical embedding, so the ML
-        # subset is treated as an isolated cluster regardless of the surrounding system's PBCs.
-        system_periodic = (topology.getPeriodicBoxVectors() is not None) or system.usesPeriodicBoundaryConditions()
-        mixed_system = atoms is not None
-        periodic = system_periodic and not mixed_system
-        # Allow the caller to override whether the Coulomb cutoff is applied. By default it is
-        # only applied when the ML potential is being evaluated under PBCs (i.e. periodic=True).
+        periodic = (topology.getPeriodicBoxVectors() is not None) or system.usesPeriodicBoundaryConditions()
         use_coulomb_cutoff = args.get('useCoulombCutoff', periodic)
         model = load_model(
             model_file_path,

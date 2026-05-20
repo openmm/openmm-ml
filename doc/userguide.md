@@ -234,13 +234,8 @@ When using TorchMD-Net models, the following extra keyword arguments to `createS
 #### Coulomb cutoff behaviour
 
 The Coulomb cutoff in TorchMD-Net uses a reaction-field approximation.  Applying it to a non-periodic
-system introduces errors, so by default the cutoff is only used when the ML potential is evaluated
-under periodic boundary conditions:
-
-* **No PBCs on the topology/system:** the cutoff is disabled (in-vacuum evaluation).
-* **PBCs + `createMixedSystem()`:** mechanical embedding is assumed, the ML subset is treated as an
-  isolated cluster, and the cutoff is disabled.
-* **PBCs + `createSystem()` (full ML system):** the cutoff is applied.
+system introduces errors, so by default the cutoff is only used when the system uses periodic
+boundary conditions.
 
 You can override this with the `useCoulombCutoff` argument if you know which behaviour you want:
 
