@@ -170,7 +170,7 @@ class MACEPotentialImpl(MLPotentialImpl):
                 logging.warning(f'The model {self.name} is distributed under the restrictive ASL license.  Commercial use is not permitted.')
         elif self.name == "mace":
             if self.modelPath is not None:
-                model = torch.load(self.modelPath, map_location=device)
+                model = torch.load(self.modelPath, map_location=device).to(device)
             else:
                 raise ValueError("No modelPath provided for local MACE model.")
         else:
