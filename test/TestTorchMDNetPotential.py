@@ -19,7 +19,11 @@ class TestTorchMDNetPotential:
     def testCreatePureMLSystem(self, platform_int, model):
         pdb = app.PDBFile(os.path.join(test_data_dir, "toluene", "toluene.pdb"))
         potential = MLPotential(model)
-        system = potential.createSystem(pdb.topology, returnEnergyType='energy')
+        kwargs = {'returnEnergyType': 'energy'}
+        if model == 'aceff-2.0':
+            kwargs['coulomb_cutoff'] = 1.2
+            kwargs['useCoulombCutoff'] = True
+        system = potential.createSystem(pdb.topology, **kwargs)
         platform = mm.Platform.getPlatform(platform_int)
         context = mm.Context(system, mm.VerletIntegrator(0.001), platform)
         context.setPositions(pdb.getPositions(asNumpy=True))
