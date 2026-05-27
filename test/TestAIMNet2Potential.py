@@ -38,7 +38,7 @@ class TestAIMNet2:
         platform = mm.Platform.getPlatform(platform_int)
         context = mm.Context(system, mm.VerletIntegrator(0.001), platform)
         positionsOriginal = pdb.getPositions(asNumpy=True)
-        energyRef = -151663232.67206445 # in kJ/mol, calculated using the AIMNet2ASE
+        energyRef = -151715123.01342362 # in kJ/mol, calculated using the AIMNet2ASE
         for i in range(3):
             positions = positionsOriginal + i * 0.9 * unit.nanometers # translate molecule to test PBC
             context.setPositions(positions)

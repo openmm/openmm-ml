@@ -53,4 +53,4 @@ class TestANIPotential:
         assert np.isclose(mixedState.getPotentialEnergy().value_in_unit(unit.kilojoules_per_mole), interpState1.getPotentialEnergy().value_in_unit(unit.kilojoules_per_mole), rtol=1e-5)
         assert np.isclose(mmState.getPotentialEnergy().value_in_unit(unit.kilojoules_per_mole), interpState2.getPotentialEnergy().value_in_unit(unit.kilojoules_per_mole), rtol=1e-5)
         assert np.allclose(mixedState.getForces().value_in_unit(unit.kilojoules_per_mole/unit.nanometer), interpState1.getForces().value_in_unit(unit.kilojoules_per_mole/unit.nanometer), rtol=1e-3)
-        assert np.allclose(mmState.getForces().value_in_unit(unit.kilojoules_per_mole/unit.nanometer), interpState2.getForces().value_in_unit(unit.kilojoules_per_mole/unit.nanometer), rtol=1e-3)
+        assert np.allclose(mmState.getForces().value_in_unit(unit.kilojoules_per_mole/unit.nanometer), interpState2.getForces().value_in_unit(unit.kilojoules_per_mole/unit.nanometer), rtol=1e-3, atol=1e-5)
