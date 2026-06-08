@@ -1,0 +1,23 @@
+﻿openmmml.models.orbpotential.OrbPotentialImpl
+=============================================
+
+.. currentmodule:: openmmml.models.orbpotential
+
+.. autoclass:: OrbPotentialImpl
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~OrbPotentialImpl.__init__
+      ~OrbPotentialImpl.addForces
+   
+   
+
+   
+   
+   

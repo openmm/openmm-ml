@@ -1,0 +1,23 @@
+﻿openmmml.models.anipotential.ANIPotentialImpl
+=============================================
+
+.. currentmodule:: openmmml.models.anipotential
+
+.. autoclass:: ANIPotentialImpl
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~ANIPotentialImpl.__init__
+      ~ANIPotentialImpl.addForces
+   
+   
+
+   
+   
+   

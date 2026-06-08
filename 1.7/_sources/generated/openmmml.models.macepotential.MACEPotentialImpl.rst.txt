@@ -1,0 +1,23 @@
+﻿openmmml.models.macepotential.MACEPotentialImpl
+===============================================
+
+.. currentmodule:: openmmml.models.macepotential
+
+.. autoclass:: MACEPotentialImpl
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~MACEPotentialImpl.__init__
+      ~MACEPotentialImpl.addForces
+   
+   
+
+   
+   
+   

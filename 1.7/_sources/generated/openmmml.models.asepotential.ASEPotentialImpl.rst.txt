@@ -1,0 +1,23 @@
+﻿openmmml.models.asepotential.ASEPotentialImpl
+=============================================
+
+.. currentmodule:: openmmml.models.asepotential
+
+.. autoclass:: ASEPotentialImpl
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~ASEPotentialImpl.__init__
+      ~ASEPotentialImpl.addForces
+   
+   
+
+   
+   
+   

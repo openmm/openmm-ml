@@ -1,0 +1,29 @@
+﻿openmmml.models.fennixpotential.FeNNixPotentialImpl
+===================================================
+
+.. currentmodule:: openmmml.models.fennixpotential
+
+.. autoclass:: FeNNixPotentialImpl
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~FeNNixPotentialImpl.__init__
+      ~FeNNixPotentialImpl.addForces
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~FeNNixPotentialImpl.KNOWN_MODELS
+   
+   

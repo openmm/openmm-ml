@@ -1,0 +1,23 @@
+﻿openmmml.models.nequippotential.NequIPPotentialImpl
+===================================================
+
+.. currentmodule:: openmmml.models.nequippotential
+
+.. autoclass:: NequIPPotentialImpl
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~NequIPPotentialImpl.__init__
+      ~NequIPPotentialImpl.addForces
+   
+   
+
+   
+   
+   

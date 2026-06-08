@@ -1,0 +1,45 @@
+API
+---
+
+.. autosummary::
+    :toctree: generated/
+    :nosignatures:
+
+    openmmml.MLPotential
+
+
+Developer API
+~~~~~~~~~~~~~
+.. autosummary::
+    :toctree: generated/
+    :nosignatures:
+
+    openmmml.mlpotential.MLPotentialImplFactory
+    openmmml.mlpotential.MLPotentialImpl
+
+
+Models
+~~~~~~
+.. autosummary::
+    :toctree: generated/
+    :nosignatures:
+   
+    
+      openmmml.models.aimnet2potential.AIMNet2PotentialImpl
+    
+      openmmml.models.anipotential.ANIPotentialImpl
+    
+      openmmml.models.asepotential.ASEPotentialImpl
+    
+      openmmml.models.deepmdpotential.DeepmdPotentialImpl
+    
+      openmmml.models.fennixpotential.FeNNixPotentialImpl
+    
+      openmmml.models.macepotential.MACEPotentialImpl
+    
+      openmmml.models.nequippotential.NequIPPotentialImpl
+    
+      openmmml.models.orbpotential.OrbPotentialImpl
+    
+      openmmml.models.torchmdnetpotential.TorchMDNetPotentialImpl
+    
