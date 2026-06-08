@@ -6,7 +6,7 @@ from setuptools import setup, find_packages
 DOCLINES = __doc__.split("\n")
 
 ########################
-__version__ = '1.6'
+__version__ = '1.7'
 VERSION = __version__
 ISRELEASED = False
 ########################
@@ -38,7 +38,7 @@ setup(
     classifiers=CLASSIFIERS.splitlines(),
     packages=find_packages(),
     zip_safe=False,
-    install_requires=['numpy', 'openmm >= 8.5'],
+    install_requires=['numpy', 'openmm >= 8.5.2'],
     entry_points={
         'openmmml.potentials': [
             'aimnet2 = openmmml.models.aimnet2potential:AIMNet2PotentialImplFactory',
