@@ -1,2 +1,2 @@
 from .mlpotential import MLPotential
-from . import models
+from . import embeddings, models

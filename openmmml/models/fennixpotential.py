@@ -124,7 +124,11 @@ class FeNNixPotentialImpl(MLPotentialImpl):
             raise ValueError(f"Unsupported FeNNix model: {self.name} (options are {supported_options})")
 
         # Load the model.
-        model = fennol.FENNIX.load(modelPath, **args)
+        fennix_args = {}
+        for key in ("use_atom_padding", "graph_config"):
+            if key in args:
+                fennix_args[key] = args[key]
+        model = fennol.FENNIX.load(modelPath, **fennix_args)
         energyScale = (unit.hartree / model.Ha_to_model_energy * unit.AVOGADRO_CONSTANT_NA).value_in_unit(unit.kilojoule_per_mole)
         forceScale = (energyScale / unit.angstrom).value_in_unit(unit.nanometer ** -1)
 
