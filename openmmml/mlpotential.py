@@ -29,8 +29,6 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 
-from __future__ import annotations
-
 import openmm
 import openmm.app
 from collections.abc import Iterable
@@ -57,7 +55,7 @@ class MLPotentialImplFactory(object):
     MLPotentialImplFactory subclass.
     """
 
-    def createImpl(self, name: str, **args) -> MLPotentialImpl:
+    def createImpl(self, name: str, **args) -> "MLPotentialImpl":
         """Create a MLPotentialImpl that will be used to implement a MLPotential.
 
         When a MLPotential is created, it invokes this method to create an object
@@ -261,7 +259,7 @@ class MLPotential(object):
     """
 
     _implFactories: dict[str, MLPotentialImplFactory] = {}
-    _embeddingImplFactories: dict[str, MLEmbeddingImplFactory] = {}
+    _embeddingImplFactories: dict[str, "MLEmbeddingImplFactory"] = {}
 
     def __init__(self, name: str, **args):
         """Create a MLPotential.
@@ -361,7 +359,8 @@ class MLPotential(object):
             the name of the embedding method.  The builtin 'mechanical'
             embedding method is used by default.  Other generic embedding
             methods may be available, as well as embedding methods specific to
-            the ML potential selected.
+            the ML potential selected.  MLPotential.getSupportedEmbeddings()
+            will report all embedding methods accepted by the potential.
         args:
             particular potential functions or embedding methods may define
             additional arguments that can be used to customize them.  See the
@@ -396,6 +395,14 @@ class MLPotential(object):
                 system.removeConstraint(constraint)
 
         return system
+
+    def getSupportedEmbeddings(self) -> list[str]:
+        """Retrieves a list of the names of all of the supported embedding
+        methods for this potential.  This includes all available generic
+        embedding methods and all of those specific to the potential.
+        """
+
+        return sorted(set(MLPotential._embeddingImplFactories.keys()) | set(self._impl.getSupportedEmbeddings()))
 
     @staticmethod
     def _removeBonds(system: openmm.System, atoms: list[int], removeInSet: bool) -> openmm.System:
@@ -467,7 +474,7 @@ class MLPotential(object):
         MLPotential._implFactories[name] = factory
 
     @staticmethod
-    def registerEmbeddingImplFactory(name: str, factory: MLEmbeddingImplFactory):
+    def registerEmbeddingImplFactory(name: str, factory: "MLEmbeddingImplFactory"):
         """Register a new embedding method that can be used with MLPotential.
 
         Parameters
@@ -492,7 +499,7 @@ class MLEmbeddingImplFactory:
     be the name of the MLEmbeddingImplFactory subclass.
     """
 
-    def createImpl(self, name: str) -> MLEmbeddingImpl:
+    def createImpl(self, name: str) -> "MLEmbeddingImpl":
         """Create an MLEmbeddingImpl that will be used to implement an embedding
         method.
 

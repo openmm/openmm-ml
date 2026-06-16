@@ -50,13 +50,13 @@ class MechanicalEmbeddingImpl(MLEmbeddingImpl):
     conventional force field to compute the interactions between the atoms
     within the ML subset and those outside of it.
 
-    If the option mlLocal is provided and True, it specifies that the ML model
-    should be treated as not using long-range interactions; if provided and
-    False, it should be treated as using long-range interactions.  In the event
-    that long-range electrostatics are in use by the conventional force field
-    but not supported by the ML model, the conventional force field charges will
-    be used to approximate the interactions between atoms within the ML subset
-    in different periodic images.
+    If the option mlLongRange is provided and True, it specifies that the ML
+    model should be treated as using long-range interactions; if provided and
+    False, it should be treated as not using long-range interactions.  In the
+    event that long-range electrostatics are in use by the conventional force
+    field but not supported by the ML model, the conventional force field
+    charges will be used to approximate the interactions between atoms within
+    the ML subset in different periodic images.
     """
 
     def __init__(self):
@@ -237,7 +237,7 @@ class MechanicalEmbeddingImpl(MLEmbeddingImpl):
                 elif isinstance(force, openmm.CustomNonbondedForce):
                     # TODO: this case has never been supported (previously it
                     # would be silently ignored).
-                    raise NotImplementedError
+                    raise NotImplementedError("Interpolation is currently unsupported when a CustomNonbondedForce is present")
 
             # Subtract the ML-ML PME energy if needed.
 
