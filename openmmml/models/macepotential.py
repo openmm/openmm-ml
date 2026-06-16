@@ -89,6 +89,18 @@ class MACEPotentialImpl(MLPotentialImpl):
         The path to the locally trained MACE model if ``name`` is 'mace'.
     """
 
+    # (Function name, model name, restrictive license, long-range)
+    KNOWN_MODELS = {
+        'mace-off23-small': ('mace_off', 'small', True, False),
+        'mace-off23-medium': ('mace_off', 'medium', True, False),
+        'mace-off23-large': ('mace_off', 'large', True, False),
+        'mace-off24-medium': ('mace_off', 'https://github.com/ACEsuit/mace-off/blob/main/mace_off24/MACE-OFF24_medium.model?raw=true', True, False),
+        'mace-mpa-0-medium': ('mace_mp', 'medium-mpa-0', False, False),
+        'mace-omat-0-small': ('mace_mp', 'small-omat-0', True, False),
+        'mace-omat-0-medium': ('mace_mp', 'medium-omat-0', True, False),
+        'mace-omol-0-extra-large': ('mace_omol', 'extra_large', True, False),
+    }
+
     def __init__(self, name: str, modelPath) -> None:
         """
         Initialize the MACEPotentialImpl.
@@ -151,20 +163,15 @@ class MACEPotentialImpl(MLPotentialImpl):
 
         # Load the model.
 
-        models = {
-            'mace-off23-small': (mace_off, 'small', True),
-            'mace-off23-medium': (mace_off, 'medium', True),
-            'mace-off23-large': (mace_off, 'large', True),
-            'mace-off24-medium': (mace_off, 'https://github.com/ACEsuit/mace-off/blob/main/mace_off24/MACE-OFF24_medium.model?raw=true', True),
-            'mace-mpa-0-medium': (mace_mp, 'medium-mpa-0', False),
-            'mace-omat-0-small': (mace_mp, 'small-omat-0', True),
-            'mace-omat-0-medium': (mace_mp, 'medium-omat-0', True),
-            'mace-omol-0-extra-large': (mace_omol, 'extra_large', True)
-        }
         device = self._getTorchDevice(args)
-        if self.name in models:
-            fn, name, warn = models[self.name]
-            model = fn(model=name, device=device, return_raw_model=True).to(device)
+        if self.name in MACEPotentialImpl.KNOWN_MODELS:
+            functions = {
+                'mace_off': mace_off,
+                'mace_mp': mace_mp,
+                'mace_omol': mace_omol,
+            }
+            fnName, name, warn, _ = MACEPotentialImpl.KNOWN_MODELS[self.name]
+            model = functions[fnName](model=name, device=device, return_raw_model=True).to(device)
             if warn:
                 import logging
                 logging.warning(f'The model {self.name} is distributed under the restrictive ASL license.  Commercial use is not permitted.')
@@ -227,6 +234,12 @@ class MACEPotentialImpl(MLPotentialImpl):
         force.setForceGroup(forceGroup)
         force.setUsesPeriodicBoundaryConditions(periodic)
         system.addForce(force)
+
+    def getMLLongRange(self) -> bool | None:
+        if self.name in MACEPotentialImpl.KNOWN_MODELS:
+            _, _, _, longRange = MACEPotentialImpl.KNOWN_MODELS[self.name]
+            return longRange
+        return None
 
 
 def _computeMACE(state, model, ptr, node_attrs, batch, pbc, returnEnergyType, charge, multiplicity, indices, periodic):

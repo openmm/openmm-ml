@@ -188,10 +188,10 @@ class MLPotentialImpl(object):
         the MLPotentialImpl.
 
         The default implementation of this method, used if a subclass does not
-        override it, always returns False for compatibility.
+        override it, always returns None.
         """
 
-        return False
+        return None
 
     def _getTorchDevice(self, args):
         """This is a utility routine for use by subclasses that are implemented with PyTorch.  It selects what device

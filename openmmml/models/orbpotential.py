@@ -113,6 +113,9 @@ class OrbPotentialImpl(MLPotentialImpl):
         force.setUsesPeriodicBoundaryConditions(any(aseAtoms.get_pbc()))
         system.addForce(force)
 
+    def getMLLongRange(self) -> bool | None:
+        return False
+
 def _computeOrb(state, atoms, indices, periodic, device, model, adapter, conservative):
     import ase.units
     import numpy as np

@@ -115,6 +115,9 @@ class ANIPotentialImpl(MLPotentialImpl):
         force.setUsesPeriodicBoundaryConditions(periodic)
         system.addForce(force)
 
+    def getMLLongRange(self) -> bool | None:
+        return False
+
 def _computeANI(state, model, species, pbc, indices):
     import torch
     import numpy as np

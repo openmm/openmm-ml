@@ -115,11 +115,6 @@ class ASEPotentialImpl(MLPotentialImpl):
         force.setUsesPeriodicBoundaryConditions(any(aseAtoms.get_pbc()))
         system.addForce(force)
 
-    def getMLLongRange(self):
-        # The calculator could compute anything; we can't assume either way.
-
-        return None
-
 
 def _computeASE(state, atoms, indices):
     import ase.units

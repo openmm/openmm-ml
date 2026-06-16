@@ -59,12 +59,14 @@ class TestMechanicalEmbedding:
         positions_ml = [positions_ml_mm[index] for index in subset]
 
         mm_force_field = openmm.app.ForceField("amber19-all.xml", "amber19/tip3pfb.xml")
-        ml_potential = MLPotential("mace-off23-small")
+        ml_potential = MLPotential("ase")
+
+        from mace.calculators.foundations_models import mace_off
 
         mm_system_ml_mm = mm_force_field.createSystem(topology_ml_mm, nonbondedMethod=openmm.app.PME if periodic else openmm.app.NoCutoff)
         mm_system_ml = mm_force_field.createSystem(topology_ml, nonbondedMethod=openmm.app.PME if periodic else openmm.app.NoCutoff)
-        ml_system_ml = ml_potential.createSystem(topology_ml, returnEnergyType="interaction_energy")
-        mixed_system = ml_potential.createMixedSystem(topology_ml_mm, mm_system_ml_mm, subset, embedding="mechanical", interpolate=interpolate, mlLongRange=periodic)
+        ml_system_ml = ml_potential.createSystem(topology_ml, calculator=mace_off("small"))
+        mixed_system = ml_potential.createMixedSystem(topology_ml_mm, mm_system_ml_mm, subset, embedding="mechanical", interpolate=interpolate, calculator=mace_off("small"), mlLongRange=periodic)
 
         # Disable the dispersion correction for this system for the test so that
         # the same dispersion correction contributions are present on both sides
@@ -124,8 +126,8 @@ class TestMechanicalEmbedding:
         # periodic images.
         mm_system_ml_mm = mm_force_field.createSystem(topology_ml_mm, nonbondedMethod=openmm.app.PME)
         mm_system_ml = mm_force_field.createSystem(topology_ml, nonbondedMethod=openmm.app.NoCutoff)
-        ml_system_ml = ml_potential.createSystem(topology_ml, returnEnergyType="interaction_energy")
-        mixed_system = ml_potential.createMixedSystem(topology_ml_mm, mm_system_ml_mm, subset, embedding="mechanical", interpolate=interpolate, mlLongRange=False)
+        ml_system_ml = ml_potential.createSystem(topology_ml)
+        mixed_system = ml_potential.createMixedSystem(topology_ml_mm, mm_system_ml_mm, subset, embedding="mechanical", interpolate=interpolate)
 
         # Disable the dispersion correction for this system for the test so that
         # the same dispersion correction contributions are present on both sides
@@ -177,8 +179,9 @@ class TestMechanicalEmbedding:
         subset = [atom.index for atom in topology_ml_mm.atoms() if atom.residue.chain.index == 0]
 
         mm_force_field = openmm.app.ForceField("amber19-all.xml", "amber19/tip3pfb.xml")
-        from mace.calculators.foundations_models import mace_off
         ml_potential = MLPotential("ase")
+
+        from mace.calculators.foundations_models import mace_off
 
         mm_system_ml_mm = mm_force_field.createSystem(topology_ml_mm, nonbondedMethod=openmm.app.PME if periodic else openmm.app.NoCutoff)
         kwargs = dict(topology=topology_ml_mm, system=mm_system_ml_mm, atoms=subset, calculator=mace_off("small"), embedding="mechanical", mlLongRange=long_range)

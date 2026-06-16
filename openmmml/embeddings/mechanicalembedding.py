@@ -50,13 +50,12 @@ class MechanicalEmbeddingImpl(MLEmbeddingImpl):
     conventional force field to compute the interactions between the atoms
     within the ML subset and those outside of it.
 
-    If the option mlLongRange is provided and True, it specifies that the ML
-    model should be treated as using long-range interactions; if provided and
-    False, it should be treated as not using long-range interactions.  In the
-    event that long-range electrostatics are in use by the conventional force
-    field but not supported by the ML model, the conventional force field
-    charges will be used to approximate the interactions between atoms within
-    the ML subset in different periodic images.
+    If long-range electrostatics are in use by the conventional force field but
+    not supported by the ML model, the conventional force field charges will be
+    used to approximate the interactions between atoms within the ML subset in
+    different periodic images.  For some models, this cannot be determined based
+    on the information provided to OpenMM-ML, and the mlLongRange option must be
+    provided explicitly to control whether or not to include these interactions.
     """
 
     def __init__(self):
@@ -76,9 +75,14 @@ class MechanicalEmbeddingImpl(MLEmbeddingImpl):
         # See if the ML potential uses long-range interactions.  mlLongRange may
         # end up being None, in which case we were unable to determine this.
 
-        mlLongRange = args.get("mlLongRange", None)
-        if mlLongRange is None:
-            mlLongRange = potential.getMLLongRange()
+        potentialMLLongRange = potential.getMLLongRange()
+        userMLLongRange = args.get("mlLongRange", None)
+        if potentialMLLongRange is None:
+            mlLongRange = userMLLongRange
+        else:
+            if userMLLongRange is not None:
+                raise ValueError("This ML model does not support the mlLongRange option.")
+            mlLongRange = potentialMLLongRange
 
         # See if the MM force field uses long-range interactions.
 

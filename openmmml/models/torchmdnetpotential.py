@@ -94,6 +94,13 @@ class TorchMDNetPotentialImpl(MLPotentialImpl):
 
     """
 
+    # (Repository ID, filename, long-range)
+    KNOWN_MODELS = {
+        'aceff-1.0': ('Acellera/AceFF-1.0', 'aceff_v1.0.ckpt', False),
+        'aceff-1.1': ('Acellera/AceFF-1.1', 'aceff_v1.1.ckpt', False),
+        'aceff-2.0': ('Acellera/AceFF-2.0', 'aceff_v2.0.ckpt', False),
+    }
+
     def __init__(self, 
                  name: str,
                  modelPath: str,
@@ -155,16 +162,9 @@ class TorchMDNetPotentialImpl(MLPotentialImpl):
                 from huggingface_hub import hf_hub_download
             except ImportError as e:
                 raise ImportError(f"Failed to import huggingface_hub please install from https://huggingface.co/docs/huggingface_hub/en/installation")
-            
-            if self.name == 'aceff-1.0':
-                repo_id="Acellera/AceFF-1.0"
-                filename="aceff_v1.0.ckpt"
-            elif self.name == 'aceff-1.1':
-                repo_id="Acellera/AceFF-1.1"
-                filename="aceff_v1.1.ckpt"
-            elif self.name == 'aceff-2.0':
-                repo_id="Acellera/AceFF-2.0"
-                filename="aceff_v2.0.ckpt"
+
+            if self.name in TorchMDNetPotentialImpl.KNOWN_MODELS:
+                repo_id, filename, _ = TorchMDNetPotentialImpl.KNOWN_MODELS[self.name]
             else:
                 raise ValueError(f'Model name {self.name} does not exist.')
 
@@ -211,6 +211,11 @@ class TorchMDNetPotentialImpl(MLPotentialImpl):
         force.setUsesPeriodicBoundaryConditions(periodic)
         system.addForce(force)
 
+    def getMLLongRange(self) -> bool | None:
+        if self.name in TorchMDNetPotentialImpl.KNOWN_MODELS:
+            _, _, longRange = TorchMDNetPotentialImpl.KNOWN_MODELS[self.name]
+            return longRange
+        return None
 
 class _ComputeTorchMDNet(object):
     def __init__(self, model, numbers, charge, batch, lengthScale, energyScale, indices, periodic):
