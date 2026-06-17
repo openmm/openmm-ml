@@ -330,10 +330,42 @@ When using ASE models, the following extra keyword arguments to `createSystem()`
 | `aseAtoms` | An Atoms object to use for computations. |
 | `info` | Values that should be added to the `info` dict of the Atoms object. |
 
-### Other Packages
+## Embeddings
+
+For mixed ML/MM systems created with `createMixedSystem()`, the interactions within the ML subset will be computed by
+the selected MLIP, and the interactions within the MM subset will be computed by the MM force field.  However, OpenMM-ML
+offers various *embedding methods* that controls how the interactions between the ML and MM atoms are computed.
+
+By default, OpenMM-ML uses mechanical embedding, but this can be selected with the `embedding` argument to
+`createMixedSystem()`.  Embedding methods can either be generic methods available for use along with any MLIP (described
+below), or they can be specific to certain MLIPs.  You can retrieve the names of all acceptable embedding methods (both
+generic and specific) for a given MLIP by calling `MLPotential.getSupportedEmbeddings()`.  Consult the API documentation
+for more information about how the embedding API works internally and how custom embedding methods can be implemented.
+
+### Mechanical Embedding
+
+This default embedding method can also be explicitly selected with the embedding name `mechanical`.  Mechanical
+embedding uses the MM force field to compute the interactions between the ML and MM atoms.
+
+For periodic ML/MM systems, some MLIPs may compute the interactions between ML atoms including all periodic images;
+OpenMM-ML calls these models "long-range".  Other MLIPs may compute only the interactions between ML atoms in a single
+periodic image.  In this case, the interaction between the ML subset and all of its other periodic images is computed
+using the MM force field when using mechanical embedding.
+
+For the pretrained models supported by OpenMM-ML, this behavior is selected automatically.  However, for custom models
+(*e.g.*, the ASE, DeePMD, and NequIP interfaces, and non-pretrained FeNNix, MACE, and TorchMDNet models) it is necessary
+to specify which behavior your model uses when doing mechanical embedding in a periodic system.  To do so, pass
+`mlLongRange=False` to `createMixedSystem()` if your model is not long-range, and `mlLongRange=True` if it is.  An error
+will be raised to inform you if this information is needed and not provided; OpenMM-ML will not assume either choice
+automatically.
+
+## Other Packages
 
 OpenMM-ML is based on a plugin architecture, allowing other packages to provide their own interfaces to it.  The
-packages listed above are the ones for which OpenMM-ML has built in support.  Other packages can interface to it by
+packages listed above are the ones for which OpenMM-ML has built in support.  Other packages can provide potentials by
 defining two classes that subclass `MLPotentialImpl` and `MLPotentialImplFactory`, then registering them by specifying
 an [entry point](https://packaging.python.org/en/latest/specifications/entry-points/) in the group `openmmml.potentials`.
-Consult the documentation for other packages to see whether they provide interfaces for OpenMM-ML.
+They can also provide generic embedding methods (that can be used with any potential from OpenMM-ML or any other package)
+by similarly defining subclasses of `MLEmbeddingImpl` and `MLEmbeddingImplFactory`, and registering them with an entry
+point in the group `openmmml.embeddings`.  Consult the documentation for other packages to see whether they provide
+interfaces for OpenMM-ML.
