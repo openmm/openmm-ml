@@ -111,7 +111,7 @@ class FeNNixPotentialImpl(MLPotentialImpl):
 
         # Download or look up the model file to use.
         if self.name in FeNNixPotentialImpl.KNOWN_MODELS:
-            url, warn = FeNNixPotentialImpl.KNOWN_MODELS[self.name]
+            url, warn, _ = FeNNixPotentialImpl.KNOWN_MODELS[self.name]
             if warn:
                 import logging
                 logging.warning(f"The model {self.name} is distributed under the restrictive ASL license.  Commercial use is not permitted.")
