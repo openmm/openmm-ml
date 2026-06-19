@@ -176,9 +176,9 @@ class _ComputeFeNNix:
         # Invoke the model to get the energy and forces.
         with jax.enable_x64(self.useDouble):
             if self.periodic:
-                modelOutputs = self.model.energy_and_forces(coordinates=positions, cells=cells, **self.inputs)
+                modelOutputs = self.model.energy_and_forces(coordinates=positions, cells=cells, gpu_preprocessing=True, **self.inputs)
             else:
-                modelOutputs = self.model.energy_and_forces(coordinates=positions, **self.inputs)
+                modelOutputs = self.model.energy_and_forces(coordinates=positions, gpu_preprocessing=True, **self.inputs)
             jaxEnergy, jaxForces = modelOutputs[:2]
             energy = jaxEnergy.item() * self.energyScale
             jaxForces *= self.forceScale
