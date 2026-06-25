@@ -20,17 +20,23 @@ def models_template_variables():
     """Create the data structure available to the Jinja2 renderer when
     filling in the templates.
 
-    This function extracts all of classes in ``openmmml.models`` and returns
-    a list of them
+    This function extracts all of classes in ``openmmml.models`` and
+    ``openmmml.embeddings`` and returns a list of them
     """
     data = {
         'models': [],
+        'embeddings': [],
     }
 
     for _, module in inspect.getmembers(openmmml.models, predicate=inspect.ismodule):
         for name, obj in inspect.getmembers(module, predicate=inspect.isclass):
             if issubclass(obj, openmmml.mlpotential.MLPotentialImpl) and obj != openmmml.mlpotential.MLPotentialImpl:
                 data['models'].append(fullname(obj))
+
+    for _, module in inspect.getmembers(openmmml.embeddings, predicate=inspect.ismodule):
+        for name, obj in inspect.getmembers(module, predicate=inspect.isclass):
+            if issubclass(obj, openmmml.mlpotential.Embedding) and obj != openmmml.mlpotential.Embedding:
+                data['embeddings'].append(fullname(obj))
 
     return data
 

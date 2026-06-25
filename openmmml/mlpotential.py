@@ -31,9 +31,7 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 import openmm
 import openmm.app
-import openmm.unit as unit
-from copy import deepcopy
-from typing import Dict, Iterable, Optional
+from collections.abc import Iterable
 import os
 import shutil
 import tempfile
@@ -56,7 +54,7 @@ class MLPotentialImplFactory(object):
     name of the potential function, and the value should be the name of the
     MLPotentialImplFactory subclass.
     """
-    
+
     def createImpl(self, name: str, **args) -> "MLPotentialImpl":
         """Create a MLPotentialImpl that will be used to implement a MLPotential.
 
@@ -89,11 +87,11 @@ class MLPotentialImpl(object):
     factory that has been registered for that name and uses it to create a
     MLPotentialImpl of the appropriate subclass.
     """
-    
+
     def addForces(self,
                   topology: openmm.app.Topology,
                   system: openmm.System,
-                  atoms: Optional[Iterable[int]],
+                  atoms: Iterable[int] | None,
                   forceGroup: int,
                   **args):
         """Add Force objects to a System to implement the potential function.
@@ -118,6 +116,82 @@ class MLPotentialImpl(object):
             behavior based on extra arguments.
         """
         raise NotImplementedError('Subclasses must implement addForces()')
+
+    def createMixedSystem(self,
+                          topology: openmm.app.Topology,
+                          system: openmm.System,
+                          atoms: list[int],
+                          forceGroup: int,
+                          interpolate: bool,
+                          embedding: str,
+                          **args) -> openmm.System:
+        """Creates a mixed system using a potential-specific embedding method.
+
+        This is invoked by MLPotential.createMixedSystem().  It will only be
+        called with one of the names returned by getSupportedEmbeddings().  If
+        subclasses support any potential-specific embedding methods, they must
+        also provide implementations of those methods by overriding this method.
+        If not, it does not need to be implemented.
+
+        Each embedding method is responsible for implementing interpolation; if
+        interpolate is True, a global parameter "lambda_interpolate" should be
+        present in the returned system, with the behavior as described by
+        MLPotential.createMixedSystem().
+
+        Parameters
+        ----------
+        topology: Topology
+            the Topology for which to create a System
+        system: System
+            a System that models the Topology with a conventional force field
+        atoms: Iterable[int]
+            the indices of all atoms whose interactions should be computed with
+            this potential
+        forceGroup: int
+            the force group the ML potential's Forces should be placed in
+        interpolate: bool
+            if True, create a System that can smoothly interpolate between the
+            conventional and ML potentials
+        embedding: str
+            the name of the embedding method (will always be one in the list
+            returned by the getSupportedEmbeddings() method)
+        args:
+            any additional arguments for the potential or embedding method
+
+        Returns
+        -------
+        a newly created System object that uses this potential function and the
+        requested embedding method to model the Topology
+        """
+
+        raise NotImplementedError('Subclasses must implement createMixedSystem()')
+
+    def getSupportedEmbeddings(self) -> list[str]:
+        """Retrieves a list of names of supported embedding methods (for the
+        creation of mixed ML/MM systems) specific to this potential.  If one of
+        these names is provided instead of providing the name of a generic
+        embedding plugin, embedding will be performed by the potential itself.
+
+        This is invoked by MLPotential.createMixedSystem().  If a subclass
+        wishes to define one or more potential-specific embedding methods, it
+        should implement this method; otherwise, it does not need to.
+        """
+
+        return []
+
+    def getMLLongRange(self) -> bool | None:
+        """Returns whether ML interactions are local (False), or long-ranged
+        (True) when periodic boundary conditions are present.  This controls
+        which interactions are included by some ML/MM embedding methods.
+        Consult the documentation for each embedding method for more details.
+        None can be returned if the nature of the interactions is not known by
+        the MLPotentialImpl.
+
+        The default implementation of this method, used if a subclass does not
+        override it, always returns None.
+        """
+
+        return None
 
     def _getTorchDevice(self, args):
         """This is a utility routine for use by subclasses that are implemented with PyTorch.  It selects what device
@@ -157,6 +231,7 @@ class MLPotentialImpl(object):
                     os.replace(tempPath, targetPath)
         return targetPath
 
+
 class MLPotential(object):
     """A potential function that can be used in simulations.
 
@@ -183,8 +258,9 @@ class MLPotential(object):
     >>> ml_system = potential.createMixedSystem(topology, mm_system, ml_atoms)
     """
 
-    _implFactories: Dict[str, MLPotentialImplFactory] = {}
-    
+    _implFactories: dict[str, MLPotentialImplFactory] = {}
+    _embeddingFactories: dict[str, "EmbeddingFactory"] = {}
+
     def __init__(self, name: str, **args):
         """Create a MLPotential.
 
@@ -209,7 +285,7 @@ class MLPotential(object):
         topology: Topology
             the Topology for which to create a System
         removeCMMotion: bool
-            if true, a CMMotionRemover will be added to the System. 
+            if true, a CMMotionRemover will be added to the System.
         args:
             particular potential functions may define additional arguments that can
             be used to customize them.  See the documentation on the specific
@@ -239,36 +315,28 @@ class MLPotential(object):
                           removeConstraints: bool = True,
                           forceGroup: int = 0,
                           interpolate: bool = False,
+                          embedding: str = 'mechanical',
                           **args) -> openmm.System:
         """Create a System that is partly modeled with this potential and partly
         with a conventional force field.
 
-        To use this method, first create a System that is entirely modeled with the
-        conventional force field.  Pass it to this method, along with the indices of the
-        atoms to model with this potential (the "ML subset").  It returns a new System
-        that is identical to the original one except for the following changes.
+        To use this method, first create a System that is entirely modeled with
+        the conventional force field.  Pass it to this method, along with the
+        indices of the atoms to model with this potential (the "ML subset").
 
-        1. Removing all bonds, angles, and torsions for which *all* atoms are in the
-           ML subset.
-        2. For every NonbondedForce and CustomNonbondedForce, adding exceptions/exclusions
-           to prevent atoms in the ML subset from interacting with each other.
-        3. (Optional) Removing constraints between atoms that are both in the ML subset.
-        4. Adding Forces as necessary to compute the internal energy of the ML subset
-           with this potential.
+        If interpolate is False, the resulting system will compute the
+        interactions between atoms outside of the ML subset with the
+        conventional force field, the interactions between atoms within the ML
+        subset with the ML potential, and the interactions between atoms within
+        and outside of the ML subset according to a selectable embedding method.
 
-        Alternatively, the System can include Forces to compute the energy both with the
-        conventional force field and with this potential, and to smoothly interpolate
-        between them.  In that case, it creates a CustomCVForce containing the following.
-
-        1. The Forces to compute this potential.
-        2. Forces to compute the bonds, angles, and torsions that were removed above.
-        3. For every NonbondedForce, a corresponding CustomBondForce to compute the
-           nonbonded interactions within the ML subset.
-
-        The CustomCVForce defines a global parameter called "lambda_interpolate" that interpolates
-        between the two potentials.  When lambda_interpolate=0, the energy is computed entirely with
-        the conventional force field.  When lambda_interpolate=1, the energy is computed entirely with
-        the ML potential.  You can set its value by calling setParameter() on the Context.
+        If interpolate is True, a global parameter "lambda_interpolate" will be
+        made available permitting linear interpolation between the conventional
+        force field and the mixed ML/MM system.  When lambda_interpolate=0, the
+        energy is computed entirely with the conventional force field.  When
+        lambda_interpolate=1, the energy is computed with the ML potential and
+        the selected embedding method.  You can set its value by calling
+        setParameter() on the Context.
 
         Parameters
         ----------
@@ -285,124 +353,66 @@ class MLPotential(object):
         forceGroup: int
             the force group the ML potential's Forces should be placed in
         interpolate: bool
-            if True, create a System that can smoothly interpolate between the conventional
-            and ML potentials
+            if True, create a System that can smoothly interpolate between the
+            conventional and ML potentials
+        embedding: str
+            the name of the embedding method.  The builtin 'mechanical'
+            embedding method is used by default.  Other generic embedding
+            methods may be available, as well as embedding methods specific to
+            the ML potential selected.  MLPotential.getSupportedEmbeddings()
+            will report all embedding methods accepted by the potential.
         args:
-            particular potential functions may define additional arguments that can
-            be used to customize them.  See the documentation on the specific
-            potential functions for more information.
+            particular potential functions or embedding methods may define
+            additional arguments that can be used to customize them.  See the
+            documentation on the specific potential functions and embedding
+            methods for more information.
 
         Returns
         -------
         a newly created System object that uses this potential function to model the Topology
         """
-        # Create the new System, removing bonded interactions within the ML subset.
-
-        newSystem = self._removeBonds(system, atoms, True, removeConstraints)
-
-        # Add nonbonded exceptions and exclusions.
 
         atomList = list(atoms)
-        for force in newSystem.getForces():
-            if isinstance(force, openmm.NonbondedForce):
-                for i in range(len(atomList)):
-                    for j in range(i):
-                        force.addException(atomList[i], atomList[j], 0, 1, 0, True)
-            elif isinstance(force, openmm.CustomNonbondedForce):
-                existing = set(tuple(force.getExclusionParticles(i)) for i in range(force.getNumExclusions()))
-                for i in range(len(atomList)):
-                    a1 = atomList[i]
-                    for j in range(i):
-                        a2 = atomList[j]
-                        if (a1, a2) not in existing and (a2, a1) not in existing:
-                            force.addExclusion(a1, a2)
 
-        # Add the ML potential.
-
-        if not interpolate:
-            self._impl.addForces(topology, newSystem, atomList, forceGroup, **args)
+        # See if we are given an embedding name that the potential can handle.
+        customEmbeddings = self._impl.getSupportedEmbeddings()
+        if embedding in customEmbeddings:
+            system = self._impl.createMixedSystem(topology, system, atomList, forceGroup, interpolate, embedding, **args)
         else:
-            # Create a CustomCVForce and put the ML forces inside it.
+            # Fall back on an embedding plugin.
+            embeddingInstance = MLPotential._embeddingFactories[embedding].createEmbedding(embedding)
+            system = embeddingInstance.createMixedSystem(self._impl, topology, system, atomList, forceGroup, interpolate, **args)
 
-            cv = openmm.CustomCVForce('')
-            cv.addGlobalParameter('lambda_interpolate', 1)
-            tempSystem = openmm.System()
-            self._impl.addForces(topology, tempSystem, atomList, forceGroup, **args)
-            mlVarNames = []
-            for i, force in enumerate(tempSystem.getForces()):
-                name = f'mlForce{i+1}'
-                cv.addCollectiveVariable(name, deepcopy(force))
-                mlVarNames.append(name)
+        if removeConstraints:
+            # Remove all constraints with both atoms in the ML subset.
+            atomSet = set(atoms)
+            constraintsToRemove = []
+            for constraint in range(system.getNumConstraints()):
+                p1, p2, _ = system.getConstraintParameters(constraint)
+                if p1 in atomSet and p2 in atomSet:
+                    constraintsToRemove.append(constraint)
+            for constraint in reversed(constraintsToRemove):
+                system.removeConstraint(constraint)
 
-            # Create Forces for all the bonded interactions within the ML subset and add them to the CustomCVForce.
+        return system
 
-            bondedSystem = self._removeBonds(system, atoms, False, removeConstraints)
-            bondedForces = []
-            for force in bondedSystem.getForces():
-                if hasattr(force, 'addBond') or hasattr(force, 'addAngle') or hasattr(force, 'addTorsion'):
-                    bondedForces.append(force)
-            mmVarNames = []
-            for i, force in enumerate(bondedForces):
-                name = f'mmForce{i+1}'
-                cv.addCollectiveVariable(name, deepcopy(force))
-                mmVarNames.append(name)
+    def getSupportedEmbeddings(self) -> list[str]:
+        """Retrieves a list of the names of all of the supported embedding
+        methods for this potential.  This includes all available generic
+        embedding methods and all of those specific to the potential.
+        """
 
-            # Create a CustomBondForce that computes all nonbonded interactions within the ML subset.
+        return sorted(set(MLPotential._embeddingFactories.keys()) | set(self._impl.getSupportedEmbeddings()))
 
-            for force in system.getForces():
-                if isinstance(force, openmm.NonbondedForce):
-                    internalNonbonded = openmm.CustomBondForce('138.935456*chargeProd/r + 4*epsilon*((sigma/r)^12-(sigma/r)^6)')
-                    internalNonbonded.addPerBondParameter('chargeProd')
-                    internalNonbonded.addPerBondParameter('sigma')
-                    internalNonbonded.addPerBondParameter('epsilon')
-                    numParticles = system.getNumParticles()
-                    atomCharge = [0]*numParticles
-                    atomSigma = [0]*numParticles
-                    atomEpsilon = [0]*numParticles
-                    for i in range(numParticles):
-                        charge, sigma, epsilon = force.getParticleParameters(i)
-                        atomCharge[i] = charge
-                        atomSigma[i] = sigma
-                        atomEpsilon[i] = epsilon
-                    exceptions = {}
-                    for i in range(force.getNumExceptions()):
-                        p1, p2, chargeProd, sigma, epsilon = force.getExceptionParameters(i)
-                        exceptions[(p1, p2)] = (chargeProd, sigma, epsilon)
-                    for p1 in atomList:
-                        for p2 in atomList:
-                            if p1 == p2:
-                                break
-                            if (p1, p2) in exceptions:
-                                chargeProd, sigma, epsilon = exceptions[(p1, p2)]
-                            elif (p2, p1) in exceptions:
-                                chargeProd, sigma, epsilon = exceptions[(p2, p1)]
-                            else:
-                                chargeProd = atomCharge[p1]*atomCharge[p2]
-                                sigma = 0.5*(atomSigma[p1]+atomSigma[p2])
-                                epsilon = unit.sqrt(atomEpsilon[p1]*atomEpsilon[p2])
-                            if chargeProd._value != 0 or epsilon._value != 0:
-                                internalNonbonded.addBond(p1, p2, [chargeProd, sigma, epsilon])
-                    if internalNonbonded.getNumBonds() > 0:
-                        name = f'mmForce{len(mmVarNames)+1}'
-                        cv.addCollectiveVariable(name, internalNonbonded)
-                        mmVarNames.append(name)
-
-            # Configure the CustomCVForce so lambda_interpolate interpolates between the conventional and ML potentials.
-
-            mlSum = '+'.join(mlVarNames) if len(mlVarNames) > 0 else '0'
-            mmSum = '+'.join(mmVarNames) if len(mmVarNames) > 0 else '0'
-            cv.setEnergyFunction(f'lambda_interpolate*({mlSum}) + (1-lambda_interpolate)*({mmSum})')
-            newSystem.addForce(cv)
-        return newSystem
-
-    def _removeBonds(self, system: openmm.System, atoms: Iterable[int], removeInSet: bool, removeConstraints: bool) -> openmm.System:
+    @staticmethod
+    def _removeBonds(system: openmm.System, atoms: list[int], removeInSet: bool) -> openmm.System:
         """Copy a System, removing all bonded interactions between atoms in (or not in) a particular set.
 
         Parameters
         ----------
         system: System
             the System to copy
-        atoms: Iterable[int]
+        atoms: list[int]
             a set of atom indices
         removeInSet: bool
             if True, any bonded term connecting atoms in the specified set is removed.  If False,
@@ -446,15 +456,6 @@ class MLPotential(object):
                 if shouldRemove(torsionAtoms):
                     torsions.remove(torsion)
 
-        # Optionally remove constraints.
-
-        if removeConstraints:
-            for constraints in root.findall('./Constraints'):
-                for constraint in constraints.findall('Constraint'):
-                    constraintAtoms = [int(constraint.attrib[p]) for p in ('p1', 'p2')]
-                    if shouldRemove(constraintAtoms):
-                        constraints.remove(constraint)
-
         # Create a new System from it.
 
         return openmm.XmlSerializer.deserialize(ET.tostring(root, encoding='unicode'))
@@ -472,8 +473,89 @@ class MLPotential(object):
         """
         MLPotential._implFactories[name] = factory
 
+    @staticmethod
+    def registerEmbeddingFactory(name: str, factory: "EmbeddingFactory"):
+        """Register a new embedding method that can be used with MLPotential.
 
-# Register any potential functions defined by entry points.
+        Parameters
+        ----------
+        name: str
+            the name of the embedding method to register for use
+        factory: MLPotentialImplFactory
+            a factory object that will be used to create Embedding objects
+        """
+        MLPotential._embeddingFactories[name] = factory
+
+
+class EmbeddingFactory:
+    """Abstract interface for classes that create Embedding objects.
+
+    If you are defining a new embedding method, you need to create subclasses of
+    Embedding and EmbeddingFactory, and register an instance of the factory by
+    calling MLPotential.registerEmbeddingFactory().  Alternatively, if a Python
+    package creates an entry point in the group "openmmml.embeddings", the
+    embedding will be registered automatically.  The entry point name is the
+    name of the embedding method, and the value should be the name of the
+    EmbeddingFactory subclass.
+    """
+
+    def createEmbedding(self, name: str) -> "Embedding":
+        """Create an Embedding that will be used to implement an embedding
+        method.
+
+        When a mixed ML/MM system is created with an MLPotential, it invokes
+        this method to create an object implementing the requested embedding.
+        Subclasses must implement this method to return an instance of the
+        correct Embedding subclass.
+
+        Parameters
+        ----------
+        name: str
+            the name of the embedding given to MLPotential.createMixedSystem()
+
+        Returns
+        -------
+        an Embedding instance that implements the embedding
+        """
+
+        raise NotImplementedError('Subclasses must implement createEmbedding()')
+
+
+class Embedding:
+    """Abstract interface for classes that implement embedding methods.
+
+    If you are defining a new embedding method, you need to create subclasses of
+    of Embedding and EmbeddingFactory.  When a user specifies a name for an
+    embedding method that is not a custom embedding method supported by that
+    potential, MLPotential looks up the factory that has been registered for
+    that name and uses it to create an Embedding of the appropriate subclass.
+    """
+
+    def createMixedSystem(self,
+                          potential: MLPotentialImpl,
+                          topology: openmm.app.Topology,
+                          system: openmm.System,
+                          atoms: list[int],
+                          forceGroup: int,
+                          interpolate: bool,
+                          **args):
+        """Creates a mixed system using the embedding method.
+
+        This is invoked by MLPotential.createMixedSystem().  It must be
+        implemented in subclasses.  The implementation should call
+        potential.addForces() as needed to generate the appropriate ML forces.
+
+        Each embedding method is responsible for implementing interpolation; if
+        interpolate is True, a global parameter "lambda_interpolate" should be
+        present in the returned system, with the behavior as described by
+        MLPotential.createMixedSystem().
+        """
+
+        raise NotImplementedError('Subclasses must implement createMixedSystem()')
+
+# Register any potential functions or embeddings defined by entry points.
 
 for potential in entry_points(group='openmmml.potentials'):
     MLPotential.registerImplFactory(potential.name, potential.load()())
+for embedding in entry_points(group='openmmml.embeddings'):
+    MLPotential.registerEmbeddingFactory(embedding.name, embedding.load()())

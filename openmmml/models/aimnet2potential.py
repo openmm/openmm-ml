@@ -93,6 +93,14 @@ class AIMNet2PotentialImpl(MLPotentialImpl):
         force.setUsesPeriodicBoundaryConditions(periodic)
         system.addForce(force)
 
+    def getMLLongRange(self) -> bool | None:
+        # NOTE: By default, creating an AIMNet2Calculator gives a coulomb_method
+        # of "simple" (which changes to the cutoff-based "dsf" method with PBCs;
+        # see https://isayevlab.github.io/aimnetcentral/long_range/).  OpenMM-ML
+        # does not expose any option to change this; if we change this behavior
+        # in the future, or other AIMNet models we support in the future have
+        # different behavior, this must be updated.
+        return False
 
 def _computeAIMNet2(state, model, numbers, charge, multiplicity, indices, periodic):
     import torch

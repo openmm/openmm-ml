@@ -59,11 +59,12 @@ class FeNNixPotentialImpl(MLPotentialImpl):
     >>> potential = MLPotential('fennix', modelPath='custom_fennix_model.fnx')
     """
 
+    # (URL, restrictive license, long-range)
     KNOWN_MODELS = {
-        "fennix-bio1-small": ("https://github.com/FeNNol-tools/FeNNol-PMC/raw/refs/heads/main/FENNIX-BIO1/v1.0/fennix-bio1S.fnx", True),
-        "fennix-bio1-medium": ("https://github.com/FeNNol-tools/FeNNol-PMC/raw/refs/heads/main/FENNIX-BIO1/v1.0/fennix-bio1M.fnx", True),
-        "fennix-bio1-small-finetune-ions": ("https://github.com/FeNNol-tools/FeNNol-PMC/raw/refs/heads/main/FENNIX-BIO1/v1.0-finetuneIons/fennix-bio1S-finetuneIons.fnx", True),
-        "fennix-bio1-medium-finetune-ions": ("https://github.com/FeNNol-tools/FeNNol-PMC/raw/refs/heads/main/FENNIX-BIO1/v1.0-finetuneIons/fennix-bio1M-finetuneIons.fnx", True),
+        "fennix-bio1-small": ("https://github.com/FeNNol-tools/FeNNol-PMC/raw/refs/heads/main/FENNIX-BIO1/v1.0/fennix-bio1S.fnx", True, False),
+        "fennix-bio1-medium": ("https://github.com/FeNNol-tools/FeNNol-PMC/raw/refs/heads/main/FENNIX-BIO1/v1.0/fennix-bio1M.fnx", True, False),
+        "fennix-bio1-small-finetune-ions": ("https://github.com/FeNNol-tools/FeNNol-PMC/raw/refs/heads/main/FENNIX-BIO1/v1.0-finetuneIons/fennix-bio1S-finetuneIons.fnx", True, False),
+        "fennix-bio1-medium-finetune-ions": ("https://github.com/FeNNol-tools/FeNNol-PMC/raw/refs/heads/main/FENNIX-BIO1/v1.0-finetuneIons/fennix-bio1M-finetuneIons.fnx", True, False),
     }
 
     def __init__(self, name: str, modelPath: str | None) -> None:
@@ -110,7 +111,7 @@ class FeNNixPotentialImpl(MLPotentialImpl):
 
         # Download or look up the model file to use.
         if self.name in FeNNixPotentialImpl.KNOWN_MODELS:
-            url, warn = FeNNixPotentialImpl.KNOWN_MODELS[self.name]
+            url, warn, _ = FeNNixPotentialImpl.KNOWN_MODELS[self.name]
             if warn:
                 import logging
                 logging.warning(f"The model {self.name} is distributed under the restrictive ASL license.  Commercial use is not permitted.")
@@ -124,7 +125,11 @@ class FeNNixPotentialImpl(MLPotentialImpl):
             raise ValueError(f"Unsupported FeNNix model: {self.name} (options are {supported_options})")
 
         # Load the model.
-        model = fennol.FENNIX.load(modelPath, **args)
+        fennix_args = {}
+        for key in ("use_atom_padding", "graph_config"):
+            if key in args:
+                fennix_args[key] = args[key]
+        model = fennol.FENNIX.load(modelPath, **fennix_args)
         energyScale = (unit.hartree / model.Ha_to_model_energy * unit.AVOGADRO_CONSTANT_NA).value_in_unit(unit.kilojoule_per_mole)
         forceScale = (energyScale / unit.angstrom).value_in_unit(unit.nanometer ** -1)
 
@@ -150,6 +155,13 @@ class FeNNixPotentialImpl(MLPotentialImpl):
         force.setForceGroup(forceGroup)
         force.setUsesPeriodicBoundaryConditions(periodic)
         system.addForce(force)
+
+    def getMLLongRange(self) -> bool | None:
+        if self.name in FeNNixPotentialImpl.KNOWN_MODELS:
+            _, _, longRange = FeNNixPotentialImpl.KNOWN_MODELS[self.name]
+            return longRange
+        return None
+
 
 class _ComputeFeNNix:
     def __init__(self, model, energyScale, forceScale, indices, inputs, periodic, useDouble):
