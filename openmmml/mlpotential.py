@@ -259,7 +259,7 @@ class MLPotential(object):
     """
 
     _implFactories: dict[str, MLPotentialImplFactory] = {}
-    _embeddingImplFactories: dict[str, "MLEmbeddingImplFactory"] = {}
+    _embeddingFactories: dict[str, "EmbeddingFactory"] = {}
 
     def __init__(self, name: str, **args):
         """Create a MLPotential.
@@ -380,8 +380,8 @@ class MLPotential(object):
             system = self._impl.createMixedSystem(topology, system, atomList, forceGroup, interpolate, embedding, **args)
         else:
             # Fall back on an embedding plugin.
-            embeddingImpl = MLPotential._embeddingImplFactories[embedding].createImpl(embedding)
-            system = embeddingImpl.createMixedSystem(self._impl, topology, system, atomList, forceGroup, interpolate, **args)
+            embeddingInstance = MLPotential._embeddingFactories[embedding].createEmbedding(embedding)
+            system = embeddingInstance.createMixedSystem(self._impl, topology, system, atomList, forceGroup, interpolate, **args)
 
         if removeConstraints:
             # Remove all constraints with both atoms in the ML subset.
@@ -402,7 +402,7 @@ class MLPotential(object):
         embedding methods and all of those specific to the potential.
         """
 
-        return sorted(set(MLPotential._embeddingImplFactories.keys()) | set(self._impl.getSupportedEmbeddings()))
+        return sorted(set(MLPotential._embeddingFactories.keys()) | set(self._impl.getSupportedEmbeddings()))
 
     @staticmethod
     def _removeBonds(system: openmm.System, atoms: list[int], removeInSet: bool) -> openmm.System:
@@ -474,7 +474,7 @@ class MLPotential(object):
         MLPotential._implFactories[name] = factory
 
     @staticmethod
-    def registerEmbeddingImplFactory(name: str, factory: "MLEmbeddingImplFactory"):
+    def registerEmbeddingFactory(name: str, factory: "EmbeddingFactory"):
         """Register a new embedding method that can be used with MLPotential.
 
         Parameters
@@ -482,31 +482,31 @@ class MLPotential(object):
         name: str
             the name of the embedding method to register for use
         factory: MLPotentialImplFactory
-            a factory object that will be used to create MLEmbeddingImpl objects
+            a factory object that will be used to create Embedding objects
         """
-        MLPotential._embeddingImplFactories[name] = factory
+        MLPotential._embeddingFactories[name] = factory
 
 
-class MLEmbeddingImplFactory:
-    """Abstract interface for classes that create MLEmbeddingImpl objects.
+class EmbeddingFactory:
+    """Abstract interface for classes that create Embedding objects.
 
     If you are defining a new embedding method, you need to create subclasses of
-    of MLEmbeddingImpl and MLEmbeddingImplFactory, and register an instance of
-    the factory by calling MLPotential.registerEmbeddingImplFactory().
-    Alternatively, if a Python package creates an entry point in the group
-    "openmmml.embeddings", the embedding will be registered automatically.  The
-    entry point name is the name of the embedding method, and the value should
-    be the name of the MLEmbeddingImplFactory subclass.
+    Embedding and EmbeddingFactory, and register an instance of the factory by
+    calling MLPotential.registerEmbeddingFactory().  Alternatively, if a Python
+    package creates an entry point in the group "openmmml.embeddings", the
+    embedding will be registered automatically.  The entry point name is the
+    name of the embedding method, and the value should be the name of the
+    EmbeddingFactory subclass.
     """
 
-    def createImpl(self, name: str) -> "MLEmbeddingImpl":
-        """Create an MLEmbeddingImpl that will be used to implement an embedding
+    def createEmbedding(self, name: str) -> "Embedding":
+        """Create an Embedding that will be used to implement an embedding
         method.
 
         When a mixed ML/MM system is created with an MLPotential, it invokes
         this method to create an object implementing the requested embedding.
         Subclasses must implement this method to return an instance of the
-        correct MLEmbeddingImpl subclass.
+        correct Embedding subclass.
 
         Parameters
         ----------
@@ -515,21 +515,20 @@ class MLEmbeddingImplFactory:
 
         Returns
         -------
-        an MLEmbeddingImpl that implements the embedding
+        an Embedding instance that implements the embedding
         """
 
-        raise NotImplementedError('Subclasses must implement createImpl()')
+        raise NotImplementedError('Subclasses must implement createEmbedding()')
 
 
-class MLEmbeddingImpl:
+class Embedding:
     """Abstract interface for classes that implement embedding methods.
 
     If you are defining a new embedding method, you need to create subclasses of
-    of MLEmbeddingImpl and MLEmbeddingImplFactory.  When a user specifies a name
-    for an embedding method that is not a custom embedding method supported by
-    that potential, MLPotential looks up the factory that has been registered
-    for that name and uses it to create an MLEmbeddingImpl of the appropriate
-    subclass.
+    of Embedding and EmbeddingFactory.  When a user specifies a name for an
+    embedding method that is not a custom embedding method supported by that
+    potential, MLPotential looks up the factory that has been registered for
+    that name and uses it to create an Embedding of the appropriate subclass.
     """
 
     def createMixedSystem(self,
@@ -559,4 +558,4 @@ class MLEmbeddingImpl:
 for potential in entry_points(group='openmmml.potentials'):
     MLPotential.registerImplFactory(potential.name, potential.load()())
 for embedding in entry_points(group='openmmml.embeddings'):
-    MLPotential.registerEmbeddingImplFactory(embedding.name, embedding.load()())
+    MLPotential.registerEmbeddingFactory(embedding.name, embedding.load()())

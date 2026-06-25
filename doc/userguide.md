@@ -366,6 +366,6 @@ packages listed above are the ones for which OpenMM-ML has built in support.  Ot
 defining two classes that subclass `MLPotentialImpl` and `MLPotentialImplFactory`, then registering them by specifying
 an [entry point](https://packaging.python.org/en/latest/specifications/entry-points/) in the group `openmmml.potentials`.
 They can also provide generic embedding methods (that can be used with any potential from OpenMM-ML or any other package)
-by similarly defining subclasses of `MLEmbeddingImpl` and `MLEmbeddingImplFactory`, and registering them with an entry
-point in the group `openmmml.embeddings`.  Consult the documentation for other packages to see whether they provide
-interfaces for OpenMM-ML.
+by similarly defining subclasses of `Embedding` and `EmbeddingFactory`, and registering them with an entry point in the
+group `openmmml.embeddings`.  Consult the documentation for other packages to see whether they provide interfaces for
+OpenMM-ML.

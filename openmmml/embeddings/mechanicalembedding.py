@@ -29,23 +29,23 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 
-from openmmml.mlpotential import MLPotential, MLPotentialImpl, MLEmbeddingImpl, MLEmbeddingImplFactory
+from openmmml.mlpotential import MLPotential, MLPotentialImpl, Embedding, EmbeddingFactory
 import openmm
 import openmm.app
 import openmm.unit as unit
 from copy import deepcopy
 
-class MechanicalEmbeddingImplFactory(MLEmbeddingImplFactory):
-    """This is the factory that creates MechanicalEmbeddingImpl objects."""
+class MechanicalEmbeddingFactory(EmbeddingFactory):
+    """This is the factory that creates MechanicalEmbedding objects."""
 
-    def createImpl(self, name: str, **args) -> MLEmbeddingImpl:
+    def createEmbedding(self, name: str, **args) -> Embedding:
 
         # name should always be "mechanical" for this plugin.
 
-        return MechanicalEmbeddingImpl()
+        return MechanicalEmbedding()
 
 
-class MechanicalEmbeddingImpl(MLEmbeddingImpl):
+class MechanicalEmbedding(Embedding):
     """Mechanical embedding.  This is the default embedding method, and uses the
     conventional force field to compute the interactions between the atoms
     within the ML subset and those outside of it.

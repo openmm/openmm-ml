@@ -69,7 +69,7 @@ setup(
             'aceff-2.0 = openmmml.models.torchmdnetpotential:TorchMDNetPotentialImplFactory',
         ],
         'openmmml.embeddings': [
-            'mechanical = openmmml.embeddings.mechanicalembedding:MechanicalEmbeddingImplFactory',
+            'mechanical = openmmml.embeddings.mechanicalembedding:MechanicalEmbeddingFactory',
         ]
     }
 )
