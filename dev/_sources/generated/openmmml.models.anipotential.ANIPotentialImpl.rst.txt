@@ -15,6 +15,9 @@
    
       ~ANIPotentialImpl.__init__
       ~ANIPotentialImpl.addForces
+      ~ANIPotentialImpl.createMixedSystem
+      ~ANIPotentialImpl.getMLLongRange
+      ~ANIPotentialImpl.getSupportedEmbeddings
    
    
 

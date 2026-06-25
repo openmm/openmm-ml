@@ -1,0 +1,23 @@
+﻿openmmml.embeddings.mechanicalembedding.MechanicalEmbedding
+===========================================================
+
+.. currentmodule:: openmmml.embeddings.mechanicalembedding
+
+.. autoclass:: MechanicalEmbedding
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~MechanicalEmbedding.__init__
+      ~MechanicalEmbedding.createMixedSystem
+   
+   
+
+   
+   
+   

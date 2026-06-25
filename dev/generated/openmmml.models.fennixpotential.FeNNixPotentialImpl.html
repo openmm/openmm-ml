@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>openmmml.models.fennixpotential.FeNNixPotentialImpl &#8212; OpenMM ML 1.7dev_a0b60ad documentation</title>
+    <title>openmmml.models.fennixpotential.FeNNixPotentialImpl &#8212; OpenMM ML 1.7dev_6d16a80 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
 
-    <script src="../_static/documentation_options.js?v=a0841e02"></script>
+    <script src="../_static/documentation_options.js?v=930fe094"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'generated/openmmml.models.fennixpotential.FeNNixPotentialImpl';</script>
@@ -391,6 +391,8 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="openmmml.mlpotential.MLPotentialImplFactory.html">openmmml.mlpotential.MLPotentialImplFactory</a></li>
 <li class="toctree-l1"><a class="reference internal" href="openmmml.mlpotential.MLPotentialImpl.html">openmmml.mlpotential.MLPotentialImpl</a></li>
+<li class="toctree-l1"><a class="reference internal" href="openmmml.mlpotential.EmbeddingFactory.html">openmmml.mlpotential.EmbeddingFactory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="openmmml.mlpotential.Embedding.html">openmmml.mlpotential.Embedding</a></li>
 </ul>
 <ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="openmmml.models.aimnet2potential.AIMNet2PotentialImpl.html">openmmml.models.aimnet2potential.AIMNet2PotentialImpl</a></li>
@@ -402,6 +404,9 @@
 <li class="toctree-l1"><a class="reference internal" href="openmmml.models.nequippotential.NequIPPotentialImpl.html">openmmml.models.nequippotential.NequIPPotentialImpl</a></li>
 <li class="toctree-l1"><a class="reference internal" href="openmmml.models.orbpotential.OrbPotentialImpl.html">openmmml.models.orbpotential.OrbPotentialImpl</a></li>
 <li class="toctree-l1"><a class="reference internal" href="openmmml.models.torchmdnetpotential.TorchMDNetPotentialImpl.html">openmmml.models.torchmdnetpotential.TorchMDNetPotentialImpl</a></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="openmmml.embeddings.mechanicalembedding.MechanicalEmbedding.html">openmmml.embeddings.mechanicalembedding.MechanicalEmbedding</a></li>
 </ul>
 </div>
 </nav></div>
@@ -505,6 +510,15 @@ download them from the FeNNol-PMC repository.</p>
 <tr class="row-even"><td><p><a class="reference internal" href="#openmmml.models.fennixpotential.FeNNixPotentialImpl.addForces" title="openmmml.models.fennixpotential.FeNNixPotentialImpl.addForces"><code class="xref py py-obj docutils literal notranslate"><span class="pre">addForces</span></code></a>(topology, system, atoms, forceGroup)</p></td>
 <td><p>Add Force objects to a System to implement the potential function.</p></td>
 </tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#openmmml.models.fennixpotential.FeNNixPotentialImpl.createMixedSystem" title="openmmml.models.fennixpotential.FeNNixPotentialImpl.createMixedSystem"><code class="xref py py-obj docutils literal notranslate"><span class="pre">createMixedSystem</span></code></a>(topology, system, atoms, ...)</p></td>
+<td><p>Creates a mixed system using a potential-specific embedding method.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#openmmml.models.fennixpotential.FeNNixPotentialImpl.getMLLongRange" title="openmmml.models.fennixpotential.FeNNixPotentialImpl.getMLLongRange"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getMLLongRange</span></code></a>()</p></td>
+<td><p>Returns whether ML interactions are local (False), or long-ranged (True) when periodic boundary conditions are present.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#openmmml.models.fennixpotential.FeNNixPotentialImpl.getSupportedEmbeddings" title="openmmml.models.fennixpotential.FeNNixPotentialImpl.getSupportedEmbeddings"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getSupportedEmbeddings</span></code></a>()</p></td>
+<td><p>Retrieves a list of names of supported embedding methods (for the creation of mixed ML/MM systems) specific to this potential.</p></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -537,6 +551,69 @@ behavior based on extra arguments.</p></li>
 </ul>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="openmmml.models.fennixpotential.FeNNixPotentialImpl.getMLLongRange">
+<span class="sig-name descname"><span class="pre">getMLLongRange</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="headerlink" href="#openmmml.models.fennixpotential.FeNNixPotentialImpl.getMLLongRange" title="Link to this definition">#</a></dt>
+<dd><p>Returns whether ML interactions are local (False), or long-ranged
+(True) when periodic boundary conditions are present.  This controls
+which interactions are included by some ML/MM embedding methods.
+Consult the documentation for each embedding method for more details.
+None can be returned if the nature of the interactions is not known by
+the MLPotentialImpl.</p>
+<p>The default implementation of this method, used if a subclass does not
+override it, always returns None.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="openmmml.models.fennixpotential.FeNNixPotentialImpl.createMixedSystem">
+<span class="sig-name descname"><span class="pre">createMixedSystem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">topology</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Topology</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">system</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">System</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atoms</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">forceGroup</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interpolate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">embedding</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">System</span></span></span><a class="headerlink" href="#openmmml.models.fennixpotential.FeNNixPotentialImpl.createMixedSystem" title="Link to this definition">#</a></dt>
+<dd><p>Creates a mixed system using a potential-specific embedding method.</p>
+<p>This is invoked by MLPotential.createMixedSystem().  It will only be
+called with one of the names returned by getSupportedEmbeddings().  If
+subclasses support any potential-specific embedding methods, they must
+also provide implementations of those methods by overriding this method.
+If not, it does not need to be implemented.</p>
+<p>Each embedding method is responsible for implementing interpolation; if
+interpolate is True, a global parameter “lambda_interpolate” should be
+present in the returned system, with the behavior as described by
+MLPotential.createMixedSystem().</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>topology</strong> (<em>Topology</em>) – the Topology for which to create a System</p></li>
+<li><p><strong>system</strong> (<em>System</em>) – a System that models the Topology with a conventional force field</p></li>
+<li><p><strong>atoms</strong> (<em>Iterable</em><em>[</em><em>int</em><em>]</em>) – the indices of all atoms whose interactions should be computed with
+this potential</p></li>
+<li><p><strong>forceGroup</strong> (<em>int</em>) – the force group the ML potential’s Forces should be placed in</p></li>
+<li><p><strong>interpolate</strong> (<em>bool</em>) – if True, create a System that can smoothly interpolate between the
+conventional and ML potentials</p></li>
+<li><p><strong>embedding</strong> (<em>str</em>) – the name of the embedding method (will always be one in the list
+returned by the getSupportedEmbeddings() method)</p></li>
+<li><p><strong>args</strong> – any additional arguments for the potential or embedding method</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><em>a newly created System object that uses this potential function and the</em></p></li>
+<li><p><em>requested embedding method to model the Topology</em></p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="openmmml.models.fennixpotential.FeNNixPotentialImpl.getSupportedEmbeddings">
+<span class="sig-name descname"><span class="pre">getSupportedEmbeddings</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#openmmml.models.fennixpotential.FeNNixPotentialImpl.getSupportedEmbeddings" title="Link to this definition">#</a></dt>
+<dd><p>Retrieves a list of names of supported embedding methods (for the
+creation of mixed ML/MM systems) specific to this potential.  If one of
+these names is provided instead of providing the name of a generic
+embedding plugin, embedding will be performed by the potential itself.</p>
+<p>This is invoked by MLPotential.createMixedSystem().  If a subclass
+wishes to define one or more potential-specific embedding methods, it
+should implement this method; otherwise, it does not need to.</p>
 </dd></dl>
 
 </dd></dl>
@@ -593,6 +670,9 @@ behavior based on extra arguments.</p></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#openmmml.models.fennixpotential.FeNNixPotentialImpl"><code class="docutils literal notranslate"><span class="pre">FeNNixPotentialImpl</span></code></a><ul class="nav section-nav flex-column">
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#openmmml.models.fennixpotential.FeNNixPotentialImpl.__init__"><code class="docutils literal notranslate"><span class="pre">FeNNixPotentialImpl.__init__()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#openmmml.models.fennixpotential.FeNNixPotentialImpl.addForces"><code class="docutils literal notranslate"><span class="pre">FeNNixPotentialImpl.addForces()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#openmmml.models.fennixpotential.FeNNixPotentialImpl.getMLLongRange"><code class="docutils literal notranslate"><span class="pre">FeNNixPotentialImpl.getMLLongRange()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#openmmml.models.fennixpotential.FeNNixPotentialImpl.createMixedSystem"><code class="docutils literal notranslate"><span class="pre">FeNNixPotentialImpl.createMixedSystem()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#openmmml.models.fennixpotential.FeNNixPotentialImpl.getSupportedEmbeddings"><code class="docutils literal notranslate"><span class="pre">FeNNixPotentialImpl.getSupportedEmbeddings()</span></code></a></li>
 </ul>
 </li>
 </ul>

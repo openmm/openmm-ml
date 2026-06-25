@@ -15,6 +15,9 @@
    
       ~NequIPPotentialImpl.__init__
       ~NequIPPotentialImpl.addForces
+      ~NequIPPotentialImpl.createMixedSystem
+      ~NequIPPotentialImpl.getMLLongRange
+      ~NequIPPotentialImpl.getSupportedEmbeddings
    
    
 

@@ -15,6 +15,9 @@
    
       ~FeNNixPotentialImpl.__init__
       ~FeNNixPotentialImpl.addForces
+      ~FeNNixPotentialImpl.createMixedSystem
+      ~FeNNixPotentialImpl.getMLLongRange
+      ~FeNNixPotentialImpl.getSupportedEmbeddings
    
    
 

@@ -1,0 +1,23 @@
+﻿openmmml.mlpotential.EmbeddingFactory
+=====================================
+
+.. currentmodule:: openmmml.mlpotential
+
+.. autoclass:: EmbeddingFactory
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~EmbeddingFactory.__init__
+      ~EmbeddingFactory.createEmbedding
+   
+   
+
+   
+   
+   

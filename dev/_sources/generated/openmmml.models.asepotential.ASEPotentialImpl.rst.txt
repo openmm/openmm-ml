@@ -15,6 +15,9 @@
    
       ~ASEPotentialImpl.__init__
       ~ASEPotentialImpl.addForces
+      ~ASEPotentialImpl.createMixedSystem
+      ~ASEPotentialImpl.getMLLongRange
+      ~ASEPotentialImpl.getSupportedEmbeddings
    
    
 

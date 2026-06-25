@@ -16,6 +16,8 @@
       ~MLPotential.__init__
       ~MLPotential.createMixedSystem
       ~MLPotential.createSystem
+      ~MLPotential.getSupportedEmbeddings
+      ~MLPotential.registerEmbeddingFactory
       ~MLPotential.registerImplFactory
    
    

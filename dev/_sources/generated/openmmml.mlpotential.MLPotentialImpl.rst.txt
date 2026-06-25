@@ -15,6 +15,9 @@
    
       ~MLPotentialImpl.__init__
       ~MLPotentialImpl.addForces
+      ~MLPotentialImpl.createMixedSystem
+      ~MLPotentialImpl.getMLLongRange
+      ~MLPotentialImpl.getSupportedEmbeddings
    
    
 

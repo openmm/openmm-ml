@@ -16,6 +16,8 @@ Developer API
 
     openmmml.mlpotential.MLPotentialImplFactory
     openmmml.mlpotential.MLPotentialImpl
+    openmmml.mlpotential.EmbeddingFactory
+    openmmml.mlpotential.Embedding
 
 
 Models
@@ -23,7 +25,7 @@ Models
 .. autosummary::
     :toctree: generated/
     :nosignatures:
-   
+
     
       openmmml.models.aimnet2potential.AIMNet2PotentialImpl
     
@@ -42,4 +44,15 @@ Models
       openmmml.models.orbpotential.OrbPotentialImpl
     
       openmmml.models.torchmdnetpotential.TorchMDNetPotentialImpl
+    
+
+
+Embeddings
+~~~~~~~~~~
+.. autosummary::
+    :toctree: generated/
+    :nosignatures:
+
+    
+      openmmml.embeddings.mechanicalembedding.MechanicalEmbedding
     

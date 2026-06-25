@@ -15,6 +15,9 @@
    
       ~OrbPotentialImpl.__init__
       ~OrbPotentialImpl.addForces
+      ~OrbPotentialImpl.createMixedSystem
+      ~OrbPotentialImpl.getMLLongRange
+      ~OrbPotentialImpl.getSupportedEmbeddings
    
    
 

@@ -15,9 +15,18 @@
    
       ~MACEPotentialImpl.__init__
       ~MACEPotentialImpl.addForces
+      ~MACEPotentialImpl.createMixedSystem
+      ~MACEPotentialImpl.getMLLongRange
+      ~MACEPotentialImpl.getSupportedEmbeddings
    
    
 
    
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~MACEPotentialImpl.KNOWN_MODELS
    
    

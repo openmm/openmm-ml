@@ -15,6 +15,9 @@
    
       ~DeepmdPotentialImpl.__init__
       ~DeepmdPotentialImpl.addForces
+      ~DeepmdPotentialImpl.createMixedSystem
+      ~DeepmdPotentialImpl.getMLLongRange
+      ~DeepmdPotentialImpl.getSupportedEmbeddings
    
    
 

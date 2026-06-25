@@ -15,9 +15,18 @@
    
       ~TorchMDNetPotentialImpl.__init__
       ~TorchMDNetPotentialImpl.addForces
+      ~TorchMDNetPotentialImpl.createMixedSystem
+      ~TorchMDNetPotentialImpl.getMLLongRange
+      ~TorchMDNetPotentialImpl.getSupportedEmbeddings
    
    
 
    
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~TorchMDNetPotentialImpl.KNOWN_MODELS
    
    

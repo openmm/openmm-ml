@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>openmmml.MLPotential &#8212; OpenMM ML 1.7dev_a0b60ad documentation</title>
+    <title>openmmml.MLPotential &#8212; OpenMM ML 1.7dev_6d16a80 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
 
-    <script src="../_static/documentation_options.js?v=a0841e02"></script>
+    <script src="../_static/documentation_options.js?v=930fe094"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'generated/openmmml.MLPotential';</script>
@@ -391,6 +391,8 @@
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="openmmml.mlpotential.MLPotentialImplFactory.html">openmmml.mlpotential.MLPotentialImplFactory</a></li>
 <li class="toctree-l1"><a class="reference internal" href="openmmml.mlpotential.MLPotentialImpl.html">openmmml.mlpotential.MLPotentialImpl</a></li>
+<li class="toctree-l1"><a class="reference internal" href="openmmml.mlpotential.EmbeddingFactory.html">openmmml.mlpotential.EmbeddingFactory</a></li>
+<li class="toctree-l1"><a class="reference internal" href="openmmml.mlpotential.Embedding.html">openmmml.mlpotential.Embedding</a></li>
 </ul>
 <ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="openmmml.models.aimnet2potential.AIMNet2PotentialImpl.html">openmmml.models.aimnet2potential.AIMNet2PotentialImpl</a></li>
@@ -402,6 +404,9 @@
 <li class="toctree-l1"><a class="reference internal" href="openmmml.models.nequippotential.NequIPPotentialImpl.html">openmmml.models.nequippotential.NequIPPotentialImpl</a></li>
 <li class="toctree-l1"><a class="reference internal" href="openmmml.models.orbpotential.OrbPotentialImpl.html">openmmml.models.orbpotential.OrbPotentialImpl</a></li>
 <li class="toctree-l1"><a class="reference internal" href="openmmml.models.torchmdnetpotential.TorchMDNetPotentialImpl.html">openmmml.models.torchmdnetpotential.TorchMDNetPotentialImpl</a></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="openmmml.embeddings.mechanicalembedding.MechanicalEmbedding.html">openmmml.embeddings.mechanicalembedding.MechanicalEmbedding</a></li>
 </ul>
 </div>
 </nav></div>
@@ -520,6 +525,12 @@ potential functions for more information.</p></li>
 <tr class="row-odd"><td><p><a class="reference internal" href="#openmmml.MLPotential.createSystem" title="openmmml.MLPotential.createSystem"><code class="xref py py-obj docutils literal notranslate"><span class="pre">createSystem</span></code></a>(topology[, removeCMMotion])</p></td>
 <td><p>Create a System for running a simulation with this potential function.</p></td>
 </tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#openmmml.MLPotential.getSupportedEmbeddings" title="openmmml.MLPotential.getSupportedEmbeddings"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getSupportedEmbeddings</span></code></a>()</p></td>
+<td><p>Retrieves a list of the names of all of the supported embedding methods for this potential.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#openmmml.MLPotential.registerEmbeddingFactory" title="openmmml.MLPotential.registerEmbeddingFactory"><code class="xref py py-obj docutils literal notranslate"><span class="pre">registerEmbeddingFactory</span></code></a>(name, factory)</p></td>
+<td><p>Register a new embedding method that can be used with MLPotential.</p></td>
+</tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#openmmml.MLPotential.registerImplFactory" title="openmmml.MLPotential.registerImplFactory"><code class="xref py py-obj docutils literal notranslate"><span class="pre">registerImplFactory</span></code></a>(name, factory)</p></td>
 <td><p>Register a new potential function that can be used with MLPotential.</p></td>
 </tr>
@@ -548,35 +559,24 @@ potential functions for more information.</p></li>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="openmmml.MLPotential.createMixedSystem">
-<span class="sig-name descname"><span class="pre">createMixedSystem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">topology</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Topology</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">system</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">System</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atoms</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">removeConstraints</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">forceGroup</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interpolate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">System</span></span></span><a class="headerlink" href="#openmmml.MLPotential.createMixedSystem" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">createMixedSystem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">topology</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Topology</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">system</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">System</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atoms</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">removeConstraints</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">forceGroup</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interpolate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">embedding</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">'mechanical'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">System</span></span></span><a class="headerlink" href="#openmmml.MLPotential.createMixedSystem" title="Link to this definition">#</a></dt>
 <dd><p>Create a System that is partly modeled with this potential and partly
 with a conventional force field.</p>
-<p>To use this method, first create a System that is entirely modeled with the
-conventional force field.  Pass it to this method, along with the indices of the
-atoms to model with this potential (the “ML subset”).  It returns a new System
-that is identical to the original one except for the following changes.</p>
-<ol class="arabic simple">
-<li><p>Removing all bonds, angles, and torsions for which <em>all</em> atoms are in the
-ML subset.</p></li>
-<li><p>For every NonbondedForce and CustomNonbondedForce, adding exceptions/exclusions
-to prevent atoms in the ML subset from interacting with each other.</p></li>
-<li><p>(Optional) Removing constraints between atoms that are both in the ML subset.</p></li>
-<li><p>Adding Forces as necessary to compute the internal energy of the ML subset
-with this potential.</p></li>
-</ol>
-<p>Alternatively, the System can include Forces to compute the energy both with the
-conventional force field and with this potential, and to smoothly interpolate
-between them.  In that case, it creates a CustomCVForce containing the following.</p>
-<ol class="arabic simple">
-<li><p>The Forces to compute this potential.</p></li>
-<li><p>Forces to compute the bonds, angles, and torsions that were removed above.</p></li>
-<li><p>For every NonbondedForce, a corresponding CustomBondForce to compute the
-nonbonded interactions within the ML subset.</p></li>
-</ol>
-<p>The CustomCVForce defines a global parameter called “lambda_interpolate” that interpolates
-between the two potentials.  When lambda_interpolate=0, the energy is computed entirely with
-the conventional force field.  When lambda_interpolate=1, the energy is computed entirely with
-the ML potential.  You can set its value by calling setParameter() on the Context.</p>
+<p>To use this method, first create a System that is entirely modeled with
+the conventional force field.  Pass it to this method, along with the
+indices of the atoms to model with this potential (the “ML subset”).</p>
+<p>If interpolate is False, the resulting system will compute the
+interactions between atoms outside of the ML subset with the
+conventional force field, the interactions between atoms within the ML
+subset with the ML potential, and the interactions between atoms within
+and outside of the ML subset according to a selectable embedding method.</p>
+<p>If interpolate is True, a global parameter “lambda_interpolate” will be
+made available permitting linear interpolation between the conventional
+force field and the mixed ML/MM system.  When lambda_interpolate=0, the
+energy is computed entirely with the conventional force field.  When
+lambda_interpolate=1, the energy is computed with the ML potential and
+the selected embedding method.  You can set its value by calling
+setParameter() on the Context.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -587,17 +587,31 @@ this potential</p></li>
 <li><p><strong>removeConstraints</strong> (<em>bool</em>) – if True, remove constraints between pairs of atoms whose interaction
 will be computed with this potential</p></li>
 <li><p><strong>forceGroup</strong> (<em>int</em>) – the force group the ML potential’s Forces should be placed in</p></li>
-<li><p><strong>interpolate</strong> (<em>bool</em>) – if True, create a System that can smoothly interpolate between the conventional
-and ML potentials</p></li>
-<li><p><strong>args</strong> – particular potential functions may define additional arguments that can
-be used to customize them.  See the documentation on the specific
-potential functions for more information.</p></li>
+<li><p><strong>interpolate</strong> (<em>bool</em>) – if True, create a System that can smoothly interpolate between the
+conventional and ML potentials</p></li>
+<li><p><strong>embedding</strong> (<em>str</em>) – the name of the embedding method.  The builtin ‘mechanical’
+embedding method is used by default.  Other generic embedding
+methods may be available, as well as embedding methods specific to
+the ML potential selected.  MLPotential.getSupportedEmbeddings()
+will report all embedding methods accepted by the potential.</p></li>
+<li><p><strong>args</strong> – particular potential functions or embedding methods may define
+additional arguments that can be used to customize them.  See the
+documentation on the specific potential functions and embedding
+methods for more information.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>a newly created System object that uses this potential function to model the Topology</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="openmmml.MLPotential.getSupportedEmbeddings">
+<span class="sig-name descname"><span class="pre">getSupportedEmbeddings</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#openmmml.MLPotential.getSupportedEmbeddings" title="Link to this definition">#</a></dt>
+<dd><p>Retrieves a list of the names of all of the supported embedding
+methods for this potential.  This includes all available generic
+embedding methods and all of those specific to the potential.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -609,6 +623,20 @@ potential functions for more information.</p></li>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>name</strong> (<em>str</em>) – the name of the potential function that will be passed to the MLPotential constructor</p></li>
 <li><p><strong>factory</strong> (<a class="reference internal" href="openmmml.mlpotential.MLPotentialImplFactory.html#openmmml.mlpotential.MLPotentialImplFactory" title="openmmml.mlpotential.MLPotentialImplFactory"><em>MLPotentialImplFactory</em></a>) – a factory object that will be used to create MLPotentialImpl objects</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="openmmml.MLPotential.registerEmbeddingFactory">
+<span class="property"><span class="k"><span class="pre">static</span></span><span class="w"> </span></span><span class="sig-name descname"><span class="pre">registerEmbeddingFactory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">factory</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="openmmml.mlpotential.EmbeddingFactory.html#openmmml.mlpotential.EmbeddingFactory" title="openmmml.mlpotential.EmbeddingFactory"><span class="pre">EmbeddingFactory</span></a></span></em><span class="sig-paren">)</span><a class="headerlink" href="#openmmml.MLPotential.registerEmbeddingFactory" title="Link to this definition">#</a></dt>
+<dd><p>Register a new embedding method that can be used with MLPotential.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<em>str</em>) – the name of the embedding method to register for use</p></li>
+<li><p><strong>factory</strong> (<a class="reference internal" href="openmmml.mlpotential.MLPotentialImplFactory.html#openmmml.mlpotential.MLPotentialImplFactory" title="openmmml.mlpotential.MLPotentialImplFactory"><em>MLPotentialImplFactory</em></a>) – a factory object that will be used to create Embedding objects</p></li>
 </ul>
 </dd>
 </dl>
@@ -669,7 +697,9 @@ potential functions for more information.</p></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#openmmml.MLPotential.__init__"><code class="docutils literal notranslate"><span class="pre">MLPotential.__init__()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#openmmml.MLPotential.createSystem"><code class="docutils literal notranslate"><span class="pre">MLPotential.createSystem()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#openmmml.MLPotential.createMixedSystem"><code class="docutils literal notranslate"><span class="pre">MLPotential.createMixedSystem()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#openmmml.MLPotential.getSupportedEmbeddings"><code class="docutils literal notranslate"><span class="pre">MLPotential.getSupportedEmbeddings()</span></code></a></li>
 <li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#openmmml.MLPotential.registerImplFactory"><code class="docutils literal notranslate"><span class="pre">MLPotential.registerImplFactory()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#openmmml.MLPotential.registerEmbeddingFactory"><code class="docutils literal notranslate"><span class="pre">MLPotential.registerEmbeddingFactory()</span></code></a></li>
 </ul>
 </li>
 </ul>

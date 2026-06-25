@@ -15,6 +15,9 @@
    
       ~AIMNet2PotentialImpl.__init__
       ~AIMNet2PotentialImpl.addForces
+      ~AIMNet2PotentialImpl.createMixedSystem
+      ~AIMNet2PotentialImpl.getMLLongRange
+      ~AIMNet2PotentialImpl.getSupportedEmbeddings
    
    
 

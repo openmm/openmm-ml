@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>openmmml.models.anipotential.ANIPotentialImpl &#8212; OpenMM ML 1.7dev_6d16a80 documentation</title>
+    <title>openmmml.mlpotential.Embedding &#8212; OpenMM ML 1.7dev_6d16a80 documentation</title>
   
   
   
@@ -41,7 +41,7 @@
     <script src="../_static/documentation_options.js?v=930fe094"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'generated/openmmml.models.anipotential.ANIPotentialImpl';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'generated/openmmml.mlpotential.Embedding';</script>
     <script>
         DOCUMENTATION_OPTIONS.theme_version = '0.19.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://openmm.github.io/openmm-ml/dev/_static/versions.json';
@@ -52,8 +52,8 @@
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="openmmml.models.asepotential.ASEPotentialImpl" href="openmmml.models.asepotential.ASEPotentialImpl.html" />
-    <link rel="prev" title="openmmml.models.aimnet2potential.AIMNet2PotentialImpl" href="openmmml.models.aimnet2potential.AIMNet2PotentialImpl.html" />
+    <link rel="next" title="openmmml.models.aimnet2potential.AIMNet2PotentialImpl" href="openmmml.models.aimnet2potential.AIMNet2PotentialImpl.html" />
+    <link rel="prev" title="openmmml.mlpotential.EmbeddingFactory" href="openmmml.mlpotential.EmbeddingFactory.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="dev" />
@@ -388,15 +388,15 @@
   <div class="bd-toc-item navbar-nav"><ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="openmmml.MLPotential.html">openmmml.MLPotential</a></li>
 </ul>
-<ul class="nav bd-sidenav">
+<ul class="current nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="openmmml.mlpotential.MLPotentialImplFactory.html">openmmml.mlpotential.MLPotentialImplFactory</a></li>
 <li class="toctree-l1"><a class="reference internal" href="openmmml.mlpotential.MLPotentialImpl.html">openmmml.mlpotential.MLPotentialImpl</a></li>
 <li class="toctree-l1"><a class="reference internal" href="openmmml.mlpotential.EmbeddingFactory.html">openmmml.mlpotential.EmbeddingFactory</a></li>
-<li class="toctree-l1"><a class="reference internal" href="openmmml.mlpotential.Embedding.html">openmmml.mlpotential.Embedding</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">openmmml.mlpotential.Embedding</a></li>
 </ul>
-<ul class="current nav bd-sidenav">
+<ul class="nav bd-sidenav">
 <li class="toctree-l1"><a class="reference internal" href="openmmml.models.aimnet2potential.AIMNet2PotentialImpl.html">openmmml.models.aimnet2potential.AIMNet2PotentialImpl</a></li>
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">openmmml.models.anipotential.ANIPotentialImpl</a></li>
+<li class="toctree-l1"><a class="reference internal" href="openmmml.models.anipotential.ANIPotentialImpl.html">openmmml.models.anipotential.ANIPotentialImpl</a></li>
 <li class="toctree-l1"><a class="reference internal" href="openmmml.models.asepotential.ASEPotentialImpl.html">openmmml.models.asepotential.ASEPotentialImpl</a></li>
 <li class="toctree-l1"><a class="reference internal" href="openmmml.models.deepmdpotential.DeepmdPotentialImpl.html">openmmml.models.deepmdpotential.DeepmdPotentialImpl</a></li>
 <li class="toctree-l1"><a class="reference internal" href="openmmml.models.fennixpotential.FeNNixPotentialImpl.html">openmmml.models.fennixpotential.FeNNixPotentialImpl</a></li>
@@ -450,7 +450,7 @@
     
     <li class="breadcrumb-item"><a href="../api.html" class="nav-link">API</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">openmmml.models.anipotential.ANIPotentialImpl</span></li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">openmmml.mlpotential.Embedding</span></li>
   </ul>
 </nav>
 </div>
@@ -467,129 +467,45 @@
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="openmmml-models-anipotential-anipotentialimpl">
-<h1>openmmml.models.anipotential.ANIPotentialImpl<a class="headerlink" href="#openmmml-models-anipotential-anipotentialimpl" title="Link to this heading">#</a></h1>
+  <section id="openmmml-mlpotential-embedding">
+<h1>openmmml.mlpotential.Embedding<a class="headerlink" href="#openmmml-mlpotential-embedding" title="Link to this heading">#</a></h1>
 <dl class="py class">
-<dt class="sig sig-object py" id="openmmml.models.anipotential.ANIPotentialImpl">
-<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">openmmml.models.anipotential.</span></span><span class="sig-name descname"><span class="pre">ANIPotentialImpl</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#openmmml.models.anipotential.ANIPotentialImpl" title="Link to this definition">#</a></dt>
-<dd><p>This is the MLPotentialImpl implementing the ANI potential.</p>
-<p>The potential is implemented using TorchANI to build a PyTorch model.  A
-TorchForce is used to add it to the OpenMM System.  The ANI1ccx and ANI2x
-versions are currently supported.</p>
-<p>Both ANI1ccx and ANI2x are ensembles of eight models.  Averaging over all eight
-models leads to slightly more accurate results than any one individually.  You
-can optionally use only a single model by specifying the modelIndex argument to
-select which one to use.  This leads to a large improvement in speed, at the
-cost of a small decrease in accuracy.</p>
+<dt class="sig sig-object py" id="openmmml.mlpotential.Embedding">
+<span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">openmmml.mlpotential.</span></span><span class="sig-name descname"><span class="pre">Embedding</span></span><a class="headerlink" href="#openmmml.mlpotential.Embedding" title="Link to this definition">#</a></dt>
+<dd><p>Abstract interface for classes that implement embedding methods.</p>
+<p>If you are defining a new embedding method, you need to create subclasses of
+of Embedding and EmbeddingFactory.  When a user specifies a name for an
+embedding method that is not a custom embedding method supported by that
+potential, MLPotential looks up the factory that has been registered for
+that name and uses it to create an Embedding of the appropriate subclass.</p>
 <dl class="py method">
-<dt class="sig sig-object py" id="openmmml.models.anipotential.ANIPotentialImpl.__init__">
-<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#openmmml.models.anipotential.ANIPotentialImpl.__init__" title="Link to this definition">#</a></dt>
+<dt class="sig sig-object py" id="openmmml.mlpotential.Embedding.__init__">
+<span class="sig-name descname"><span class="pre">__init__</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#openmmml.mlpotential.Embedding.__init__" title="Link to this definition">#</a></dt>
 <dd></dd></dl>
 
 <p class="rubric">Methods</p>
 <div class="pst-scrollable-table-container"><table class="autosummary longtable table">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#openmmml.models.anipotential.ANIPotentialImpl.__init__" title="openmmml.models.anipotential.ANIPotentialImpl.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(name)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#openmmml.mlpotential.Embedding.__init__" title="openmmml.mlpotential.Embedding.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>()</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#openmmml.models.anipotential.ANIPotentialImpl.addForces" title="openmmml.models.anipotential.ANIPotentialImpl.addForces"><code class="xref py py-obj docutils literal notranslate"><span class="pre">addForces</span></code></a>(topology, system, atoms, forceGroup)</p></td>
-<td><p>Add Force objects to a System to implement the potential function.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#openmmml.models.anipotential.ANIPotentialImpl.createMixedSystem" title="openmmml.models.anipotential.ANIPotentialImpl.createMixedSystem"><code class="xref py py-obj docutils literal notranslate"><span class="pre">createMixedSystem</span></code></a>(topology, system, atoms, ...)</p></td>
-<td><p>Creates a mixed system using a potential-specific embedding method.</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#openmmml.models.anipotential.ANIPotentialImpl.getMLLongRange" title="openmmml.models.anipotential.ANIPotentialImpl.getMLLongRange"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getMLLongRange</span></code></a>()</p></td>
-<td><p>Returns whether ML interactions are local (False), or long-ranged (True) when periodic boundary conditions are present.</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#openmmml.models.anipotential.ANIPotentialImpl.getSupportedEmbeddings" title="openmmml.models.anipotential.ANIPotentialImpl.getSupportedEmbeddings"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getSupportedEmbeddings</span></code></a>()</p></td>
-<td><p>Retrieves a list of names of supported embedding methods (for the creation of mixed ML/MM systems) specific to this potential.</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#openmmml.mlpotential.Embedding.createMixedSystem" title="openmmml.mlpotential.Embedding.createMixedSystem"><code class="xref py py-obj docutils literal notranslate"><span class="pre">createMixedSystem</span></code></a>(potential, topology, ...)</p></td>
+<td><p>Creates a mixed system using the embedding method.</p></td>
 </tr>
 </tbody>
 </table>
 </div>
 <dl class="py method">
-<dt class="sig sig-object py" id="openmmml.models.anipotential.ANIPotentialImpl.addForces">
-<span class="sig-name descname"><span class="pre">addForces</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">topology</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Topology</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">system</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">System</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atoms</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">forceGroup</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modelIndex</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#openmmml.models.anipotential.ANIPotentialImpl.addForces" title="Link to this definition">#</a></dt>
-<dd><p>Add Force objects to a System to implement the potential function.</p>
-<p>This is invoked by MLPotential.createSystem().  Subclasses must implement
-it to create the requested potential function.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>topology</strong> (<em>Topology</em>) – the Topology from which the System is being created</p></li>
-<li><p><strong>system</strong> (<em>System</em>) – the System that is being created</p></li>
-<li><p><strong>atoms</strong> (<em>Optional</em><em>[</em><em>Iterable</em><em>[</em><em>int</em><em>]</em><em>]</em>) – the indices of atoms the potential should be applied to, or None if
-it should be applied to the entire System</p></li>
-<li><p><strong>forceGroup</strong> (<em>int</em>) – the force group that any newly added Forces should be in</p></li>
-<li><p><strong>args</strong> – any additional keyword arguments that were provided to createSystem()
-are passed to this method.  This allows subclasses to customize their
-behavior based on extra arguments.</p></li>
-</ul>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="openmmml.models.anipotential.ANIPotentialImpl.getMLLongRange">
-<span class="sig-name descname"><span class="pre">getMLLongRange</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></span><a class="headerlink" href="#openmmml.models.anipotential.ANIPotentialImpl.getMLLongRange" title="Link to this definition">#</a></dt>
-<dd><p>Returns whether ML interactions are local (False), or long-ranged
-(True) when periodic boundary conditions are present.  This controls
-which interactions are included by some ML/MM embedding methods.
-Consult the documentation for each embedding method for more details.
-None can be returned if the nature of the interactions is not known by
-the MLPotentialImpl.</p>
-<p>The default implementation of this method, used if a subclass does not
-override it, always returns None.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="openmmml.models.anipotential.ANIPotentialImpl.createMixedSystem">
-<span class="sig-name descname"><span class="pre">createMixedSystem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">topology</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Topology</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">system</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">System</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atoms</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">forceGroup</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interpolate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">embedding</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">System</span></span></span><a class="headerlink" href="#openmmml.models.anipotential.ANIPotentialImpl.createMixedSystem" title="Link to this definition">#</a></dt>
-<dd><p>Creates a mixed system using a potential-specific embedding method.</p>
-<p>This is invoked by MLPotential.createMixedSystem().  It will only be
-called with one of the names returned by getSupportedEmbeddings().  If
-subclasses support any potential-specific embedding methods, they must
-also provide implementations of those methods by overriding this method.
-If not, it does not need to be implemented.</p>
+<dt class="sig sig-object py" id="openmmml.mlpotential.Embedding.createMixedSystem">
+<span class="sig-name descname"><span class="pre">createMixedSystem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">potential</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="openmmml.mlpotential.MLPotentialImpl.html#openmmml.mlpotential.MLPotentialImpl" title="openmmml.mlpotential.MLPotentialImpl"><span class="pre">MLPotentialImpl</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">topology</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Topology</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">system</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">System</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atoms</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">forceGroup</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interpolate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#openmmml.mlpotential.Embedding.createMixedSystem" title="Link to this definition">#</a></dt>
+<dd><p>Creates a mixed system using the embedding method.</p>
+<p>This is invoked by MLPotential.createMixedSystem().  It must be
+implemented in subclasses.  The implementation should call
+potential.addForces() as needed to generate the appropriate ML forces.</p>
 <p>Each embedding method is responsible for implementing interpolation; if
 interpolate is True, a global parameter “lambda_interpolate” should be
 present in the returned system, with the behavior as described by
 MLPotential.createMixedSystem().</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>topology</strong> (<em>Topology</em>) – the Topology for which to create a System</p></li>
-<li><p><strong>system</strong> (<em>System</em>) – a System that models the Topology with a conventional force field</p></li>
-<li><p><strong>atoms</strong> (<em>Iterable</em><em>[</em><em>int</em><em>]</em>) – the indices of all atoms whose interactions should be computed with
-this potential</p></li>
-<li><p><strong>forceGroup</strong> (<em>int</em>) – the force group the ML potential’s Forces should be placed in</p></li>
-<li><p><strong>interpolate</strong> (<em>bool</em>) – if True, create a System that can smoothly interpolate between the
-conventional and ML potentials</p></li>
-<li><p><strong>embedding</strong> (<em>str</em>) – the name of the embedding method (will always be one in the list
-returned by the getSupportedEmbeddings() method)</p></li>
-<li><p><strong>args</strong> – any additional arguments for the potential or embedding method</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p><ul class="simple">
-<li><p><em>a newly created System object that uses this potential function and the</em></p></li>
-<li><p><em>requested embedding method to model the Topology</em></p></li>
-</ul>
-</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="openmmml.models.anipotential.ANIPotentialImpl.getSupportedEmbeddings">
-<span class="sig-name descname"><span class="pre">getSupportedEmbeddings</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#openmmml.models.anipotential.ANIPotentialImpl.getSupportedEmbeddings" title="Link to this definition">#</a></dt>
-<dd><p>Retrieves a list of names of supported embedding methods (for the
-creation of mixed ML/MM systems) specific to this potential.  If one of
-these names is provided instead of providing the name of a generic
-embedding plugin, embedding will be performed by the potential itself.</p>
-<p>This is invoked by MLPotential.createMixedSystem().  If a subclass
-wishes to define one or more potential-specific embedding methods, it
-should implement this method; otherwise, it does not need to.</p>
 </dd></dl>
 
 </dd></dl>
@@ -607,20 +523,20 @@ should implement this method; otherwise, it does not need to.</p>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="openmmml.models.aimnet2potential.AIMNet2PotentialImpl.html"
+       href="openmmml.mlpotential.EmbeddingFactory.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">openmmml.models.aimnet2potential.AIMNet2PotentialImpl</p>
+        <p class="prev-next-title">openmmml.mlpotential.EmbeddingFactory</p>
       </div>
     </a>
     <a class="right-next"
-       href="openmmml.models.asepotential.ASEPotentialImpl.html"
+       href="openmmml.models.aimnet2potential.AIMNet2PotentialImpl.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">openmmml.models.asepotential.ASEPotentialImpl</p>
+        <p class="prev-next-title">openmmml.models.aimnet2potential.AIMNet2PotentialImpl</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -643,12 +559,9 @@ should implement this method; otherwise, it does not need to.</p>
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#openmmml.models.anipotential.ANIPotentialImpl"><code class="docutils literal notranslate"><span class="pre">ANIPotentialImpl</span></code></a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#openmmml.models.anipotential.ANIPotentialImpl.__init__"><code class="docutils literal notranslate"><span class="pre">ANIPotentialImpl.__init__()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#openmmml.models.anipotential.ANIPotentialImpl.addForces"><code class="docutils literal notranslate"><span class="pre">ANIPotentialImpl.addForces()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#openmmml.models.anipotential.ANIPotentialImpl.getMLLongRange"><code class="docutils literal notranslate"><span class="pre">ANIPotentialImpl.getMLLongRange()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#openmmml.models.anipotential.ANIPotentialImpl.createMixedSystem"><code class="docutils literal notranslate"><span class="pre">ANIPotentialImpl.createMixedSystem()</span></code></a></li>
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#openmmml.models.anipotential.ANIPotentialImpl.getSupportedEmbeddings"><code class="docutils literal notranslate"><span class="pre">ANIPotentialImpl.getSupportedEmbeddings()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#openmmml.mlpotential.Embedding"><code class="docutils literal notranslate"><span class="pre">Embedding</span></code></a><ul class="nav section-nav flex-column">
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#openmmml.mlpotential.Embedding.__init__"><code class="docutils literal notranslate"><span class="pre">Embedding.__init__()</span></code></a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#openmmml.mlpotential.Embedding.createMixedSystem"><code class="docutils literal notranslate"><span class="pre">Embedding.createMixedSystem()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -657,7 +570,7 @@ should implement this method; otherwise, it does not need to.</p>
   <div class="sidebar-secondary-item">
 
   <div class="tocsection sourcelink">
-    <a href="../_sources/generated/openmmml.models.anipotential.ANIPotentialImpl.rst.txt">
+    <a href="../_sources/generated/openmmml.mlpotential.Embedding.rst.txt">
       <i class="fa-solid fa-file-lines"></i> Show Source
     </a>
   </div>
