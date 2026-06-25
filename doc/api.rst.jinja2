@@ -16,6 +16,8 @@ Developer API
 
     openmmml.mlpotential.MLPotentialImplFactory
     openmmml.mlpotential.MLPotentialImpl
+    openmmml.mlpotential.EmbeddingFactory
+    openmmml.mlpotential.Embedding
 
 
 Models
@@ -23,7 +25,18 @@ Models
 .. autosummary::
     :toctree: generated/
     :nosignatures:
-   
+
     {% for model in models %}
       {{ model }}
+    {% endfor %}
+
+
+Embeddings
+~~~~~~~~~~
+.. autosummary::
+    :toctree: generated/
+    :nosignatures:
+
+    {% for embedding in embeddings %}
+      {{ embedding }}
     {% endfor %}

@@ -15,31 +15,10 @@ test_data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
 @pytest.mark.parametrize("platform_int", list(platform_ints))
 class TestMechanicalEmbedding:
 
-    def getTopologySubset(self, old_topology, subset):
-        new_topology = openmm.app.Topology()
-        new_topology.setPeriodicBoxVectors(old_topology.getPeriodicBoxVectors())
-
-        new_atoms = {}
-
-        for old_chain in old_topology.chains():
-            if not any(atom.index in subset for atom in old_chain.atoms()):
-                continue
-            new_chain = new_topology.addChain(old_chain.id)
-
-            for old_residue in old_chain.residues():
-                if not any(atom.index in subset for atom in old_residue.atoms()):
-                    continue
-                new_residue = new_topology.addResidue(old_residue.name, new_chain, old_residue.id, old_residue.insertionCode)
-
-                for old_atom in old_residue.atoms():
-                    if old_atom.index in subset:
-                        new_atoms[old_atom.index] = new_topology.addAtom(old_atom.name, old_atom.element, new_residue, old_atom.id, old_atom.formalCharge)
-
-        for old_bond in old_topology.bonds():
-            if old_bond.atom1.index in new_atoms and old_bond.atom2.index in new_atoms:
-                new_topology.addBond(new_atoms[old_bond.atom1.index], new_atoms[old_bond.atom2.index], old_bond.order)
-
-        return new_topology
+    def getTopologyPositionsSubset(self, topology, positions, subset):
+        modeller = openmm.app.Modeller(topology, positions)
+        modeller.delete([atom for atom in topology.atoms() if atom.index not in subset])
+        return modeller.getTopology(), modeller.getPositions()
 
     @pytest.mark.parametrize("periodic", (False, True))
     @pytest.mark.parametrize("interpolate", (False, True))
@@ -55,8 +34,7 @@ class TestMechanicalEmbedding:
         positions_ml_mm = pdb.positions
 
         subset = [atom.index for atom in topology_ml_mm.atoms() if atom.residue.chain.index == 0]
-        topology_ml = self.getTopologySubset(topology_ml_mm, set(subset))
-        positions_ml = [positions_ml_mm[index] for index in subset]
+        topology_ml, positions_ml = self.getTopologyPositionsSubset(topology_ml_mm, positions_ml_mm, set(subset))
 
         mm_force_field = openmm.app.ForceField("amber19-all.xml", "amber19/tip3pfb.xml")
         ml_potential = MLPotential("ase")
@@ -115,8 +93,7 @@ class TestMechanicalEmbedding:
         positions_ml_mm = pdb.positions
 
         subset = [atom.index for atom in topology_ml_mm.atoms() if atom.residue.chain.index == 0]
-        topology_ml = self.getTopologySubset(topology_ml_mm, set(subset))
-        positions_ml = [positions_ml_mm[index] for index in subset]
+        topology_ml, positions_ml = self.getTopologyPositionsSubset(topology_ml_mm, positions_ml_mm, set(subset))
 
         mm_force_field = openmm.app.ForceField("amber19-all.xml", "amber19/tip3pfb.xml")
         ml_potential = MLPotential("mace-off23-small")

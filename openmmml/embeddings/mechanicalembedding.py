@@ -56,6 +56,10 @@ class MechanicalEmbedding(Embedding):
     different periodic images.  For some models, this cannot be determined based
     on the information provided to OpenMM-ML, and the mlLongRange option must be
     provided explicitly to control whether or not to include these interactions.
+
+    This implementation assumes that if a model reports using long-range
+    interactions, or mlLongRange is True, then the long-range interactions that
+    the model computes are purely electrostatic (Ewald/PME), not LJPME.
     """
 
     def __init__(self):
