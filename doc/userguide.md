@@ -110,12 +110,18 @@ When using MACE models, the following extra keyword arguments to `createSystem()
 ### AIMNet2
 
 The [aimnet](https://github.com/isayevlab/aimnetcentral) package can be used to create models using the pretrained
-[AIMNet2](https://doi.org/10.1039/D4SC08572H) potential.  The following model names
-are supported.
+[AIMNet2](https://doi.org/10.1039/D4SC08572H) potential.  This includes both the pretrained model and custom models you
+create yourself.  The following model names are supported.
 
 | Name | Model |
 | --- | --- |
-| `aimnet2` | Pretrained AIMNet2 models |
+| `aimnet2` | Pretrained AIMNet2 model, or a custom AIMNet2 model specified with the `modelPath` argument |
+
+When creating AIMNet2 models, the following keyword arguments to the `MLPotential` constructor are supported.
+
+| Argument | Description |
+| --- | --- |
+| `modelPath` | For custom models, the path to the file containing the model.  If omitted, the pretrained AIMNet2 model is used. |
 
 When using AIMNet2 models, the following extra keyword arguments to `createSystem()` and `createMixedSystem()` are supported.
 
