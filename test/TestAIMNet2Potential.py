@@ -17,9 +17,18 @@ test_data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
 
 @pytest.mark.parametrize("platform_int", list(platform_ints))
 class TestAIMNet2:
-    def testCreatePureMLSystem(self, platform_int):
+    # useLocalModel=True loads the pretrained model via an explicit modelPath
+    # (resolving its on-disk location), which should give identical results to
+    # loading it by name.
+    @pytest.mark.parametrize("useLocalModel", [False, True])
+    def testCreatePureMLSystem(self, platform_int, useLocalModel):
+        if useLocalModel:
+            from aimnet.calculators.calculator import get_model_path
+            modelPath = get_model_path("aimnet2")
+        else:
+            modelPath = None
         pdb = app.PDBFile(os.path.join(test_data_dir, "toluene", "toluene.pdb"))
-        potential = MLPotential("aimnet2", charge=0, multiplicity=1)
+        potential = MLPotential("aimnet2", modelPath=modelPath, charge=0, multiplicity=1)
         system = potential.createSystem(pdb.topology)
         platform = mm.Platform.getPlatform(platform_int)
         context = mm.Context(system, mm.VerletIntegrator(0.001), platform)
@@ -30,21 +39,6 @@ class TestAIMNet2:
             context.setPositions(positions)
             energyML = context.getState(getEnergy=True).getPotentialEnergy().value_in_unit(unit.kilojoules_per_mole)
             assert np.isclose(energyRef, energyML, rtol=rtol)
-
-    def testLocalModelPath(self, platform_int):
-        # Load the pretrained model via an explicit modelPath (resolving its
-        # on-disk location) and check it gives the same energy as loading by name.
-        from aimnet.calculators.calculator import get_model_path
-        modelPath = get_model_path("aimnet2")
-        pdb = app.PDBFile(os.path.join(test_data_dir, "toluene", "toluene.pdb"))
-        potential = MLPotential("aimnet2", modelPath=modelPath, charge=0, multiplicity=1)
-        system = potential.createSystem(pdb.topology)
-        platform = mm.Platform.getPlatform(platform_int)
-        context = mm.Context(system, mm.VerletIntegrator(0.001), platform)
-        context.setPositions(pdb.getPositions(asNumpy=True))
-        energyML = context.getState(getEnergy=True).getPotentialEnergy().value_in_unit(unit.kilojoules_per_mole)
-        energyRef = -713468.0026230365 # in kJ/mol, calculated using the AIMNet2ASE
-        assert np.isclose(energyRef, energyML, rtol=rtol)
 
     def testPeriodicSystem(self, platform_int):
         pdb = app.PDBFile(os.path.join(test_data_dir, "alanine-dipeptide", "alanine-dipeptide-explicit.pdb"))
