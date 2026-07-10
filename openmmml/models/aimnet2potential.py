@@ -39,21 +39,39 @@ import numpy as np
 class AIMNet2PotentialImplFactory(MLPotentialImplFactory):
     """This is the factory that creates AIMNet2PotentialImpl objects."""
 
-    def createImpl(self, name: str, **args) -> MLPotentialImpl:
-        return AIMNet2PotentialImpl(name)
+    def createImpl(self, name: str, modelPath: Optional[str] = None, **args) -> MLPotentialImpl:
+        return AIMNet2PotentialImpl(name, modelPath)
 
 
 class AIMNet2PotentialImpl(MLPotentialImpl):
     """This is the MLPotentialImpl implementing the AIMNet2 potential.
 
     The AIMNet2 potential is constructed using `aimnet` to build a PyTorch model,
-    and then integrated into the OpenMM System using a TorchForce.  To use it, specify the model by name:
+    and then integrated into the OpenMM System using a PythonForce.  This
+    implementation supports both the pretrained AIMNet2 model and locally trained
+    AIMNet2 models.
+
+    To use the pretrained AIMNet2 model, specify the model by name:
 
     >>> potential = MLPotential('aimnet2')
+
+    To use a locally trained AIMNet2 model, use the name 'aimnet' and provide the
+    path to the model file:
+
+    >>> potential = MLPotential('aimnet', modelPath='mymodel.pt')
+
+    Attributes
+    ----------
+    name : str
+        The name of the AIMNet2 model.  Options are 'aimnet2' for the pretrained
+        model and 'aimnet' for a locally trained model.
+    modelPath : str
+        The path to the locally trained AIMNet2 model if ``name`` is 'aimnet'.
     """
 
-    def __init__(self, name):
+    def __init__(self, name, modelPath=None):
         self.name = name
+        self.modelPath = modelPath
 
     def addForces(self,
                   topology: openmm.app.Topology,
@@ -68,7 +86,14 @@ class AIMNet2PotentialImpl(MLPotentialImpl):
         except ImportError as e:
             raise ImportError(f"Failed to import aimnet with error: {e}. Install from https://github.com/isayevlab/aimnetcentral.")
         import torch
-        model = AIMNet2Calculator('aimnet2')
+        if self.name == 'aimnet2':
+            model = AIMNet2Calculator('aimnet2')
+        elif self.name == 'aimnet':
+            if self.modelPath is None:
+                raise ValueError("No modelPath provided for local AIMNet2 model.")
+            model = AIMNet2Calculator(self.modelPath)
+        else:
+            raise ValueError(f"Unsupported AIMNet2 model: {self.name}")
         device = torch.device(model.device)
         model.device = device
 
@@ -99,7 +124,9 @@ class AIMNet2PotentialImpl(MLPotentialImpl):
         # see https://isayevlab.github.io/aimnetcentral/long_range/).  OpenMM-ML
         # does not expose any option to change this; if we change this behavior
         # in the future, or other AIMNet models we support in the future have
-        # different behavior, this must be updated.
+        # different behavior, this must be updated.  A user-supplied local model
+        # (modelPath) is assumed to use this same default coulomb behavior; if a
+        # custom model does not, this would need revisiting.
         return False
 
 def _computeAIMNet2(state, model, numbers, charge, multiplicity, indices, periodic):

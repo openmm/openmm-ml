@@ -17,9 +17,20 @@ test_data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
 
 @pytest.mark.parametrize("platform_int", list(platform_ints))
 class TestAIMNet2:
-    def testCreatePureMLSystem(self, platform_int):
+    # useLocalModel=True loads the pretrained model as a custom model via the
+    # 'aimnet' name and an explicit modelPath, which should give identical
+    # results to loading it by the 'aimnet2' name.
+    @pytest.mark.parametrize("useLocalModel", [False, True])
+    def testCreatePureMLSystem(self, platform_int, useLocalModel):
+        if useLocalModel:
+            from aimnet.calculators.calculator import get_model_path
+            name = "aimnet"
+            modelPath = get_model_path("aimnet2")
+        else:
+            name = "aimnet2"
+            modelPath = None
         pdb = app.PDBFile(os.path.join(test_data_dir, "toluene", "toluene.pdb"))
-        potential = MLPotential("aimnet2", charge=0, multiplicity=1)
+        potential = MLPotential(name, modelPath=modelPath, charge=0, multiplicity=1)
         system = potential.createSystem(pdb.topology)
         platform = mm.Platform.getPlatform(platform_int)
         context = mm.Context(system, mm.VerletIntegrator(0.001), platform)
