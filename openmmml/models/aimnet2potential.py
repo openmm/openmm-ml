@@ -55,17 +55,18 @@ class AIMNet2PotentialImpl(MLPotentialImpl):
 
     >>> potential = MLPotential('aimnet2')
 
-    To use a locally trained AIMNet2 model, provide the path to the model file:
+    To use a locally trained AIMNet2 model, use the name 'aimnet' and provide the
+    path to the model file:
 
-    >>> potential = MLPotential('aimnet2', modelPath='mymodel.pt')
+    >>> potential = MLPotential('aimnet', modelPath='mymodel.pt')
 
     Attributes
     ----------
     name : str
-        The name of the AIMNet2 model.
+        The name of the AIMNet2 model.  Options are 'aimnet2' for the pretrained
+        model and 'aimnet' for a locally trained model.
     modelPath : str
-        The path to the locally trained AIMNet2 model, or ``None`` to use the
-        pretrained model.
+        The path to the locally trained AIMNet2 model if ``name`` is 'aimnet'.
     """
 
     def __init__(self, name, modelPath=None):
@@ -85,7 +86,14 @@ class AIMNet2PotentialImpl(MLPotentialImpl):
         except ImportError as e:
             raise ImportError(f"Failed to import aimnet with error: {e}. Install from https://github.com/isayevlab/aimnetcentral.")
         import torch
-        model = AIMNet2Calculator(self.modelPath if self.modelPath is not None else 'aimnet2')
+        if self.name == 'aimnet2':
+            model = AIMNet2Calculator('aimnet2')
+        elif self.name == 'aimnet':
+            if self.modelPath is None:
+                raise ValueError("No modelPath provided for local AIMNet2 model.")
+            model = AIMNet2Calculator(self.modelPath)
+        else:
+            raise ValueError(f"Unsupported AIMNet2 model: {self.name}")
         device = torch.device(model.device)
         model.device = device
 

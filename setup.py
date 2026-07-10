@@ -41,6 +41,7 @@ setup(
     install_requires=['numpy', 'openmm >= 8.5.2'],
     entry_points={
         'openmmml.potentials': [
+            'aimnet = openmmml.models.aimnet2potential:AIMNet2PotentialImplFactory',
             'aimnet2 = openmmml.models.aimnet2potential:AIMNet2PotentialImplFactory',
             'ani1ccx = openmmml.models.anipotential:ANIPotentialImplFactory',
             'ani2x = openmmml.models.anipotential:ANIPotentialImplFactory',

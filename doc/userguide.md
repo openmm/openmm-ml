@@ -115,13 +115,14 @@ create yourself.  The following model names are supported.
 
 | Name | Model |
 | --- | --- |
-| `aimnet2` | Pretrained AIMNet2 model, or a custom AIMNet2 model specified with the `modelPath` argument |
+| `aimnet2` | Pretrained AIMNet2 model |
+| `aimnet` | Custom AIMNet2 models specified with the `modelPath` argument |
 
 When creating AIMNet2 models, the following keyword arguments to the `MLPotential` constructor are supported.
 
 | Argument | Description |
 | --- | --- |
-| `modelPath` | For custom models, the path to the file containing the model.  If omitted, the pretrained AIMNet2 model is used. |
+| `modelPath` | For custom models (name `aimnet`), the path to the file containing the model |
 
 When using AIMNet2 models, the following extra keyword arguments to `createSystem()` and `createMixedSystem()` are supported.
 
