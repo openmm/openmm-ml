@@ -110,13 +110,21 @@ When using MACE models, the following extra keyword arguments to `createSystem()
 ### AIMNet2
 
 The [aimnet](https://github.com/isayevlab/aimnetcentral) package can be used to create models using the pretrained
-[AIMNet2](https://doi.org/10.1039/D4SC08572H) potential.  This includes both the pretrained model and custom models you
-create yourself.  The following model names are supported.
+[AIMNet2](https://doi.org/10.1039/D4SC08572H) potential.  This includes both the pretrained models and custom models you
+create yourself.  The following pretrained model families are supported.
 
 | Name | Model |
 | --- | --- |
-| `aimnet2` | Pretrained AIMNet2 model |
+| `aimnet2` | General organic and elemental-organic chemistry (wB97M-D3).  Covers H, B, C, N, O, F, Si, P, S, Cl, As, Se, Br, I |
+| `aimnet2-2025` | B97-3c with improved intermolecular interactions.  Same element coverage as `aimnet2` |
+| `aimnet2-nse` | Open-shell systems |
+| `aimnet2-pd` | Pd catalysis (B97-3c/CPCM(THF)).  Adds the Pd element (replaces As) |
+| `aimnet2-rxn` | Reactive chemistry, transition states, NEB/IRC.  Limited to net-neutral systems and H, C, N, O only |
 | `aimnet` | Custom AIMNet2 models specified with the `modelPath` argument |
+
+Each pretrained family is a four-member ensemble.  The family name (e.g. `aimnet2`) selects member 0; to use a
+specific member, append `_0` through `_3` to the registry name (e.g. `aimnet2-wb97m-d3_2`).  The full set of
+supported names (every ensemble member and family alias) is the `openmmml.potentials` entry points in `setup.py`.
 
 When creating AIMNet2 models, the following keyword arguments to the `MLPotential` constructor are supported.
 
