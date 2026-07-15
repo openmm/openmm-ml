@@ -29,11 +29,10 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
 
-from openmmml.mlpotential import MLPotential, MLPotentialImpl, Embedding, EmbeddingFactory
+from openmmml.mlpotential import MLPotentialImpl, Embedding, EmbeddingFactory
+from openmmml.embeddings import utilities
 import openmm
 import openmm.app
-import openmm.unit as unit
-from copy import deepcopy
 
 class MechanicalEmbeddingFactory(EmbeddingFactory):
     """This is the factory that creates MechanicalEmbedding objects."""
@@ -124,7 +123,7 @@ class MechanicalEmbedding(Embedding):
         # Create the new system with ML-ML interactions to be computed by the ML
         # potential removed.
 
-        newSystem = MLPotential._removeBonds(system, atoms, True)
+        newSystem = utilities.removeBonds(system, atoms, True)
 
         for force in newSystem.getForces():
             if isinstance(force, openmm.NonbondedForce):
@@ -151,13 +150,7 @@ class MechanicalEmbedding(Embedding):
                 force.setExceptionsUsePeriodicBoundaryConditions(periodic)
 
             elif isinstance(force, openmm.CustomNonbondedForce):
-                existing = set(tuple(force.getExclusionParticles(i)) for i in range(force.getNumExclusions()))
-                for iAtom1 in range(len(atoms)):
-                    atom1 = atoms[iAtom1]
-                    for iAtom2 in range(iAtom1):
-                        atom2 = atoms[iAtom2]
-                        if (atom1, atom2) not in existing and (atom2, atom1) not in existing:
-                            force.addExclusion(atom1, atom2)
+                utilities.makeCustomNonbondedExclusions(force, atoms)
 
         if excludeLongRange:
             # Prepare a force to calculate the PME energy of the ML-ML region.
@@ -173,97 +166,13 @@ class MechanicalEmbedding(Embedding):
                 excludeForce.addParticle(mmLongRangeForce.getParticleParameters(atom)[0] if atom in atomSet else 0, 1, 0)
 
         if interpolate:
-            # Set up a CV force to do the interpolation.
-
-            cvForce = openmm.CustomCVForce("")
-            cvForce.addGlobalParameter("lambda_interpolate", 1)
-
-            mlTermNames = []
-            def addMLTerm(force):
-                name = f"mlTerm{len(mlTermNames)}"
-                cvForce.addCollectiveVariable(name, force)
-                mlTermNames.append(name)
-
-            mmTermNames = []
-            def addMMTerm(force):
-                name = f"mmTerm{len(mmTermNames)}"
-                cvForce.addCollectiveVariable(name, force)
-                mmTermNames.append(name)
-
-            # Add the ML potential.
-
-            tempSystem = openmm.System()
-            potential.addForces(topology, tempSystem, atoms, forceGroup, **args)
-            for force in tempSystem.getForces():
-                addMLTerm(deepcopy(force))
-
-            # Add back the bonds that were removed.
-
-            bondedSystem = MLPotential._removeBonds(system, atoms, False)
-            for force in bondedSystem.getForces():
-                if hasattr(force, "addBond") or hasattr(force, "addAngle") or hasattr(force, "addTorsion"):
-                    addMMTerm(deepcopy(force))
-
-            # Add in terms corresponding to the exceptions set earlier.
-
-            for force in system.getForces():
-                if isinstance(force, openmm.NonbondedForce):
-                    replacementForce = openmm.CustomBondForce("138.935456*chargeProd/r + 4*epsilon*((sigma/r)^12-(sigma/r)^6)")
-                    replacementForce.setUsesPeriodicBoundaryConditions(periodic)
-                    replacementForce.addPerBondParameter("chargeProd")
-                    replacementForce.addPerBondParameter("sigma")
-                    replacementForce.addPerBondParameter("epsilon")
-
-                    atomCharge, atomSigma, atomEpsilon = zip(*(force.getParticleParameters(atom) for atom in atoms))
-                    exceptions = {}
-                    for i in range(force.getNumExceptions()):
-                        atom1, atom2, chargeProd, sigma, epsilon = force.getExceptionParameters(i)
-                        exceptions[atom1, atom2] = (chargeProd, sigma, epsilon)
-                    def getParameters(iAtom1, iAtom2):
-                        atom1 = atoms[iAtom1]
-                        atom2 = atoms[iAtom2]
-                        if (atom1, atom2) in exceptions:
-                            return exceptions[atom1, atom2]
-                        if (atom2, atom1) in exceptions:
-                            return exceptions[atom2, atom1]
-                        return (
-                            atomCharge[iAtom1] * atomCharge[iAtom2],
-                            0.5 * (atomSigma[iAtom1] + atomSigma[iAtom2]),
-                            unit.sqrt(atomEpsilon[iAtom1] * atomEpsilon[iAtom2]),
-                        )
-
-                    for iAtom1 in range(len(atoms)):
-                        for iAtom2 in range(iAtom1):
-                            chargeProd, sigma, epsilon = getParameters(iAtom1, iAtom2)
-                            if excludeLongRange:
-                                chargeProd -= atomCharge[iAtom1] * atomCharge[iAtom2]
-                            if chargeProd._value != 0 or epsilon._value != 0:
-                                replacementForce.addBond(atoms[iAtom1], atoms[iAtom2], [chargeProd, sigma, epsilon])
-
-                    addMMTerm(replacementForce)
-
-                elif isinstance(force, openmm.CustomNonbondedForce):
-                    # TODO: this case has never been supported (previously it
-                    # would be silently ignored).
-                    raise NotImplementedError("Interpolation is currently unsupported when a CustomNonbondedForce is present")
-
-            # Subtract the ML-ML PME energy if needed.
-
+            interpolator = utilities.InterpolationHelper()
+            interpolator.addMLPotentialTerms(potential, topology, atoms, forceGroup, **args)
+            interpolator.addMMBondedTerms(system, atoms)
+            interpolator.setupNonbonded(newSystem, system)
             if excludeLongRange:
-                mlTermNames.append("(-excludeForce)")
-                cvForce.addCollectiveVariable("excludeForce", excludeForce)
-
-            # Build the expression to do the interpolation.
-
-            cvTerms = []
-            if mlTermNames:
-                mlSum = "+".join(mlTermNames)
-                cvTerms.append(f"lambda_interpolate*({mlSum})")
-            if mmTermNames:
-                mmSum = "+".join(mmTermNames)
-                cvTerms.append(f"(1-lambda_interpolate)*({mmSum})")
-            cvForce.setEnergyFunction("+".join(cvTerms) if cvTerms else "0")
-            newSystem.addForce(cvForce)
+                interpolator.addMLTerm(excludeForce, "-{}")
+            interpolator.setupInterpolation(newSystem)
 
         else:
             # Add the ML potential and subtract the ML-ML PME energy if needed.

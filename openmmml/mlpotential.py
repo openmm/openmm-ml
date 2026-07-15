@@ -405,62 +405,6 @@ class MLPotential(object):
         return sorted(set(MLPotential._embeddingFactories.keys()) | set(self._impl.getSupportedEmbeddings()))
 
     @staticmethod
-    def _removeBonds(system: openmm.System, atoms: list[int], removeInSet: bool) -> openmm.System:
-        """Copy a System, removing all bonded interactions between atoms in (or not in) a particular set.
-
-        Parameters
-        ----------
-        system: System
-            the System to copy
-        atoms: list[int]
-            a set of atom indices
-        removeInSet: bool
-            if True, any bonded term connecting atoms in the specified set is removed.  If False,
-            any term that does *not* connect atoms in the specified set is removed
-        removeConstraints: bool
-            if True, remove constraints between pairs of atoms in the set
-
-        Returns
-        -------
-        a newly created System object in which the specified bonded interactions have been removed
-        """
-        atomSet = set(atoms)
-
-        # Create an XML representation of the System.
-
-        import xml.etree.ElementTree as ET
-        xml = openmm.XmlSerializer.serialize(system)
-        root = ET.fromstring(xml)
-
-        # This function decides whether a bonded interaction should be removed.
-
-        def shouldRemove(termAtoms):
-            return all(a in atomSet for a in termAtoms) == removeInSet
-
-        # Remove bonds, angles, and torsions.
-
-        for bonds in root.findall('./Forces/Force/Bonds'):
-            for bond in bonds.findall('Bond'):
-                bondAtoms = [int(bond.attrib[p]) for p in ('p1', 'p2')]
-                if shouldRemove(bondAtoms):
-                    bonds.remove(bond)
-        for angles in root.findall('./Forces/Force/Angles'):
-            for angle in angles.findall('Angle'):
-                angleAtoms = [int(angle.attrib[p]) for p in ('p1', 'p2', 'p3')]
-                if shouldRemove(angleAtoms):
-                    angles.remove(angle)
-        for torsions in root.findall('./Forces/Force/Torsions'):
-            for torsion in torsions.findall('Torsion'):
-                torsionLabels =  ('p1', 'p2', 'p3', 'p4') if 'p1' in torsion.attrib else ('a1', 'a2', 'a3', 'a4', 'b1', 'b2', 'b3', 'b4')
-                torsionAtoms = [int(torsion.attrib[p]) for p in torsionLabels]
-                if shouldRemove(torsionAtoms):
-                    torsions.remove(torsion)
-
-        # Create a new System from it.
-
-        return openmm.XmlSerializer.deserialize(ET.tostring(root, encoding='unicode'))
-
-    @staticmethod
     def registerImplFactory(name: str, factory: MLPotentialImplFactory):
         """Register a new potential function that can be used with MLPotential.
 
