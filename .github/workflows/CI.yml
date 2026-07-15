@@ -20,7 +20,7 @@ jobs:
             requirements: "orb"
 
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v2
         name: "Checkout the source code"
 
       - uses: mamba-org/setup-micromamba@v1
@@ -54,7 +54,7 @@ jobs:
         python-version: ["3.14"]
 
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v2
         name: "Checkout the source code"
 
       - uses: mamba-org/setup-micromamba@v1
@@ -65,11 +65,12 @@ jobs:
           init-shell: bash
 
       - name: "Download EMLE-Engine"
-        uses: actions/checkout@v7
-        repository: chemle/emle-engine
-        path: emle-engine-repository
-        # TODO: EMLE-Engine needs to make a release so we can use that instead
-        ref: 4585bb3f1df00ab3b38be980d9ed1e7a947d4480
+        uses: actions/checkout@v2
+        with:
+          repository: chemle/emle-engine
+          path: emle-engine-repository
+          # TODO: EMLE-Engine needs to make a release so we can use that instead
+          ref: 4585bb3f1df00ab3b38be980d9ed1e7a947d4480
 
       - name: "Install dependencies with conda"
         shell: bash -l {0}
