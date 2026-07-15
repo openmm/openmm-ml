@@ -46,3 +46,45 @@ jobs:
         run: |
           cd test
           pytest -v *
+
+  build_test_emle:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.14"]
+
+    steps:
+      - uses: actions/checkout@v2
+        name: "Checkout the source code"
+
+      - uses: mamba-org/setup-micromamba@v1
+        with:
+          environment-name: build-env
+          create-args: >-
+            python=${{ matrix.python-version }}
+          init-shell: bash
+
+      - name: "Download EMLE-Engine"
+        uses: actions/checkout@v2
+        repository: chemle/emle-engine
+        path: emle-engine-repository
+        # TODO: EMLE-Engine needs to make a release so we can use that instead
+        ref: 4585bb3f1df00ab3b38be980d9ed1e7a947d4480
+
+      - name: "Install dependencies with conda"
+        shell: bash -l {0}
+        run: |
+          cd emle-engine-repository
+          conda install --file environment.yaml openmm pytest
+          pip install .
+
+      - name: "Install OpenMM-ML"
+        shell: bash -l {0}
+        run: |
+          pip install .
+
+      - name: "Run tests"
+        shell: bash -l {0}
+        run: |
+          cd test
+          pytest -v *

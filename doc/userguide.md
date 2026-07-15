@@ -359,6 +359,25 @@ to specify which behavior your model uses when doing mechanical embedding in a p
 will be raised to inform you if this information is needed and not provided; OpenMM-ML will not assume either choice
 automatically.
 
+### EMLE
+
+OpenMM-ML supports the EMLE (Electrostatic Machine Learning Embedding) method through an interface with the
+[EMLE-Engine](https://chemle.github.io/emle-engine/) package.  The following embedding names are supported.
+
+| Name | Model |
+| --- | --- |
+| `emle` | Default pretrained [EMLE](https://github.com/chemle/emle-models) model. |
+| `emle-engine` | Use a custom EMLE-Engine model loaded from a local file. |
+
+The following extra keyword arguments are recognized by the embedding:
+
+| Name | Model |
+| --- | --- |
+| `embeddingModelPath` | Path to a local model, only used (and required) if `emle-engine` is given as the embedding name. |
+| `alphaMode` | The mode for computing atomic polarizabilities: can be `'species'` (default) or `'reference'`.  See the [EMLE-Engine API documentation](https://chemle.github.io/emle-engine/api/index_models.html#emle.models.EMLE) for more details. |
+| `precision` | `'single'` for single precision or `'double'` for double precision. |
+| `device` | The PyTorch device to perform calculations on, either a `torch.device` object or a string (such as `'cuda'` or `'cpu'`.)  If omitted, a device is chosen automatically. |
+
 ## Other Packages
 
 OpenMM-ML is based on a plugin architecture, allowing other packages to provide their own interfaces to it.  The
