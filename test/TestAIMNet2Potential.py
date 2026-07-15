@@ -17,9 +17,10 @@ test_data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
 
 @pytest.mark.parametrize("platform_int", list(platform_ints))
 class TestAIMNet2:
-    def _toluene_energy(self, name, platform_int, **mlPotentialArgs):
+    def _toluene_energy(self, name, platform_int, modelPath=None, **createSystemArgs):
         pdb = app.PDBFile(os.path.join(test_data_dir, "toluene", "toluene.pdb"))
-        system = MLPotential(name, **mlPotentialArgs).createSystem(pdb.topology)
+        potentialArgs = {} if modelPath is None else {"modelPath": modelPath}
+        system = MLPotential(name, **potentialArgs).createSystem(pdb.topology, **createSystemArgs)
         platform = mm.Platform.getPlatform(platform_int)
         context = mm.Context(system, mm.VerletIntegrator(0.001), platform)
         context.setPositions(pdb.getPositions(asNumpy=True))
@@ -51,6 +52,24 @@ class TestAIMNet2:
         from aimnet.calculators.calculator import get_model_path
         energy = self._toluene_energy("aimnet", platform_int, modelPath=get_model_path("aimnet2"))
         assert np.isclose(energy, self.familyEnergies["aimnet2"], rtol=rtol)
+
+    def testModelIndex(self, platform_int):
+        # The family name selects ensemble member 0, so modelIndex=0 reproduces the
+        # family default energy while a different member gives a slightly different energy.
+        # Check they're relatively similar but do actually differ.
+        default = self._toluene_energy("aimnet2", platform_int)
+        member0 = self._toluene_energy("aimnet2", platform_int, modelIndex=0)
+        member2 = self._toluene_energy("aimnet2", platform_int, modelIndex=2)
+        assert np.isclose(default, member0, rtol=rtol)
+        assert abs(default - member2) > 0.1
+
+    def testInvalidModelIndex(self, platform_int):
+        # An out-of-range member and modelIndex on a local model both raise ValueError.
+        from aimnet.calculators.calculator import get_model_path
+        with pytest.raises(ValueError):
+            self._toluene_energy("aimnet2", platform_int, modelIndex=4)
+        with pytest.raises(ValueError):
+            self._toluene_energy("aimnet", platform_int, modelPath=get_model_path("aimnet2"), modelIndex=0)
 
     def testPeriodicSystem(self, platform_int):
         pdb = app.PDBFile(os.path.join(test_data_dir, "alanine-dipeptide", "alanine-dipeptide-explicit.pdb"))

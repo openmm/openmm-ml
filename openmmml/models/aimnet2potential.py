@@ -59,9 +59,11 @@ class AIMNet2PotentialImpl(MLPotentialImpl):
 
     >>> potential = MLPotential('aimnet2')
 
-    Each family is a four-member ensemble.  A family name maps to member 0; append
-    '_0' through '_3' to select a particular member (e.g. 'aimnet2-wb97m-d3_2').  See the
-    'openmmml.potentials' entry points in setup.py for the full list of accepted names.
+    Each family is a four-member ensemble.  A family name maps to member 0; to select a
+    particular member, pass the ``modelIndex`` argument (0 through 3) to
+    ``createSystem()``:
+
+    >>> system = potential.createSystem(topology, modelIndex=2)
 
     To use a locally trained AIMNet2 model, use the name 'aimnet' and provide the
     path to the model file:
@@ -86,6 +88,7 @@ class AIMNet2PotentialImpl(MLPotentialImpl):
                   system: openmm.System,
                   atoms: Optional[Iterable[int]],
                   forceGroup: int,
+                  modelIndex: Optional[int] = None,
                   **args):
         # Load the AIMNet2 model.
 
@@ -97,11 +100,23 @@ class AIMNet2PotentialImpl(MLPotentialImpl):
         if self.name == 'aimnet':
             if self.modelPath is None:
                 raise ValueError("No modelPath provided for local AIMNet2 model.")
+            if modelIndex is not None:
+                raise ValueError("modelIndex is not supported for local AIMNet2 models ('aimnet').")
             model = AIMNet2Calculator(self.modelPath)
         else:
-            # Any other registered name is an AIMNet2 registry name or alias; aimnet
-            # resolves it (family and ensemble member) itself.
-            model = AIMNet2Calculator(self.name)
+            # The registered name is an AIMNet2 family alias, which aimnet resolves to
+            # ensemble member 0.  If modelIndex is given, select that member instead:
+            # family aliases are not a simple prefix (e.g. member 2 of 'aimnet2-2025' is
+            # 'aimnet2-b973c-2025-d3_2'), so resolve the alias to its canonical member-0
+            # name and substitute the requested member index.
+            modelName = self.name
+            if modelIndex is not None:
+                if not 0 <= modelIndex <= 3:
+                    raise ValueError(f"modelIndex must be 0-3 for {self.name}, got {modelIndex}")
+                from aimnet.calculators.model_registry import resolve_registry_model_name
+                familyPrefix = resolve_registry_model_name(self.name).rsplit('_', 1)[0]
+                modelName = f'{familyPrefix}_{modelIndex}'
+            model = AIMNet2Calculator(modelName)
         device = torch.device(model.device)
         model.device = device
 

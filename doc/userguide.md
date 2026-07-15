@@ -123,8 +123,7 @@ create yourself.  The following pretrained model families are supported.
 | `aimnet` | Custom AIMNet2 models specified with the `modelPath` argument |
 
 Each pretrained family is a four-member ensemble.  The family name (e.g. `aimnet2`) selects member 0; to use a
-specific member, append `_0` through `_3` to the registry name (e.g. `aimnet2-wb97m-d3_2`).  The full set of
-supported names (every ensemble member and family alias) is the `openmmml.potentials` entry points in `setup.py`.
+specific member, pass the `modelIndex` argument (0 through 3) to `createSystem()`.
 
 When creating AIMNet2 models, the following keyword arguments to the `MLPotential` constructor are supported.
 
@@ -138,6 +137,7 @@ When using AIMNet2 models, the following extra keyword arguments to `createSyste
 | --- | --- |
 | `charge` | The total charge of the system.  If omitted, it is assumed to be 0. |
 | `multiplicity` | The spin multiplicity of the system.  If omitted, it is assumed to be 1. |
+| `modelIndex` | For pretrained families, the ensemble member (0 through 3) to use.  If omitted, member 0 is used.  Not supported for custom models (name `aimnet`). |
 
 ### NequIP
 

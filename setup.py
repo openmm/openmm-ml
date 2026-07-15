@@ -43,43 +43,14 @@ setup(
         'openmmml.potentials': [
             # Custom AIMNet2 model supplied by path.
             'aimnet = openmmml.models.aimnet2potential:AIMNet2PotentialImplFactory',
-            # AIMNet2 registry models: the canonical name and family alias for each
-            # supported model from the aimnet model registry
-            # (aimnet/calculators/model_registry.yaml) is passed straight through to
-            # AIMNet2Calculator, which resolves the family and ensemble member.  The
-            # trailing _0.._3 selects the ensemble member; the short alias for each
-            # family (e.g. 'aimnet2') maps to member 0.  Legacy underscore aliases from
-            # the registry (e.g. 'aimnet2_rxn_0') are intentionally not registered.
-            # wb97m-d3 family.
-            'aimnet2-wb97m-d3_0 = openmmml.models.aimnet2potential:AIMNet2PotentialImplFactory',
-            'aimnet2-wb97m-d3_1 = openmmml.models.aimnet2potential:AIMNet2PotentialImplFactory',
-            'aimnet2-wb97m-d3_2 = openmmml.models.aimnet2potential:AIMNet2PotentialImplFactory',
-            'aimnet2-wb97m-d3_3 = openmmml.models.aimnet2potential:AIMNet2PotentialImplFactory',
+            # AIMNet2 pretrained families.  Each family name is passed to
+            # AIMNet2Calculator, which resolves it to ensemble member 0.  A specific
+            # member (0..3) is selected with the modelIndex argument to createSystem()
+            # (see openmmml/models/aimnet2potential.py).
             'aimnet2 = openmmml.models.aimnet2potential:AIMNet2PotentialImplFactory',
-            'aimnet2-wb97m = openmmml.models.aimnet2potential:AIMNet2PotentialImplFactory',
-            # b973c-2025-d3 family.
-            'aimnet2-b973c-2025-d3_0 = openmmml.models.aimnet2potential:AIMNet2PotentialImplFactory',
-            'aimnet2-b973c-2025-d3_1 = openmmml.models.aimnet2potential:AIMNet2PotentialImplFactory',
-            'aimnet2-b973c-2025-d3_2 = openmmml.models.aimnet2potential:AIMNet2PotentialImplFactory',
-            'aimnet2-b973c-2025-d3_3 = openmmml.models.aimnet2potential:AIMNet2PotentialImplFactory',
             'aimnet2-2025 = openmmml.models.aimnet2potential:AIMNet2PotentialImplFactory',
-            # nse family (open-shell systems and radicals).
-            'aimnet2-nse_0 = openmmml.models.aimnet2potential:AIMNet2PotentialImplFactory',
-            'aimnet2-nse_1 = openmmml.models.aimnet2potential:AIMNet2PotentialImplFactory',
-            'aimnet2-nse_2 = openmmml.models.aimnet2potential:AIMNet2PotentialImplFactory',
-            'aimnet2-nse_3 = openmmml.models.aimnet2potential:AIMNet2PotentialImplFactory',
             'aimnet2-nse = openmmml.models.aimnet2potential:AIMNet2PotentialImplFactory',
-            # pd family (Pd catalysis).
-            'aimnet2-pd_0 = openmmml.models.aimnet2potential:AIMNet2PotentialImplFactory',
-            'aimnet2-pd_1 = openmmml.models.aimnet2potential:AIMNet2PotentialImplFactory',
-            'aimnet2-pd_2 = openmmml.models.aimnet2potential:AIMNet2PotentialImplFactory',
-            'aimnet2-pd_3 = openmmml.models.aimnet2potential:AIMNet2PotentialImplFactory',
             'aimnet2-pd = openmmml.models.aimnet2potential:AIMNet2PotentialImplFactory',
-            # rxn family (reactive chemistry; net-neutral, H/C/N/O only).
-            'aimnet2-rxn_0 = openmmml.models.aimnet2potential:AIMNet2PotentialImplFactory',
-            'aimnet2-rxn_1 = openmmml.models.aimnet2potential:AIMNet2PotentialImplFactory',
-            'aimnet2-rxn_2 = openmmml.models.aimnet2potential:AIMNet2PotentialImplFactory',
-            'aimnet2-rxn_3 = openmmml.models.aimnet2potential:AIMNet2PotentialImplFactory',
             'aimnet2-rxn = openmmml.models.aimnet2potential:AIMNet2PotentialImplFactory',
             'ani1ccx = openmmml.models.anipotential:ANIPotentialImplFactory',
             'ani2x = openmmml.models.anipotential:ANIPotentialImplFactory',
