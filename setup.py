@@ -41,8 +41,17 @@ setup(
     install_requires=['numpy', 'openmm >= 8.5.2'],
     entry_points={
         'openmmml.potentials': [
+            # Custom AIMNet2 model supplied by path.
             'aimnet = openmmml.models.aimnet2potential:AIMNet2PotentialImplFactory',
+            # AIMNet2 pretrained families.  Each family name is passed to
+            # AIMNet2Calculator, which resolves it to ensemble member 0.  A specific
+            # member (0..3) is selected with the modelIndex argument to createSystem()
+            # (see openmmml/models/aimnet2potential.py).
             'aimnet2 = openmmml.models.aimnet2potential:AIMNet2PotentialImplFactory',
+            'aimnet2-2025 = openmmml.models.aimnet2potential:AIMNet2PotentialImplFactory',
+            'aimnet2-nse = openmmml.models.aimnet2potential:AIMNet2PotentialImplFactory',
+            'aimnet2-pd = openmmml.models.aimnet2potential:AIMNet2PotentialImplFactory',
+            'aimnet2-rxn = openmmml.models.aimnet2potential:AIMNet2PotentialImplFactory',
             'ani1ccx = openmmml.models.anipotential:ANIPotentialImplFactory',
             'ani2x = openmmml.models.anipotential:ANIPotentialImplFactory',
             'ase = openmmml.models.asepotential:ASEPotentialImplFactory',

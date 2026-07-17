@@ -48,12 +48,22 @@ class AIMNet2PotentialImpl(MLPotentialImpl):
 
     The AIMNet2 potential is constructed using `aimnet` to build a PyTorch model,
     and then integrated into the OpenMM System using a PythonForce.  This
-    implementation supports both the pretrained AIMNet2 model and locally trained
+    implementation supports both the pretrained AIMNet2 models and locally trained
     AIMNet2 models.
 
-    To use the pretrained AIMNet2 model, specify the model by name:
+    To use a pretrained model, specify a supported AIMNet2 model name.  The supported
+    model families are 'aimnet2' (general organic/elemental-organic), 'aimnet2-2025'
+    (improved intermolecular interactions), 'aimnet2-nse' (open-shell systems and
+    radicals), 'aimnet2-pd' (Pd catalysis), and 'aimnet2-rxn' (reactive chemistry).  For
+    example:
 
     >>> potential = MLPotential('aimnet2')
+
+    Each family is a four-member ensemble.  Pass the ``modelIndex`` argument (0 through 3)
+    to ``createSystem()`` to select which member to use.  If it is omitted, member 0 is
+    used by default:
+
+    >>> system = potential.createSystem(topology, modelIndex=2)
 
     To use a locally trained AIMNet2 model, use the name 'aimnet' and provide the
     path to the model file:
@@ -63,11 +73,21 @@ class AIMNet2PotentialImpl(MLPotentialImpl):
     Attributes
     ----------
     name : str
-        The name of the AIMNet2 model.  Options are 'aimnet2' for the pretrained
-        model and 'aimnet' for a locally trained model.
+        The name of the AIMNet2 model.  This is either an AIMNet2 registry model name
+        or alias for a pretrained model, or 'aimnet' for a locally trained model.
     modelPath : str
         The path to the locally trained AIMNet2 model if ``name`` is 'aimnet'.
     """
+
+    # (Family alias, canonical AIMNet2 registry family prefix)
+    # Model index (0-3) is appended at load time, e.g. 'aimnet2-wb97m-d3_2'.
+    KNOWN_MODELS = {
+        'aimnet2':      'aimnet2-wb97m-d3',
+        'aimnet2-2025': 'aimnet2-b973c-2025-d3',
+        'aimnet2-nse':  'aimnet2-nse',
+        'aimnet2-pd':   'aimnet2-pd',
+        'aimnet2-rxn':  'aimnet2-rxn',
+    }
 
     def __init__(self, name, modelPath=None):
         self.name = name
@@ -78,6 +98,7 @@ class AIMNet2PotentialImpl(MLPotentialImpl):
                   system: openmm.System,
                   atoms: Optional[Iterable[int]],
                   forceGroup: int,
+                  modelIndex: int = 0,
                   **args):
         # Load the AIMNet2 model.
 
@@ -86,11 +107,24 @@ class AIMNet2PotentialImpl(MLPotentialImpl):
         except ImportError as e:
             raise ImportError(f"Failed to import aimnet with error: {e}. Install from https://github.com/isayevlab/aimnetcentral.")
         import torch
-        if self.name == 'aimnet2':
-            model = AIMNet2Calculator('aimnet2')
+        if self.name in AIMNet2PotentialImpl.KNOWN_MODELS:
+            # We select an ensemble member by substituting its index into the family's
+            # canonical member name (e.g. 'aimnet2-wb97m-d3_2'), using the prefixes in
+            # KNOWN_MODELS. We can't instead pass the family alias with
+            # AIMNet2Calculator's `ensemble_member` argument: for a registry alias that
+            # argument is silently ignored (it only applies when loading an ensemble from
+            # a HuggingFace repo), so every index would return member 0 and out-of-range
+            # values would raise nothing.
+            if not 0 <= modelIndex <= 3:
+                raise ValueError(f"modelIndex must be 0-3 for {self.name}, got {modelIndex}")
+            modelName = f'{AIMNet2PotentialImpl.KNOWN_MODELS[self.name]}_{modelIndex}'
+            model = AIMNet2Calculator(modelName)
         elif self.name == 'aimnet':
             if self.modelPath is None:
                 raise ValueError("No modelPath provided for local AIMNet2 model.")
+            if modelIndex != 0:
+                raise ValueError("modelIndex != 0 is not supported for local AIMNet2 models "
+                                 "('aimnet') -- only the model at modelPath is available.")
             model = AIMNet2Calculator(self.modelPath)
         else:
             raise ValueError(f"Unsupported AIMNet2 model: {self.name}")
@@ -121,12 +155,12 @@ class AIMNet2PotentialImpl(MLPotentialImpl):
     def getMLLongRange(self) -> bool | None:
         # NOTE: By default, creating an AIMNet2Calculator gives a coulomb_method
         # of "simple" (which changes to the cutoff-based "dsf" method with PBCs;
-        # see https://isayevlab.github.io/aimnetcentral/long_range/).  OpenMM-ML
-        # does not expose any option to change this; if we change this behavior
-        # in the future, or other AIMNet models we support in the future have
-        # different behavior, this must be updated.  A user-supplied local model
-        # (modelPath) is assumed to use this same default coulomb behavior; if a
-        # custom model does not, this would need revisiting.
+        # see https://isayevlab.github.io/aimnetcentral/long_range/).  This is a
+        # property of the calculator rather than the individual model weights, so it
+        # is assumed to hold for every supported registry family as well as for a
+        # user-supplied local model (modelPath).  OpenMM-ML does not expose any
+        # option to change this; if we change this behavior in the future, or a
+        # supported model has different behavior, this must be updated.
         return False
 
 def _computeAIMNet2(state, model, numbers, charge, multiplicity, indices, periodic):

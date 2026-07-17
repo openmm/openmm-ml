@@ -110,13 +110,20 @@ When using MACE models, the following extra keyword arguments to `createSystem()
 ### AIMNet2
 
 The [aimnet](https://github.com/isayevlab/aimnetcentral) package can be used to create models using the pretrained
-[AIMNet2](https://doi.org/10.1039/D4SC08572H) potential.  This includes both the pretrained model and custom models you
-create yourself.  The following model names are supported.
+[AIMNet2](https://doi.org/10.1039/D4SC08572H) potential.  This includes both the pretrained models and custom models you
+create yourself.  The following pretrained model families are supported.
 
 | Name | Model |
 | --- | --- |
-| `aimnet2` | Pretrained AIMNet2 model |
+| `aimnet2` | General organic and elemental-organic chemistry (wB97M-D3).  Covers H, B, C, N, O, F, Si, P, S, Cl, As, Se, Br, I |
+| `aimnet2-2025` | B97-3c with improved intermolecular interactions.  Same element coverage as `aimnet2` |
+| `aimnet2-nse` | Open-shell systems |
+| `aimnet2-pd` | Pd catalysis (B97-3c/CPCM(THF)).  Adds the Pd element (replaces As) |
+| `aimnet2-rxn` | Reactive chemistry, transition states, NEB/IRC.  Limited to net-neutral systems and H, C, N, O only |
 | `aimnet` | Custom AIMNet2 models specified with the `modelPath` argument |
+
+Each pretrained family is a four-member ensemble.  Pass the `modelIndex` argument (0 through 3) to `createSystem()`
+to select which member to use.  If it is omitted, member 0 is used by default.
 
 When creating AIMNet2 models, the following keyword arguments to the `MLPotential` constructor are supported.
 
@@ -130,6 +137,7 @@ When using AIMNet2 models, the following extra keyword arguments to `createSyste
 | --- | --- |
 | `charge` | The total charge of the system.  If omitted, it is assumed to be 0. |
 | `multiplicity` | The spin multiplicity of the system.  If omitted, it is assumed to be 1. |
+| `modelIndex` | For pretrained families, the ensemble member (0 through 3) to use.  If omitted, member 0 is used.  Not supported for custom models (name `aimnet`). |
 
 ### NequIP
 
