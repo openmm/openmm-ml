@@ -59,9 +59,9 @@ class AIMNet2PotentialImpl(MLPotentialImpl):
 
     >>> potential = MLPotential('aimnet2')
 
-    Each family is a four-member ensemble.  A family name maps to member 0; to select a
-    particular member, pass the ``modelIndex`` argument (0 through 3) to
-    ``createSystem()``:
+    Each family is a four-member ensemble.  Pass the ``modelIndex`` argument (0 through 3)
+    to ``createSystem()`` to select which member to use.  If it is omitted, member 0 is
+    used by default:
 
     >>> system = potential.createSystem(topology, modelIndex=2)
 
@@ -88,7 +88,7 @@ class AIMNet2PotentialImpl(MLPotentialImpl):
                   system: openmm.System,
                   atoms: Optional[Iterable[int]],
                   forceGroup: int,
-                  modelIndex: Optional[int] = None,
+                  modelIndex: int = 0,
                   **args):
         # Load the AIMNet2 model.
 
@@ -100,22 +100,28 @@ class AIMNet2PotentialImpl(MLPotentialImpl):
         if self.name == 'aimnet':
             if self.modelPath is None:
                 raise ValueError("No modelPath provided for local AIMNet2 model.")
-            if modelIndex is not None:
-                raise ValueError("modelIndex is not supported for local AIMNet2 models ('aimnet').")
+            if modelIndex != 0:
+                raise ValueError("modelIndex > 0 is not supported for local AIMNet2 models "
+                                 "('aimnet') -- only the model at modelPath is used.")
             model = AIMNet2Calculator(self.modelPath)
         else:
-            # The registered name is an AIMNet2 family alias, which aimnet resolves to
-            # ensemble member 0.  If modelIndex is given, select that member instead:
-            # family aliases are not a simple prefix (e.g. member 2 of 'aimnet2-2025' is
-            # 'aimnet2-b973c-2025-d3_2'), so resolve the alias to its canonical member-0
-            # name and substitute the requested member index.
-            modelName = self.name
-            if modelIndex is not None:
-                if not 0 <= modelIndex <= 3:
-                    raise ValueError(f"modelIndex must be 0-3 for {self.name}, got {modelIndex}")
-                from aimnet.calculators.model_registry import resolve_registry_model_name
-                familyPrefix = resolve_registry_model_name(self.name).rsplit('_', 1)[0]
-                modelName = f'{familyPrefix}_{modelIndex}'
+            # The registered name is an AIMNet2 family alias. We can't just pass the
+            # alias with AIMNet2Calculator's `ensemble_member` argument: for a registry
+            # alias this argument is silently ignored (it only applies when loading an
+            # ensemble from a HuggingFace repo), so every index returns member 0 and
+            # out-of-range values raise nothing. Instead, resolve the alias to its
+            # canonical member-0 name and substitute the requested member index. Family
+            # aliases are not a simple prefix (e.g. member 2 of 'aimnet2-2025' is
+            # 'aimnet2-b973c-2025-d3_2'), hence the resolve step. 
+
+            # Validate the modelIndex range for the AIMNet2 family, as AIMNet doesn't
+            # do this directly (it just complains about a missing model or silently
+            # ignores for family aliases).
+            if not 0 <= modelIndex <= 3:
+                raise ValueError(f"modelIndex must be 0-3 for {self.name}, got {modelIndex}")
+            from aimnet.calculators.model_registry import resolve_registry_model_name
+            familyPrefix = resolve_registry_model_name(self.name).rsplit('_', 1)[0]
+            modelName = f'{familyPrefix}_{modelIndex}'
             model = AIMNet2Calculator(modelName)
         device = torch.device(model.device)
         model.device = device

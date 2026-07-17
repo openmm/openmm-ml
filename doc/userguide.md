@@ -122,8 +122,8 @@ create yourself.  The following pretrained model families are supported.
 | `aimnet2-rxn` | Reactive chemistry, transition states, NEB/IRC.  Limited to net-neutral systems and H, C, N, O only |
 | `aimnet` | Custom AIMNet2 models specified with the `modelPath` argument |
 
-Each pretrained family is a four-member ensemble.  The family name (e.g. `aimnet2`) selects member 0; to use a
-specific member, pass the `modelIndex` argument (0 through 3) to `createSystem()`.
+Each pretrained family is a four-member ensemble.  Pass the `modelIndex` argument (0 through 3) to `createSystem()`
+to select which member to use.  If it is omitted, member 0 is used by default.
 
 When creating AIMNet2 models, the following keyword arguments to the `MLPotential` constructor are supported.
 

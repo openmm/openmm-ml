@@ -64,12 +64,13 @@ class TestAIMNet2:
         assert abs(default - member2) > 0.1
 
     def testInvalidModelIndex(self, platform_int):
-        # An out-of-range member and modelIndex on a local model both raise ValueError.
+        # An out-of-range member and a non-default modelIndex on a local model both raise
+        # ValueError.
         from aimnet.calculators.calculator import get_model_path
         with pytest.raises(ValueError):
             self._toluene_energy("aimnet2", platform_int, modelIndex=4)
         with pytest.raises(ValueError):
-            self._toluene_energy("aimnet", platform_int, modelPath=get_model_path("aimnet2"), modelIndex=0)
+            self._toluene_energy("aimnet", platform_int, modelPath=get_model_path("aimnet2"), modelIndex=2)
 
     def testPeriodicSystem(self, platform_int):
         pdb = app.PDBFile(os.path.join(test_data_dir, "alanine-dipeptide", "alanine-dipeptide-explicit.pdb"))
