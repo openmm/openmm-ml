@@ -79,6 +79,16 @@ class AIMNet2PotentialImpl(MLPotentialImpl):
         The path to the locally trained AIMNet2 model if ``name`` is 'aimnet'.
     """
 
+    # (Family alias, canonical AIMNet2 registry family prefix)
+    # Model index (0-3) is appended at load time, e.g. 'aimnet2-wb97m-d3_2'.
+    KNOWN_MODELS = {
+        'aimnet2':      'aimnet2-wb97m-d3',
+        'aimnet2-2025': 'aimnet2-b973c-2025-d3',
+        'aimnet2-nse':  'aimnet2-nse',
+        'aimnet2-pd':   'aimnet2-pd',
+        'aimnet2-rxn':  'aimnet2-rxn',
+    }
+
     def __init__(self, name, modelPath=None):
         self.name = name
         self.modelPath = modelPath
@@ -97,32 +107,27 @@ class AIMNet2PotentialImpl(MLPotentialImpl):
         except ImportError as e:
             raise ImportError(f"Failed to import aimnet with error: {e}. Install from https://github.com/isayevlab/aimnetcentral.")
         import torch
-        if self.name == 'aimnet':
+        if self.name in AIMNet2PotentialImpl.KNOWN_MODELS:
+            # We select an ensemble member by substituting its index into the family's
+            # canonical member name (e.g. 'aimnet2-wb97m-d3_2'), using the prefixes in
+            # KNOWN_MODELS. We can't instead pass the family alias with
+            # AIMNet2Calculator's `ensemble_member` argument: for a registry alias that
+            # argument is silently ignored (it only applies when loading an ensemble from
+            # a HuggingFace repo), so every index would return member 0 and out-of-range
+            # values would raise nothing.
+            if not 0 <= modelIndex <= 3:
+                raise ValueError(f"modelIndex must be 0-3 for {self.name}, got {modelIndex}")
+            modelName = f'{AIMNet2PotentialImpl.KNOWN_MODELS[self.name]}_{modelIndex}'
+            model = AIMNet2Calculator(modelName)
+        elif self.name == 'aimnet':
             if self.modelPath is None:
                 raise ValueError("No modelPath provided for local AIMNet2 model.")
             if modelIndex != 0:
-                raise ValueError("modelIndex > 0 is not supported for local AIMNet2 models "
-                                 "('aimnet') -- only the model at modelPath is used.")
+                raise ValueError("modelIndex != 0 is not supported for local AIMNet2 models "
+                                 "('aimnet') -- only the model at modelPath is available.")
             model = AIMNet2Calculator(self.modelPath)
         else:
-            # The registered name is an AIMNet2 family alias. We can't just pass the
-            # alias with AIMNet2Calculator's `ensemble_member` argument: for a registry
-            # alias this argument is silently ignored (it only applies when loading an
-            # ensemble from a HuggingFace repo), so every index returns member 0 and
-            # out-of-range values raise nothing. Instead, resolve the alias to its
-            # canonical member-0 name and substitute the requested member index. Family
-            # aliases are not a simple prefix (e.g. member 2 of 'aimnet2-2025' is
-            # 'aimnet2-b973c-2025-d3_2'), hence the resolve step. 
-
-            # Validate the modelIndex range for the AIMNet2 family, as AIMNet doesn't
-            # do this directly (it just complains about a missing model or silently
-            # ignores for family aliases).
-            if not 0 <= modelIndex <= 3:
-                raise ValueError(f"modelIndex must be 0-3 for {self.name}, got {modelIndex}")
-            from aimnet.calculators.model_registry import resolve_registry_model_name
-            familyPrefix = resolve_registry_model_name(self.name).rsplit('_', 1)[0]
-            modelName = f'{familyPrefix}_{modelIndex}'
-            model = AIMNet2Calculator(modelName)
+            raise ValueError(f"Unsupported AIMNet2 model: {self.name}")
         device = torch.device(model.device)
         model.device = device
 

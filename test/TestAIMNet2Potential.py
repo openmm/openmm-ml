@@ -72,6 +72,17 @@ class TestAIMNet2:
         with pytest.raises(ValueError):
             self._toluene_energy("aimnet", platform_int, modelPath=get_model_path("aimnet2"), modelIndex=2)
 
+    def testUnsupportedModel(self, platform_int):
+        # A name that reaches the impl but isn't a known family (e.g. the legacy b973c
+        # family, a raw member alias, or a typo) is rejected.  Names are normally gated by
+        # the registered entry points before this point, so we exercise the impl directly.
+        from openmmml.models.aimnet2potential import AIMNet2PotentialImpl
+        pdb = app.PDBFile(os.path.join(test_data_dir, "toluene", "toluene.pdb"))
+        for name in ("aimnet2-b973c", "aimnet2_wb97m_d3_2", "not-a-model"):
+            impl = AIMNet2PotentialImpl(name)
+            with pytest.raises(ValueError, match="Unsupported AIMNet2 model"):
+                impl.addForces(pdb.topology, mm.System(), None, 0)
+
     def testPeriodicSystem(self, platform_int):
         pdb = app.PDBFile(os.path.join(test_data_dir, "alanine-dipeptide", "alanine-dipeptide-explicit.pdb"))
         potential = MLPotential("aimnet2", charge=0, multiplicity=1)
