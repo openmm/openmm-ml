@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>openmmml.models.aimnet2potential.AIMNet2PotentialImpl &#8212; OpenMM ML 1.7dev_8908e74 documentation</title>
+    <title>openmmml.models.aimnet2potential.AIMNet2PotentialImpl &#8212; OpenMM ML 1.7dev_02a2c62 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../_static/documentation_options.js?v=ded2fc0d"></script>
+    <script src="../_static/documentation_options.js?v=83f1246e"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'generated/openmmml.models.aimnet2potential.AIMNet2PotentialImpl';</script>
@@ -476,10 +476,20 @@
 <dd><p>This is the MLPotentialImpl implementing the AIMNet2 potential.</p>
 <p>The AIMNet2 potential is constructed using <cite>aimnet</cite> to build a PyTorch model,
 and then integrated into the OpenMM System using a PythonForce.  This
-implementation supports both the pretrained AIMNet2 model and locally trained
+implementation supports both the pretrained AIMNet2 models and locally trained
 AIMNet2 models.</p>
-<p>To use the pretrained AIMNet2 model, specify the model by name:</p>
+<p>To use a pretrained model, specify a supported AIMNet2 model name.  The supported
+model families are ‘aimnet2’ (general organic/elemental-organic), ‘aimnet2-2025’
+(improved intermolecular interactions), ‘aimnet2-nse’ (open-shell systems and
+radicals), ‘aimnet2-pd’ (Pd catalysis), and ‘aimnet2-rxn’ (reactive chemistry).  For
+example:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">potential</span> <span class="o">=</span> <span class="n">MLPotential</span><span class="p">(</span><span class="s1">&#39;aimnet2&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Each family is a four-member ensemble.  Pass the <code class="docutils literal notranslate"><span class="pre">modelIndex</span></code> argument (0 through 3)
+to <code class="docutils literal notranslate"><span class="pre">createSystem()</span></code> to select which member to use.  If it is omitted, member 0 is
+used by default:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">system</span> <span class="o">=</span> <span class="n">potential</span><span class="o">.</span><span class="n">createSystem</span><span class="p">(</span><span class="n">topology</span><span class="p">,</span> <span class="n">modelIndex</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>To use a locally trained AIMNet2 model, use the name ‘aimnet’ and provide the
@@ -490,8 +500,8 @@ path to the model file:</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="openmmml.models.aimnet2potential.AIMNet2PotentialImpl.name">
 <span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#openmmml.models.aimnet2potential.AIMNet2PotentialImpl.name" title="Link to this definition">#</a></dt>
-<dd><p>The name of the AIMNet2 model.  Options are ‘aimnet2’ for the pretrained
-model and ‘aimnet’ for a locally trained model.</p>
+<dd><p>The name of the AIMNet2 model.  This is either an AIMNet2 registry model name
+or alias for a pretrained model, or ‘aimnet’ for a locally trained model.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>str</p>
@@ -521,7 +531,7 @@ model and ‘aimnet’ for a locally trained model.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="#openmmml.models.aimnet2potential.AIMNet2PotentialImpl.__init__" title="openmmml.models.aimnet2potential.AIMNet2PotentialImpl.__init__"><code class="xref py py-obj docutils literal notranslate"><span class="pre">__init__</span></code></a>(name[, modelPath])</p></td>
 <td><p></p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#openmmml.models.aimnet2potential.AIMNet2PotentialImpl.addForces" title="openmmml.models.aimnet2potential.AIMNet2PotentialImpl.addForces"><code class="xref py py-obj docutils literal notranslate"><span class="pre">addForces</span></code></a>(topology, system, atoms, ...)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#openmmml.models.aimnet2potential.AIMNet2PotentialImpl.addForces" title="openmmml.models.aimnet2potential.AIMNet2PotentialImpl.addForces"><code class="xref py py-obj docutils literal notranslate"><span class="pre">addForces</span></code></a>(topology, system, atoms, forceGroup)</p></td>
 <td><p>Add Force objects to a System to implement the potential function.</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#openmmml.models.aimnet2potential.AIMNet2PotentialImpl.createMixedSystem" title="openmmml.models.aimnet2potential.AIMNet2PotentialImpl.createMixedSystem"><code class="xref py py-obj docutils literal notranslate"><span class="pre">createMixedSystem</span></code></a>(topology, system, atoms, ...)</p></td>
@@ -536,9 +546,18 @@ model and ‘aimnet’ for a locally trained model.</p>
 </tbody>
 </table>
 </div>
+<p class="rubric">Attributes</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table">
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">KNOWN_MODELS</span></code></p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+</div>
 <dl class="py method">
 <dt class="sig sig-object py" id="openmmml.models.aimnet2potential.AIMNet2PotentialImpl.addForces">
-<span class="sig-name descname"><span class="pre">addForces</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">topology</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Topology</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">system</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">System</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atoms</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">forceGroup</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#openmmml.models.aimnet2potential.AIMNet2PotentialImpl.addForces" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">addForces</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">topology</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Topology</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">system</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">System</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atoms</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Iterable</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">forceGroup</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">modelIndex</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#openmmml.models.aimnet2potential.AIMNet2PotentialImpl.addForces" title="Link to this definition">#</a></dt>
 <dd><p>Add Force objects to a System to implement the potential function.</p>
 <p>This is invoked by MLPotential.createSystem().  Subclasses must implement
 it to create the requested potential function.</p>

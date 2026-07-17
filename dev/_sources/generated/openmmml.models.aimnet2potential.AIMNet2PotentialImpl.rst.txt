@@ -23,4 +23,10 @@
 
    
    
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~AIMNet2PotentialImpl.KNOWN_MODELS
+   
    
