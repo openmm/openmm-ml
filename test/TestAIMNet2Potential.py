@@ -17,19 +17,71 @@ test_data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
 
 @pytest.mark.parametrize("platform_int", list(platform_ints))
 class TestAIMNet2:
-    def testCreatePureMLSystem(self, platform_int):
+    def _toluene_energy(self, name, platform_int, modelPath=None, **createSystemArgs):
         pdb = app.PDBFile(os.path.join(test_data_dir, "toluene", "toluene.pdb"))
-        potential = MLPotential("aimnet2", charge=0, multiplicity=1)
-        system = potential.createSystem(pdb.topology)
+        potentialArgs = {} if modelPath is None else {"modelPath": modelPath}
+        system = MLPotential(name, **potentialArgs).createSystem(pdb.topology, **createSystemArgs)
         platform = mm.Platform.getPlatform(platform_int)
         context = mm.Context(system, mm.VerletIntegrator(0.001), platform)
-        positionsOriginal = pdb.getPositions(asNumpy=True)
-        energyRef = -713468.0026230365 # in kJ/mol, calculated using the AIMNet2ASE
-        for i in range(10):
-            positions = positionsOriginal + i * 0.5 * unit.nanometers # translate molecule to test PBC
-            context.setPositions(positions)
-            energyML = context.getState(getEnergy=True).getPotentialEnergy().value_in_unit(unit.kilojoules_per_mole)
-            assert np.isclose(energyRef, energyML, rtol=rtol)
+        context.setPositions(pdb.getPositions(asNumpy=True))
+        return context.getState(getEnergy=True).getPotentialEnergy().value_in_unit(unit.kilojoules_per_mole)
+
+    # Reference toluene energies (kJ/mol) for the pretrained families, calculated with
+    # AIMNet2ASE (see test/data/toluene/aimnet2_energies.py).  Toluene is neutral and
+    # H/C only, so it is compatible with every family, including rxn (net-neutral,
+    # H/C/N/O only).  Energy references differ across families (rxn in particular uses a
+    # learned, shifted scale), so these values are not comparable to one another.
+    familyEnergies = {
+        "aimnet2": -713468.0026230365,
+        "aimnet2-2025": -712625.9531791345,
+        "aimnet2-nse": -713470.4078623096,
+        "aimnet2-pd": -712635.0374879715,
+        "aimnet2-rxn": -208.3835827516966,
+    }
+
+    @pytest.mark.parametrize("model,energyRef", list(familyEnergies.items()))
+    def testCreateModels(self, platform_int, model, energyRef):
+        # Each pretrained family reproduces the reference energy computed
+        # independently with AIMNet2ASE.
+        assert np.isclose(self._toluene_energy(model, platform_int), energyRef, rtol=rtol)
+
+    def testLocalModel(self, platform_int):
+        # Loading the pretrained aimnet2 model as a custom model via the 'aimnet' name
+        # and an explicit modelPath gives the same energy as loading it by the 'aimnet2'
+        # name (tested in testCreateModels).
+        from aimnet.calculators.calculator import get_model_path
+        energy = self._toluene_energy("aimnet", platform_int, modelPath=get_model_path("aimnet2"))
+        assert np.isclose(energy, self.familyEnergies["aimnet2"], rtol=rtol)
+
+    def testModelIndex(self, platform_int):
+        # The family name selects ensemble member 0, so modelIndex=0 reproduces the
+        # family default energy while a different member gives a slightly different energy.
+        # Check they're relatively similar but do actually differ.
+        default = self._toluene_energy("aimnet2", platform_int)
+        member0 = self._toluene_energy("aimnet2", platform_int, modelIndex=0)
+        member2 = self._toluene_energy("aimnet2", platform_int, modelIndex=2)
+        assert np.isclose(default, member0, rtol=rtol)
+        assert abs(default - member2) > 0.1
+
+    def testInvalidModelIndex(self, platform_int):
+        # An out-of-range member and a non-default modelIndex on a local model both raise
+        # ValueError.
+        from aimnet.calculators.calculator import get_model_path
+        with pytest.raises(ValueError):
+            self._toluene_energy("aimnet2", platform_int, modelIndex=4)
+        with pytest.raises(ValueError):
+            self._toluene_energy("aimnet", platform_int, modelPath=get_model_path("aimnet2"), modelIndex=2)
+
+    def testUnsupportedModel(self, platform_int):
+        # A name that reaches the impl but isn't a known family (e.g. the legacy b973c
+        # family, a raw member alias, or a typo) is rejected.  Names are normally gated by
+        # the registered entry points before this point, so we exercise the impl directly.
+        from openmmml.models.aimnet2potential import AIMNet2PotentialImpl
+        pdb = app.PDBFile(os.path.join(test_data_dir, "toluene", "toluene.pdb"))
+        for name in ("aimnet2-b973c", "aimnet2_wb97m_d3_2", "not-a-model"):
+            impl = AIMNet2PotentialImpl(name)
+            with pytest.raises(ValueError, match="Unsupported AIMNet2 model"):
+                impl.addForces(pdb.topology, mm.System(), None, 0)
 
     def testPeriodicSystem(self, platform_int):
         pdb = app.PDBFile(os.path.join(test_data_dir, "alanine-dipeptide", "alanine-dipeptide-explicit.pdb"))
