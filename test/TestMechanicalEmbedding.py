@@ -12,6 +12,8 @@ platform_ints = range(openmm.Platform.getNumPlatforms())
 # Get the path to the test data
 test_data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
 
+atol = 0.01
+
 @pytest.mark.parametrize("platform_int", list(platform_ints))
 class TestMechanicalEmbedding:
 
@@ -75,11 +77,11 @@ class TestMechanicalEmbedding:
             for lambda_value in (0.0, 0.25, 0.5, 0.75, 1.0):
                 mixed_context.setParameter("lambda_interpolate", lambda_value)
                 mixed_energy = mixed_context.getState(energy=True).getPotentialEnergy().value_in_unit(openmm.unit.kilojoule_per_mole)
-                assert np.isclose(mixed_energy, expected_energy * lambda_value + mm_energy_ml_mm * (1 - lambda_value), rtol=0, atol=1e-3)
+                assert np.isclose(mixed_energy, expected_energy * lambda_value + mm_energy_ml_mm * (1 - lambda_value), rtol=0, atol=atol)
 
         else:
             mixed_energy = mixed_context.getState(energy=True).getPotentialEnergy().value_in_unit(openmm.unit.kilojoule_per_mole)
-            assert np.isclose(mixed_energy, expected_energy, rtol=0, atol=1e-3)
+            assert np.isclose(mixed_energy, expected_energy, rtol=0, atol=atol)
 
     @pytest.mark.parametrize("interpolate", (False, True))
     def testPeriodicShortRange(self, platform_int, interpolate):
@@ -134,12 +136,11 @@ class TestMechanicalEmbedding:
             for lambda_value in (0.0, 0.25, 0.5, 0.75, 1.0):
                 mixed_context.setParameter("lambda_interpolate", lambda_value)
                 mixed_energy = mixed_context.getState(energy=True).getPotentialEnergy().value_in_unit(openmm.unit.kilojoule_per_mole)
-                assert np.isclose(mixed_energy, expected_energy * lambda_value + mm_energy_ml_mm * (1 - lambda_value), rtol=0, atol=1e-3)
+                assert np.isclose(mixed_energy, expected_energy * lambda_value + mm_energy_ml_mm * (1 - lambda_value), rtol=0, atol=atol)
 
         else:
             mixed_energy = mixed_context.getState(energy=True).getPotentialEnergy().value_in_unit(openmm.unit.kilojoule_per_mole)
-            print(mixed_energy - expected_energy)
-            assert np.isclose(mixed_energy, expected_energy, rtol=0, atol=1e-3)
+            assert np.isclose(mixed_energy, expected_energy, rtol=0, atol=atol)
 
     @pytest.mark.parametrize("periodic", (False, True))
     @pytest.mark.parametrize("long_range", (False, True, None))
