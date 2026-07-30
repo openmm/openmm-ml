@@ -35,10 +35,124 @@ import openmm.app
 import openmm.unit as unit
 from openmmml.mlpotential import MLPotentialImpl
 
-def removeBonds(system: openmm.System, atoms: list[int], removeInSet: bool) -> openmm.System:
+COVALENT_RADII = [
+    0, 32, 46, 120, 94, 77, 75, 71, 63, 64, 67, 140, 125, 112, 104, 110, 102,
+    99, 96, 176, 154, 133, 122, 121, 110, 107, 104, 100, 99, 101, 109, 112, 109,
+    114, 110, 113, 117, 189, 167, 147, 139, 132, 124, 114, 112, 112, 108, 114,
+    123, 128, 126, 126, 123, 132, 131, 209, 176, 162, 147, 158, 157, 156, 155,
+    151, 152, 151, 150, 149, 149, 148, 153, 146, 137, 131, 123, 118, 115, 111,
+    112, 112, 132, 130, 130, 136, 131, 138, 142, 200, 181, 167, 158, 152, 153,
+    154, 155, 149, 149, 151, 151, 148, 150, 156, 158, 145, 141, 134, 129, 127,
+    121, 115, 114, 109, 122, 136, 143, 146, 158, 148, 157
+] * openmm.unit.picometer
+"""
+Default covalent radii to use for assigning distances in the link-atom method.
+This set is taken from MLIPOps, which chose them to be consistent with the
+simple-dftd3 library (https://github.com/dftd3/simple-dftd3).  They are taken
+from Pyykko and Atsumi, Chem. Eur. J. 15, 2009, 188-197, except that the radii
+of metals have been reduced by 10%.
+"""
+
+def findLinkBonds(topology: openmm.app.Topology, atoms: list[int]) -> list[tuple[int, int]]:
+    """
+    Finds bonds in a topology between a subset of atoms and its complement.
+
+    Parameters
+    ----------
+    topology: Topology
+        The Topology to find bonds in.
+    atoms: list[int]
+        A set of atom indices.
+
+    Returns
+    -------
+    A list of atom index pairs corresponding to "link bonds", i.e., bonds
+    between atoms in the subset and atoms not in the subset.  The first index of
+    every pair will correspond to the atom in the subset.
+    """
+
+    atomSet = set(atoms)
+    linkBonds = []
+
+    for bond in topology.bonds():
+        atom1 = bond.atom1.index
+        atom2 = bond.atom2.index
+        atom1Included = atom1 in atomSet
+        atom2Included = atom2 in atomSet
+        if atom1Included and not atom2Included:
+            linkBonds.append((atom1, atom2))
+        if atom2Included and not atom1Included:
+            linkBonds.append((atom2, atom1))
+
+    return linkBonds
+
+def addLinkAtomSites(topology: openmm.app.Topology, systems: list[openmm.System], linkBonds: list[tuple[int, int]], linkAtomDistances: list[tuple[int, int, unit.Quantity]]) -> list[int]:
+    """
+    Adds virtual sites to systems and a topology for the link-atom method.
+
+    Each virtual site represents a hydrogen atom capping a bond spanning the ML
+    and MM regions of an ML/MM simulation.  By default, the distance from the
+    atom on the ML side of such a bond to the virtual site is calculated based
+    on the covalent radii of the ML atom and hydrogen, but this is overridable
+    for particular link bonds using `linkAtomDistances`.
+
+    Parameters
+    ----------
+    systems: list[System]
+        The list of Systems to modify in place by adding virtual sites.
+    topology: Topology
+        The Topology to look up atomic numbers from and modify in place by
+        adding virtual sites.
+    linkBonds: list[tuple[int, int]]
+        A list of bonds to add virtual sites to, in the format returned by
+        `findLinkBonds()`.
+    linkAtomDistances: list[tuple[int, int, Quantity]]
+        A list of link bonds with virtual site distances to set manually.
+
+    Returns
+    -------
+    A list of indices corresponding to the virtual sites added to the systems.
+    """
+
+    linkAtomDistanceTable = {}
+    for atom1, atom2, distance in linkAtomDistances:
+        linkAtomDistanceTable[min(atom1, atom2), max(atom1, atom2)] = distance
+
+    # Update the topology with virtual sites to be added, and load data from it.
+
+    residues = [atom.residue for atom in topology.atoms()]
+    siteIndices = []
+    for site, (atom1, _) in enumerate(linkBonds):
+        siteIndices.append(topology.addAtom(f"V{site}", openmm.app.element.hydrogen, residues[atom1]).index)
+    atomicNumbers = [atom.element.atomic_number for atom in topology.atoms()]
+
+    # Add virtual sites to the systems.
+
+    for atom1, atom2 in linkBonds:
+        key = min(atom1, atom2), max(atom1, atom2)
+        if key in linkAtomDistanceTable:
+            distance = linkAtomDistanceTable[key]
+        else:
+            distance = COVALENT_RADII[atomicNumbers[atom1]] + COVALENT_RADII[1]
+
+        for system in systems:
+            site = openmm.LocalCoordinatesSite([atom1, atom2], [1.0, 0.0], [-1.0, 1.0], [0.0, 0.0], [distance, 0.0, 0.0])
+            system.setVirtualSite(system.addParticle(0.0), site)
+
+            for force in system.getForces():
+                if isinstance(force, openmm.NonbondedForce):
+                    force.addParticle(0.0, 0.0, 0.0)
+
+    return siteIndices
+
+def removeBonds(system: openmm.System, atoms: list[int], removeInSet: bool, linkBonds: list[tuple[int, int]] | None = None) -> openmm.System:
     """
     Copy a System, removing all bonded interactions between atoms in (or not in)
     a particular set.
+
+    If `linkBonds` is specified, an expanded set of atoms including those bonded
+    to atoms in the set by bonds in `linkBonds` will be used for the angles and
+    torsions.  This behavior is appropriate for use with the link-atom method.
 
     Parameters
     ----------
@@ -50,8 +164,11 @@ def removeBonds(system: openmm.System, atoms: list[int], removeInSet: bool) -> o
         If True, any bonded term connecting atoms in the specified set is
         removed.  If False, any term that does *not* connect atoms in the
         specified set is removed.
-    removeConstraints: bool
-        If True, remove constraints between pairs of atoms in the set.
+    linkBonds: list[tuple[int, int]], optional
+        A list of bonds spanning the specified set of atoms and its complement.
+        The first index in each pair should be that of an atom in the set, and
+        the second likewise out of the set.  This is the format returned by
+        `findLinkBonds()`.
 
     Returns
     -------
@@ -61,6 +178,14 @@ def removeBonds(system: openmm.System, atoms: list[int], removeInSet: bool) -> o
 
     atomSet = set(atoms)
 
+    if linkBonds is None:
+        expandedAtomSet = atomSet
+    else:
+        expandedAtomSet = set(atomSet)
+        for atom1, atom2 in linkBonds:
+            assert atom1 in atomSet
+            expandedAtomSet.add(atom2)
+
     # Create an XML representation of the System.
 
     import xml.etree.ElementTree as ET
@@ -69,26 +194,26 @@ def removeBonds(system: openmm.System, atoms: list[int], removeInSet: bool) -> o
 
     # This function decides whether a bonded interaction should be removed.
 
-    def shouldRemove(termAtoms):
-        return all(a in atomSet for a in termAtoms) == removeInSet
+    def shouldRemove(termAtoms, checkSet):
+        return all(a in checkSet for a in termAtoms) == removeInSet
 
     # Remove bonds, angles, and torsions.
 
     for bonds in root.findall('./Forces/Force/Bonds'):
         for bond in bonds.findall('Bond'):
             bondAtoms = [int(bond.attrib[p]) for p in ('p1', 'p2')]
-            if shouldRemove(bondAtoms):
+            if shouldRemove(bondAtoms, atomSet):
                 bonds.remove(bond)
     for angles in root.findall('./Forces/Force/Angles'):
         for angle in angles.findall('Angle'):
             angleAtoms = [int(angle.attrib[p]) for p in ('p1', 'p2', 'p3')]
-            if shouldRemove(angleAtoms):
+            if shouldRemove(angleAtoms, expandedAtomSet):
                 angles.remove(angle)
     for torsions in root.findall('./Forces/Force/Torsions'):
         for torsion in torsions.findall('Torsion'):
             torsionLabels =  ('p1', 'p2', 'p3', 'p4') if 'p1' in torsion.attrib else ('a1', 'a2', 'a3', 'a4', 'b1', 'b2', 'b3', 'b4')
             torsionAtoms = [int(torsion.attrib[p]) for p in torsionLabels]
-            if shouldRemove(torsionAtoms):
+            if shouldRemove(torsionAtoms, expandedAtomSet):
                 torsions.remove(torsion)
 
     # Create a new System from it.
@@ -204,7 +329,7 @@ class InterpolationHelper:
         for force in tempSystem.getForces():
             self.addMLTerm(copy.deepcopy(force))
 
-    def addMMBondedTerms(self, mmSystem: openmm.System, atoms: list[int]) -> None:
+    def addMMBondedTerms(self, mmSystem: openmm.System, atoms: list[int], linkBonds: list[tuple[int, int]] | None = None) -> None:
         """
         Helper function to add all bonded forces removed from the ML region of
         an ML/MM system as MM terms for interpolation.
@@ -217,9 +342,12 @@ class InterpolationHelper:
             terms to interpolate.
         atoms: list[int]
             The indices of the ML region atoms in the ML/MM system.
+        linkBonds: list[tuple[int, int]], optional
+            A list of bonds spanning the ML and MM regions.  See `removeBonds()`
+            for details.
         """
 
-        bondedSystem = removeBonds(mmSystem, atoms, False)
+        bondedSystem = removeBonds(mmSystem, atoms, False, linkBonds)
         for force in bondedSystem.getForces():
             if hasattr(force, "addBond") or hasattr(force, "addAngle") or hasattr(force, "addTorsion"):
                 self.addMMTerm(copy.deepcopy(force))
