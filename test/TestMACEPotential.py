@@ -72,3 +72,19 @@ class TestMACE:
         interpEnergy2 = interpContext.getState(getEnergy=True).getPotentialEnergy().value_in_unit(unit.kilojoules_per_mole)
         assert np.isclose(mixedEnergy, interpEnergy1, rtol=1e-5)
         assert np.isclose(mmEnergy, interpEnergy2, rtol=1e-5)
+
+    @pytest.mark.parametrize("precision,rtol", [("single", 1e-5), ("double", 1e-6)])
+    def testPrecision(self, platform_int, precision, rtol):
+        # MACE-OFF23 is distributed as a float64 checkpoint, so requesting 'single'
+        # exercises the conversion path. The model itself has to be converted and not
+        # only the inputs, otherwise float32 inputs meet float64 weights and this
+        # raises "RuntimeError: both inputs should have same dtype".
+        pdb = app.PDBFile(os.path.join(test_data_dir, "toluene", "toluene.pdb"))
+        potential = MLPotential('mace-off23-small')
+        system = potential.createSystem(pdb.topology, returnEnergyType='energy', precision=precision)
+        platform = mm.Platform.getPlatform(platform_int)
+        context = mm.Context(system, mm.VerletIntegrator(0.001), platform)
+        context.setPositions(pdb.getPositions(asNumpy=True))
+        energyML = context.getState(getEnergy=True).getPotentialEnergy().value_in_unit(unit.kilojoules_per_mole)
+        # Reference energy is calculated with MACECalculator
+        assert np.isclose(-713468.6327560507, energyML, rtol=rtol)
