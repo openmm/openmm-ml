@@ -82,22 +82,16 @@ class TestMACE:
         pdb = app.PDBFile(os.path.join(test_data_dir, "toluene", "toluene.pdb"))
         potential = MLPotential('mace-off23-small')
 
-        # specifying precision single/double.
+        # Specifying precision single/double.
         system = potential.createSystem(pdb.topology, returnEnergyType='energy', precision=precision)
         platform = mm.Platform.getPlatform(platform_int)
         context = mm.Context(system, mm.VerletIntegrator(0.001), platform)
-        context.setPositions(pdb.getPositions(asNumpy=True))
+        context.setPositions(pdb.positions)
 
         # Inconsistent dtypes will crash the simulation.
-        context_values = context.getState(energy=True, forces=True, positions=True, velocities=True)
+        energyML = context.getState(energy=True, forces=True).getPotentialEnergy().value_in_unit(unit.kilojoules_per_mole)
 
-        # the energy should be physically meaningful under
-        # both precisions
-        energyML = (
-            context_values
-            .getPotentialEnergy()
-            .value_in_unit(unit.kilojoules_per_mole)
-        )
+        # The energy should be physically meaningful under both precisions
         assert np.isfinite(energyML), \
             "Energy is not finite under precision {}".format(precision)
         assert np.isclose(energyML, self.refEnergy['mace-off23-small'], rtol=1e-6),\
