@@ -80,6 +80,8 @@ setup(
         ],
         'openmmml.embeddings': [
             'mechanical = openmmml.embeddings.mechanicalembedding:MechanicalEmbeddingFactory',
+            'emle-engine = openmmml.embeddings.emleembedding:EMLEEmbeddingFactory',
+            'emle = openmmml.embeddings.emleembedding:EMLEEmbeddingFactory',
         ]
     }
 )
