@@ -203,6 +203,7 @@ class MACEPotentialImpl(MLPotentialImpl):
             raise ValueError(f"Unsupported precision {precision} for the model. Supported values are 'single' and 'double'.")
         if dtype != modelDefaultDtype:
             print(f"Model dtype is {modelDefaultDtype} and requested dtype is {dtype}. The model will be converted to the requested dtype.")
+            model = model.to(dtype)
 
         # One hot encoding of atomic numbers
 
