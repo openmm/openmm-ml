@@ -57,7 +57,8 @@ class MACEPotentialImpl(MLPotentialImpl):
     >>> potential = MLPotential('mace-off23-small')
 
     Other available models include 'mace-off23-medium', 'mace-off23-large', 'mace-off24-medium',
-    'mace-mpa-0-medium', 'mace-omat-0-small', 'mace-omat-0-medium', and 'mace-omol-0-extra-large'.
+    'mace-mpa-0-medium', 'mace-omat-0-small', 'mace-omat-0-medium', 'mace-omol-0-extra-large',
+    and 'mace-les-off-small'.
 
     To use a locally trained MACE model, provide the path to the model file. For example:
 
@@ -112,7 +113,7 @@ class MACEPotentialImpl(MLPotentialImpl):
             The name of the MACE model.
             Options include 'mace-off23-small', 'mace-off23-medium', 'mace-off23-large',
             'mace-off24-medium', 'mace-mpa-0-medium', 'mace-omat-0-small', 'mace-omat-0-medium',
-            'mace-omol-0-extra-large', and 'mace'.
+            'mace-omol-0-extra-large', 'mace-les-off-small', and 'mace'.
         modelPath : str, optional
             The path to the locally trained MACE model if ``name`` is 'mace'.
         """
