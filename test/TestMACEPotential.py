@@ -25,11 +25,15 @@ class TestMACE:
         'mace-mpa-0-medium': -8839.299589829867,
         'mace-omat-0-small': -8726.63865431241,
         'mace-omat-0-medium': -8679.026847088873,
-        'mace-omol-0-extra-large': -712903.4934289698
+        'mace-omol-0-extra-large': -712903.4934289698,
+        'mace-polar-1-small': -712903.1710073923,
+        'mace-polar-1-medium': -712903.4536792638,
+        'mace-polar-1-large': -712903.7834631138
     }
 
     @pytest.mark.parametrize("model", ['mace-off23-small', 'mace-off23-medium', 'mace-off23-large', 'mace-off24-medium',
-                                       'mace-mpa-0-medium', 'mace-omat-0-small', 'mace-omat-0-medium', 'mace-omol-0-extra-large'])
+                                       'mace-mpa-0-medium', 'mace-omat-0-small', 'mace-omat-0-medium', 'mace-omol-0-extra-large',
+                                       'mace-polar-1-small', 'mace-polar-1-medium', 'mace-polar-1-large'])
     def testCreatePureMLSystem(self, platform_int, model):
         pdb = app.PDBFile(os.path.join(test_data_dir, "toluene", "toluene.pdb"))
         potential = MLPotential(model)
