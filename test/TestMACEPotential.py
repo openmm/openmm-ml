@@ -35,6 +35,8 @@ class TestMACE:
                                        'mace-mpa-0-medium', 'mace-omat-0-small', 'mace-omat-0-medium', 'mace-omol-0-extra-large',
                                        'mace-polar-1-small', 'mace-polar-1-medium', 'mace-polar-1-large'])
     def testCreatePureMLSystem(self, platform_int, model):
+        if 'mace-polar' in model:
+            pytest.importorskip("graph_longrange", reason="graph_electrostatics is not installed")
         pdb = app.PDBFile(os.path.join(test_data_dir, "toluene", "toluene.pdb"))
         potential = MLPotential(model)
         system = potential.createSystem(pdb.topology, returnEnergyType='energy')
