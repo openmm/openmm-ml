@@ -99,6 +99,7 @@ class MACEPotentialImpl(MLPotentialImpl):
         'mace-omat-0-small': ('mace_mp', 'small-omat-0', True, False),
         'mace-omat-0-medium': ('mace_mp', 'medium-omat-0', True, False),
         'mace-omol-0-extra-large': ('mace_omol', 'extra_large', True, False),
+        'mace-les-off-small': ('mace_off', 'https://github.com/ChengUCB/les_fit/blob/main/MACELES-OFF/MACELES-OFF_small_converted.model?raw=true', True, True),
     }
 
     def __init__(self, name: str, modelPath) -> None:
