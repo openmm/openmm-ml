@@ -24,17 +24,14 @@ atoms.calc = mace_omol('extra_large')
 results['mace-omol-0-extra-large'] = atoms.get_potential_energy()
 try:
     import graph_longrange
-    has_graph_longrange = True
-except ImportError:
-    print('No MACE-POLAR reference energies will be generated; you must first install graph_longrange from https://github.com/WillBaldwin0/graph_electrostatics')
-    has_graph_longrange = False
-if has_graph_longrange:
     atoms.calc = mace_polar('polar-1-s')
     results['mace-polar-1-small'] = atoms.get_potential_energy()
     atoms.calc = mace_polar('polar-1-m')
     results['mace-polar-1-medium'] = atoms.get_potential_energy()
     atoms.calc = mace_polar('polar-1-l')
     results['mace-polar-1-large'] = atoms.get_potential_energy()
+except ImportError:
+    print('No MACE-POLAR reference energies will be generated; you must first install graph_longrange from https://github.com/WillBaldwin0/graph_electrostatics')
 atoms = ase.io.read('alanine-dipeptide/alanine-dipeptide-explicit.pdb')
 atoms.calc = mace_off('small')
 results['alanine-dipeptide'] = atoms.get_potential_energy()

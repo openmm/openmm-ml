@@ -265,11 +265,6 @@ def _computeMACE(state, model, ptr, node_attrs, batch, pbc, returnEnergyType, ch
     cutoff = float(model.r_max.detach())
     edgeIndex, shifts, _, _ = get_neighborhood(positions, cutoff, [periodic, periodic, periodic], cell)
     cellTensor = torch.tensor(cell, dtype=dtype, device=ptr.device)
-    volume = torch.linalg.det(cellTensor)
-    if torch.abs(volume) > 0:
-        rcell = 2 * torch.pi * torch.linalg.inv(cellTensor.mT)
-    else:
-        rcell = torch.zeros((3, 3), dtype=dtype, device=ptr.device)
     inputDict = {
         "ptr": ptr,
         "node_attrs": node_attrs,
@@ -279,8 +274,8 @@ def _computeMACE(state, model, ptr, node_attrs, batch, pbc, returnEnergyType, ch
         "edge_index": torch.tensor(edgeIndex, dtype=torch.int64, device=ptr.device),
         "shifts": torch.tensor(shifts, dtype=dtype, device=ptr.device),
         "cell": cellTensor,
-        "rcell": rcell,
-        "volume": volume,
+        "rcell": 2 * torch.pi * torch.linalg.inv(cellTensor.mT),
+        "volume": torch.linalg.det(cellTensor),
         "total_charge": charge,
         "total_spin": multiplicity,
         "external_field": torch.zeros((1, 3), dtype=dtype, device=ptr.device),
