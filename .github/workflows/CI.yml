@@ -49,6 +49,11 @@ jobs:
         run: |
           pip install .
 
+      - name: "Check OpenMM platforms available"
+        shell: bash -l {0}
+        run: |
+          python -m openmm.testInstallation
+
       - name: "Run tests"
         shell: bash -l {0}
         run: |
