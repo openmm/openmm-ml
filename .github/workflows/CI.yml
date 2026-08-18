@@ -41,7 +41,7 @@ jobs:
       - name: "Install dependencies with pip"
         shell: bash -l {0}
         run: |
-          pip install --pre openmm
+          pip install --pre openmm[cuda13]
           pip install -v -r devtools/requirements/${{ matrix.requirements }}.txt
 
       - name: "Install OpenMM-ML"
