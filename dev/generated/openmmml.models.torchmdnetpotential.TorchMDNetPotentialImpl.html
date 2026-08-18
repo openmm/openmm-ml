@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>openmmml.models.torchmdnetpotential.TorchMDNetPotentialImpl &#8212; OpenMM ML 1.7dev_35da826 documentation</title>
+    <title>openmmml.models.torchmdnetpotential.TorchMDNetPotentialImpl &#8212; OpenMM ML 1.7dev_2443610 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../_static/documentation_options.js?v=ba1945bf"></script>
+    <script src="../_static/documentation_options.js?v=b6bd08f2"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'generated/openmmml.models.torchmdnetpotential.TorchMDNetPotentialImpl';</script>
@@ -477,13 +477,13 @@
 <p>The TorchMDNet potential is constructed using <cite>torchmdnet</cite> to build a PyTorch model,
 and then integrated into the OpenMM System using a TorchForce.  To use it, specify the model by name
 and provide the path to a model.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">potential</span> <span class="o">=</span> <span class="n">MLPotential</span><span class="p">(</span><span class="s1">&#39;torchmdnet&#39;</span><span class="p">,</span> <span class="n">modelPath</span><span class="o">=&lt;</span><span class="n">model_file_path</span><span class="o">&gt;</span><span class="p">)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">potential</span> <span class="o">=</span> <span class="n">MLPotential</span><span class="p">(</span><span class="s1">'torchmdnet'</span><span class="p">,</span> <span class="n">modelPath</span><span class="o">=&lt;</span><span class="n">model_file_path</span><span class="o">&gt;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>The default energy and length scales assume a model is trained with positions in angstroms and energies in eV.
 If this is not the case you can specify the length and energy scales by passing the factors that convert the model
 distance to nm and the energy to kJ/mol, for example:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">potential</span> <span class="o">=</span> <span class="n">MLPotential</span><span class="p">(</span><span class="s1">&#39;torchmdnet&#39;</span><span class="p">,</span> <span class="n">modelPath</span><span class="o">=&lt;</span><span class="n">model_file_path</span><span class="o">&gt;</span><span class="p">,</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">potential</span> <span class="o">=</span> <span class="n">MLPotential</span><span class="p">(</span><span class="s1">'torchmdnet'</span><span class="p">,</span> <span class="n">modelPath</span><span class="o">=&lt;</span><span class="n">model_file_path</span><span class="o">&gt;</span><span class="p">,</span>
 <span class="go">                            lengthScale=0.1 # angstrom to nm,</span>
 <span class="go">                            energyScale=4.184 # kcal/mol to kJ/mol)</span>
 </pre></div>
@@ -498,13 +498,13 @@ distance to nm and the energy to kJ/mol, for example:</p>
 </pre></div>
 </div>
 <p>Pretained AceFF models can be used directly:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">potential</span> <span class="o">=</span> <span class="n">MLPotential</span><span class="p">(</span><span class="s1">&#39;aceff-2.0&#39;</span><span class="p">)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">potential</span> <span class="o">=</span> <span class="n">MLPotential</span><span class="p">(</span><span class="s1">'aceff-2.0'</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">potential</span> <span class="o">=</span> <span class="n">MLPotential</span><span class="p">(</span><span class="s1">&#39;aceff-1.1&#39;</span><span class="p">)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">potential</span> <span class="o">=</span> <span class="n">MLPotential</span><span class="p">(</span><span class="s1">'aceff-1.1'</span><span class="p">)</span>
 </pre></div>
 </div>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">potential</span> <span class="o">=</span> <span class="n">MLPotential</span><span class="p">(</span><span class="s1">&#39;aceff-1.0&#39;</span><span class="p">)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">potential</span> <span class="o">=</span> <span class="n">MLPotential</span><span class="p">(</span><span class="s1">'aceff-1.0'</span><span class="p">)</span>
 </pre></div>
 </div>
 <section id="coulomb-cutoff-behavior">

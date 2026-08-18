@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>openmmml.models.macepotential.MACEPotentialImpl &#8212; OpenMM ML 1.7dev_35da826 documentation</title>
+    <title>openmmml.models.macepotential.MACEPotentialImpl &#8212; OpenMM ML 1.7dev_2443610 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../_static/documentation_options.js?v=ba1945bf"></script>
+    <script src="../_static/documentation_options.js?v=b6bd08f2"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'generated/openmmml.models.macepotential.MACEPotentialImpl';</script>
@@ -478,18 +478,19 @@
 and then integrated into the OpenMM System using a TorchForce.
 This implementation supports both foundation models and locally trained MACE models.</p>
 <p>To use one of the pre-trained MACE foundation models, specify the model name. For example:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">potential</span> <span class="o">=</span> <span class="n">MLPotential</span><span class="p">(</span><span class="s1">&#39;mace-off23-small&#39;</span><span class="p">)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">potential</span> <span class="o">=</span> <span class="n">MLPotential</span><span class="p">(</span><span class="s1">'mace-off23-small'</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Other available models include ‘mace-off23-medium’, ‘mace-off23-large’, ‘mace-off24-medium’,
-‘mace-mpa-0-medium’, ‘mace-omat-0-small’, ‘mace-omat-0-medium’, and ‘mace-omol-0-extra-large’.</p>
+‘mace-mpa-0-medium’, ‘mace-omat-0-small’, ‘mace-omat-0-medium’, ‘mace-omol-0-extra-large’,
+and ‘mace-les-off-small’.</p>
 <p>To use a locally trained MACE model, provide the path to the model file. For example:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">potential</span> <span class="o">=</span> <span class="n">MLPotential</span><span class="p">(</span><span class="s1">&#39;mace&#39;</span><span class="p">,</span> <span class="n">modelPath</span><span class="o">=</span><span class="s1">&#39;MACE.model&#39;</span><span class="p">)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">potential</span> <span class="o">=</span> <span class="n">MLPotential</span><span class="p">(</span><span class="s1">'mace'</span><span class="p">,</span> <span class="n">modelPath</span><span class="o">=</span><span class="s1">'MACE.model'</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>During system creation, you can optionally specify the precision of the model using the
 <code class="docutils literal notranslate"><span class="pre">precision</span></code> keyword argument. Supported options are ‘single’ and ‘double’. For example:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">system</span> <span class="o">=</span> <span class="n">potential</span><span class="o">.</span><span class="n">createSystem</span><span class="p">(</span><span class="n">topology</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="s1">&#39;single&#39;</span><span class="p">)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">system</span> <span class="o">=</span> <span class="n">potential</span><span class="o">.</span><span class="n">createSystem</span><span class="p">(</span><span class="n">topology</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="s1">'single'</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>By default, the implementation uses the precision of the loaded MACE model.
@@ -498,7 +499,7 @@ less accurate), while ‘double’ precision is recommended for geometry optimiz
 <p>Additionally, you can request computation of the full atomic energy, including the atom
 self-energy, instead of the default interaction energy, by setting <code class="docutils literal notranslate"><span class="pre">returnEnergyType</span></code> to
 ‘energy’. For example:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">system</span> <span class="o">=</span> <span class="n">potential</span><span class="o">.</span><span class="n">createSystem</span><span class="p">(</span><span class="n">topology</span><span class="p">,</span> <span class="n">returnEnergyType</span><span class="o">=</span><span class="s1">&#39;energy&#39;</span><span class="p">)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">system</span> <span class="o">=</span> <span class="n">potential</span><span class="o">.</span><span class="n">createSystem</span><span class="p">(</span><span class="n">topology</span><span class="p">,</span> <span class="n">returnEnergyType</span><span class="o">=</span><span class="s1">'energy'</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>The default is to compute the interaction energy, which can be made explicit by setting
@@ -535,7 +536,7 @@ self-energy, instead of the default interaction energy, by setting <code class="
 <li><p><strong>name</strong> (<em>str</em>) – The name of the MACE model.
 Options include ‘mace-off23-small’, ‘mace-off23-medium’, ‘mace-off23-large’,
 ‘mace-off24-medium’, ‘mace-mpa-0-medium’, ‘mace-omat-0-small’, ‘mace-omat-0-medium’,
-‘mace-omol-0-extra-large’, and ‘mace’.</p></li>
+‘mace-omol-0-extra-large’, ‘mace-les-off-small’, and ‘mace’.</p></li>
 <li><p><strong>modelPath</strong> (<em>str</em><em>, </em><em>optional</em>) – The path to the locally trained MACE model if <code class="docutils literal notranslate"><span class="pre">name</span></code> is ‘mace’.</p></li>
 </ul>
 </dd>

@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>openmmml.models.asepotential.ASEPotentialImpl &#8212; OpenMM ML 1.7dev_35da826 documentation</title>
+    <title>openmmml.models.asepotential.ASEPotentialImpl &#8212; OpenMM ML 1.7dev_2443610 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../_static/documentation_options.js?v=ba1945bf"></script>
+    <script src="../_static/documentation_options.js?v=b6bd08f2"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'generated/openmmml.models.asepotential.ASEPotentialImpl';</script>
@@ -476,7 +476,7 @@
 <dd><p>This MLPotentialImpl implements potentials using an ASE calculator.</p>
 <p>It can be used in two ways.  One option is to provide an ASE Atoms object that has already been configured with the
 correct calculator and all other settings.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">potential</span> <span class="o">=</span> <span class="n">MLPotential</span><span class="p">(</span><span class="s1">&#39;ase&#39;</span><span class="p">)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">potential</span> <span class="o">=</span> <span class="n">MLPotential</span><span class="p">(</span><span class="s1">'ase'</span><span class="p">)</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">system</span> <span class="o">=</span> <span class="n">potential</span><span class="o">.</span><span class="n">createSystem</span><span class="p">(</span><span class="n">topology</span><span class="p">,</span> <span class="n">aseAtoms</span><span class="o">=</span><span class="n">atoms</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -489,7 +489,7 @@ based on the Topology and assigns the calculator to it.</p>
 </div>
 <p>When used this way, you can optionally include an <cite>info</cite> argument with properties that should be added to the Atoms
 object’s info dict.</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">system</span> <span class="o">=</span> <span class="n">potential</span><span class="o">.</span><span class="n">createSystem</span><span class="p">(</span><span class="n">topology</span><span class="p">,</span> <span class="n">calculator</span><span class="o">=</span><span class="n">calculator</span><span class="p">,</span> <span class="n">info</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;charge&#39;</span><span class="p">:</span><span class="mi">2</span><span class="p">})</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">system</span> <span class="o">=</span> <span class="n">potential</span><span class="o">.</span><span class="n">createSystem</span><span class="p">(</span><span class="n">topology</span><span class="p">,</span> <span class="n">calculator</span><span class="o">=</span><span class="n">calculator</span><span class="p">,</span> <span class="n">info</span><span class="o">=</span><span class="p">{</span><span class="s1">'charge'</span><span class="p">:</span><span class="mi">2</span><span class="p">})</span>
 </pre></div>
 </div>
 <dl class="py method">

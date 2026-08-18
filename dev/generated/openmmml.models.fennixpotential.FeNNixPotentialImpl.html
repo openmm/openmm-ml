@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>openmmml.models.fennixpotential.FeNNixPotentialImpl &#8212; OpenMM ML 1.7dev_35da826 documentation</title>
+    <title>openmmml.models.fennixpotential.FeNNixPotentialImpl &#8212; OpenMM ML 1.7dev_2443610 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../_static/documentation_options.js?v=ba1945bf"></script>
+    <script src="../_static/documentation_options.js?v=b6bd08f2"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'generated/openmmml.models.fennixpotential.FeNNixPotentialImpl';</script>
@@ -478,12 +478,12 @@
 forces.  This implementation can use local files for models or automatically
 download them from the FeNNol-PMC repository.</p>
 <p>To use one of the pre-trained FeNNix models, specify it by name.  For example:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">potential</span> <span class="o">=</span> <span class="n">MLPotential</span><span class="p">(</span><span class="s1">&#39;fennix-bio1-small&#39;</span><span class="p">)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">potential</span> <span class="o">=</span> <span class="n">MLPotential</span><span class="p">(</span><span class="s1">'fennix-bio1-small'</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Other available models include ‘fennix-bio1-medium’, ‘fennix-bio1-small-finetune-ions’, and ‘fennix-bio1-medium-finetune-ions’.</p>
 <p>To use a local <cite>.fnx</cite> file, specify ‘fennix’ as the model name, and supply the <cite>modelPath</cite> argument, <em>e.g.</em>,</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">potential</span> <span class="o">=</span> <span class="n">MLPotential</span><span class="p">(</span><span class="s1">&#39;fennix&#39;</span><span class="p">,</span> <span class="n">modelPath</span><span class="o">=</span><span class="s1">&#39;custom_fennix_model.fnx&#39;</span><span class="p">)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">potential</span> <span class="o">=</span> <span class="n">MLPotential</span><span class="p">(</span><span class="s1">'fennix'</span><span class="p">,</span> <span class="n">modelPath</span><span class="o">=</span><span class="s1">'custom_fennix_model.fnx'</span><span class="p">)</span>
 </pre></div>
 </div>
 <dl class="py method">

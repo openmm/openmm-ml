@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>User Guide &#8212; OpenMM ML 1.7dev_35da826 documentation</title>
+    <title>User Guide &#8212; OpenMM ML 1.7dev_2443610 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="_static/documentation_options.js?v=ba1945bf"></script>
+    <script src="_static/documentation_options.js?v=b6bd08f2"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'userguide';</script>
@@ -474,13 +474,13 @@ with pip, not conda.</p>
 simplest cases you just provide it the name of the pretrained potential function to use.  You can then call
 <code class="docutils literal notranslate"><span class="pre">createSystem()</span></code> to create a <code class="docutils literal notranslate"><span class="pre">System</span></code> object for a simulation.  For example,</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">openmmml</span><span class="w"> </span><span class="kn">import</span> <span class="n">MLPotential</span>
-<span class="n">potential</span> <span class="o">=</span> <span class="n">MLPotential</span><span class="p">(</span><span class="s1">&#39;ani2x&#39;</span><span class="p">)</span>
+<span class="n">potential</span> <span class="o">=</span> <span class="n">MLPotential</span><span class="p">(</span><span class="s1">'ani2x'</span><span class="p">)</span>
 <span class="n">system</span> <span class="o">=</span> <span class="n">potential</span><span class="o">.</span><span class="n">createSystem</span><span class="p">(</span><span class="n">topology</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>To use a model you provide yourself rather than a standard pretrained one, include the <code class="docutils literal notranslate"><span class="pre">modelPath</span></code> option to point to
 the file containing your model.  For example,</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">potential</span> <span class="o">=</span> <span class="n">MLPotential</span><span class="p">(</span><span class="s1">&#39;mace&#39;</span><span class="p">,</span> <span class="n">modelPath</span><span class="o">=</span><span class="s1">&#39;MACE.model&#39;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">potential</span> <span class="o">=</span> <span class="n">MLPotential</span><span class="p">(</span><span class="s1">'mace'</span><span class="p">,</span> <span class="n">modelPath</span><span class="o">=</span><span class="s1">'MACE.model'</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Other options that are specific to particular types of models are described below.</p>
@@ -491,11 +491,11 @@ replace with the MLIP.</p>
 <p>As an example, suppose the <code class="docutils literal notranslate"><span class="pre">Topology</span></code> contains three chains.  Chain 0 is a protein, chain 1 is a ligand, and chain 2 is
 solvent.  The following code creates a <code class="docutils literal notranslate"><span class="pre">System</span></code> in which the internal energy of the ligand is computed with ANI2x, while
 everything else (including interactions between the ligand and the rest of the system) is computed with Amber14.</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">forcefield</span> <span class="o">=</span> <span class="n">ForceField</span><span class="p">(</span><span class="s1">&#39;amber14-all.xml&#39;</span><span class="p">,</span> <span class="s1">&#39;amber14/tip3pfb.xml&#39;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">forcefield</span> <span class="o">=</span> <span class="n">ForceField</span><span class="p">(</span><span class="s1">'amber14-all.xml'</span><span class="p">,</span> <span class="s1">'amber14/tip3pfb.xml'</span><span class="p">)</span>
 <span class="n">mm_system</span> <span class="o">=</span> <span class="n">forcefield</span><span class="o">.</span><span class="n">createSystem</span><span class="p">(</span><span class="n">topology</span><span class="p">)</span>
 <span class="n">chains</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">topology</span><span class="o">.</span><span class="n">chains</span><span class="p">())</span>
 <span class="n">ml_atoms</span> <span class="o">=</span> <span class="p">[</span><span class="n">atom</span><span class="o">.</span><span class="n">index</span> <span class="k">for</span> <span class="n">atom</span> <span class="ow">in</span> <span class="n">chains</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">atoms</span><span class="p">()]</span>
-<span class="n">potential</span> <span class="o">=</span> <span class="n">MLPotential</span><span class="p">(</span><span class="s1">&#39;ani2x&#39;</span><span class="p">)</span>
+<span class="n">potential</span> <span class="o">=</span> <span class="n">MLPotential</span><span class="p">(</span><span class="s1">'ani2x'</span><span class="p">)</span>
 <span class="n">ml_system</span> <span class="o">=</span> <span class="n">potential</span><span class="o">.</span><span class="n">createMixedSystem</span><span class="p">(</span><span class="n">topology</span><span class="p">,</span> <span class="n">mm_system</span><span class="p">,</span> <span class="n">ml_atoms</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -530,7 +530,10 @@ are supported.</p>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">mace-omol-0-extra-large</span></code></p></td>
 <td><p>Pretrained MACE-OMOL-0 model</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">mace</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">mace-les-off-small</span></code></p></td>
+<td><p>Pretrained <a class="reference external" href="https://github.com/ChengUCB/les_fit">MACELES-OFF</a> model (requires <a class="reference external" href="https://github.com/ChengUCB/les">LES</a> plugin)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">mace</span></code></p></td>
 <td><p>Custom MACE models specified with the <code class="docutils literal notranslate"><span class="pre">modelPath</span></code> argument</p></td>
 </tr>
 </tbody>
@@ -1001,14 +1004,14 @@ from Orbital Materials.  The following model names are supported.</p>
 <p>OpenMM-ML can use an arbitrary <a class="reference external" href="https://ase-lib.org/">ASE</a> Calculator to perform calculations.  This allows it to use
 any model or code for which a Calculator is available, including a wide variety of MLIPs and quantum chemistry programs.
 Simply pass the <a class="reference external" href="https://ase-lib.org/ase/calculators/calculators.html">Calculator</a> to <code class="docutils literal notranslate"><span class="pre">createSystem()</span></code>:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">potential</span> <span class="o">=</span> <span class="n">MLPotential</span><span class="p">(</span><span class="s1">&#39;ase&#39;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">potential</span> <span class="o">=</span> <span class="n">MLPotential</span><span class="p">(</span><span class="s1">'ase'</span><span class="p">)</span>
 <span class="n">system</span> <span class="o">=</span> <span class="n">potential</span><span class="o">.</span><span class="n">createSystem</span><span class="p">(</span><span class="n">topology</span><span class="p">,</span> <span class="n">calculator</span><span class="o">=</span><span class="n">calculator</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>An ASE <a class="reference external" href="https://ase-lib.org/ase/atoms.html">Atoms</a> object is created automatically based on the OpenMM Topology.  You
 can optionally provide values to add to its <code class="docutils literal notranslate"><span class="pre">info</span></code> dict.  Some Calculators use this as a mechanism to specify parameters
 like total charge and spin multiplicity:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">system</span> <span class="o">=</span> <span class="n">potential</span><span class="o">.</span><span class="n">createSystem</span><span class="p">(</span><span class="n">topology</span><span class="p">,</span> <span class="n">calculator</span><span class="o">=</span><span class="n">calculator</span><span class="p">,</span> <span class="n">info</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;charge&#39;</span><span class="p">:</span><span class="mi">2</span><span class="p">})</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">system</span> <span class="o">=</span> <span class="n">potential</span><span class="o">.</span><span class="n">createSystem</span><span class="p">(</span><span class="n">topology</span><span class="p">,</span> <span class="n">calculator</span><span class="o">=</span><span class="n">calculator</span><span class="p">,</span> <span class="n">info</span><span class="o">=</span><span class="p">{</span><span class="s1">'charge'</span><span class="p">:</span><span class="mi">2</span><span class="p">})</span>
 </pre></div>
 </div>
 <p>In cases where you need more direct control, you can instead create an Atoms object yourself and provide it directly:</p>

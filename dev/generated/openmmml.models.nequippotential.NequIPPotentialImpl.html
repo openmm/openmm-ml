@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>openmmml.models.nequippotential.NequIPPotentialImpl &#8212; OpenMM ML 1.7dev_35da826 documentation</title>
+    <title>openmmml.models.nequippotential.NequIPPotentialImpl &#8212; OpenMM ML 1.7dev_2443610 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../_static/documentation_options.js?v=ba1945bf"></script>
+    <script src="../_static/documentation_options.js?v=b6bd08f2"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'generated/openmmml.models.nequippotential.NequIPPotentialImpl';</script>
@@ -481,8 +481,8 @@ Note that you must provide a model, as no general purpose model is available.</p
 <p>To use a model in OpenMM-ML, you must provide the path to the model checkpoint file,
 and the conversion factors between the model length and energy units and OpenMM
 units (nm and kJ/mol, respectively). For example:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">potential</span> <span class="o">=</span> <span class="n">MLPotential</span><span class="p">(</span><span class="s1">&#39;nequip&#39;</span><span class="p">,</span>
-<span class="go">                            modelPath=&#39;example_model.ckpt&#39;,</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">potential</span> <span class="o">=</span> <span class="n">MLPotential</span><span class="p">(</span><span class="s1">'nequip'</span><span class="p">,</span>
+<span class="go">                            modelPath='example_model.ckpt',</span>
 <span class="go">                            lengthScale=0.1, # Angstrom to nm</span>
 <span class="go">                            energyScale=4.184 # kcal/mol to kJ/mol</span>
 <span class="go">                            )</span>
@@ -499,7 +499,7 @@ will work if you trained your model using the standard
 <p>Additionally, you can specify the precision of
 the model using the <code class="docutils literal notranslate"><span class="pre">precision</span></code> keyword argument. Supported options are
 ‘single’ and ‘double’. For example:</p>
-<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">system</span> <span class="o">=</span> <span class="n">potential</span><span class="o">.</span><span class="n">createSystem</span><span class="p">(</span><span class="n">topology</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="s1">&#39;single&#39;</span><span class="p">)</span>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">system</span> <span class="o">=</span> <span class="n">potential</span><span class="o">.</span><span class="n">createSystem</span><span class="p">(</span><span class="n">topology</span><span class="p">,</span> <span class="n">precision</span><span class="o">=</span><span class="s1">'single'</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>By default, the implementation uses the precision of the loaded model.

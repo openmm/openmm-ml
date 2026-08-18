@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>openmmml.models.deepmdpotential.DeepmdPotentialImpl &#8212; OpenMM ML 1.7dev_35da826 documentation</title>
+    <title>openmmml.models.deepmdpotential.DeepmdPotentialImpl &#8212; OpenMM ML 1.7dev_2443610 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../_static/documentation_options.js?v=ba1945bf"></script>
+    <script src="../_static/documentation_options.js?v=b6bd08f2"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'generated/openmmml.models.deepmdpotential.DeepmdPotentialImpl';</script>
@@ -492,10 +492,10 @@ DeePMD potentials are trained using the DeepMD-kit framework and can provide hig
 <span class="kn">import</span><span class="w"> </span><span class="nn">openmm.app</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">app</span>
 
 <span class="c1"># Load your system</span>
-<span class="n">pdb</span> <span class="o">=</span> <span class="n">app</span><span class="o">.</span><span class="n">PDBFile</span><span class="p">(</span><span class="s1">&#39;system.pdb&#39;</span><span class="p">)</span>
+<span class="n">pdb</span> <span class="o">=</span> <span class="n">app</span><span class="o">.</span><span class="n">PDBFile</span><span class="p">(</span><span class="s1">'system.pdb'</span><span class="p">)</span>
 
 <span class="c1"># Create DeePMD potential</span>
-<span class="n">potential</span> <span class="o">=</span> <span class="n">MLPotential</span><span class="p">(</span><span class="s1">&#39;deepmd&#39;</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s1">&#39;model.pb&#39;</span><span class="p">,</span>
+<span class="n">potential</span> <span class="o">=</span> <span class="n">MLPotential</span><span class="p">(</span><span class="s1">'deepmd'</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s1">'model.pb'</span><span class="p">,</span>
                         <span class="n">coordinatesCoefficient</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span>
                         <span class="n">forceCoefficient</span><span class="o">=</span><span class="mf">964.8792534459</span><span class="p">,</span>
                         <span class="n">energyCoefficient</span><span class="o">=</span><span class="mf">96.48792534459</span><span class="p">)</span>
@@ -509,25 +509,25 @@ DeePMD potentials are trained using the DeepMD-kit framework and can provide hig
 </div>
 <p>For alchemical simulations:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create system with lambda parameter for free energy calculations</span>
-<span class="n">potential</span> <span class="o">=</span> <span class="n">MLPotential</span><span class="p">(</span><span class="s1">&#39;deepmd&#39;</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s1">&#39;model.pb&#39;</span><span class="p">)</span>
+<span class="n">potential</span> <span class="o">=</span> <span class="n">MLPotential</span><span class="p">(</span><span class="s1">'deepmd'</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s1">'model.pb'</span><span class="p">)</span>
 <span class="n">system</span> <span class="o">=</span> <span class="n">potential</span><span class="o">.</span><span class="n">createSystem</span><span class="p">(</span>
     <span class="n">topology</span><span class="o">=</span><span class="n">pdb</span><span class="o">.</span><span class="n">topology</span><span class="p">,</span>
-    <span class="n">lambdaName</span><span class="o">=</span><span class="s1">&#39;lambda_alchemical&#39;</span><span class="p">,</span>
+    <span class="n">lambdaName</span><span class="o">=</span><span class="s1">'lambda_alchemical'</span><span class="p">,</span>
     <span class="n">lambdaValue</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>  <span class="c1"># Lambda value between 0 and 1</span>
 <span class="p">)</span>
 
 <span class="c1"># During simulation, you can also update lambda value through the context:</span>
-<span class="n">context</span><span class="o">.</span><span class="n">setParameter</span><span class="p">(</span><span class="s1">&#39;lambda_alchemical&#39;</span><span class="p">,</span> <span class="n">new_lambda_value</span><span class="p">)</span>
+<span class="n">context</span><span class="o">.</span><span class="n">setParameter</span><span class="p">(</span><span class="s1">'lambda_alchemical'</span><span class="p">,</span> <span class="n">new_lambda_value</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>For NNP/MM-style simulations with atom subsets:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">forcefield</span> <span class="o">=</span> <span class="n">ForceField</span><span class="p">(</span><span class="s1">&#39;amber14-all.xml&#39;</span><span class="p">,</span> <span class="s1">&#39;amber14/tip3pfb.xml&#39;</span><span class="p">)</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">forcefield</span> <span class="o">=</span> <span class="n">ForceField</span><span class="p">(</span><span class="s1">'amber14-all.xml'</span><span class="p">,</span> <span class="s1">'amber14/tip3pfb.xml'</span><span class="p">)</span>
 <span class="n">mm_system</span> <span class="o">=</span> <span class="n">forcefield</span><span class="o">.</span><span class="n">createSystem</span><span class="p">(</span><span class="n">topology</span><span class="p">)</span>
 
 <span class="c1"># Define NNP region atoms (0-indexed)</span>
 <span class="n">nnp_atoms</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]</span>  <span class="c1"># First 5 atoms</span>
 
-<span class="n">potential</span> <span class="o">=</span> <span class="n">MLPotential</span><span class="p">(</span><span class="s1">&#39;deepmd&#39;</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s1">&#39;model.pb&#39;</span><span class="p">)</span>
+<span class="n">potential</span> <span class="o">=</span> <span class="n">MLPotential</span><span class="p">(</span><span class="s1">'deepmd'</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s1">'model.pb'</span><span class="p">)</span>
 <span class="n">nnp_mm_system</span> <span class="o">=</span> <span class="n">potential</span><span class="o">.</span><span class="n">createMixedSystem</span><span class="p">(</span>
     <span class="n">topology</span><span class="o">=</span><span class="n">pdb</span><span class="o">.</span><span class="n">topology</span><span class="p">,</span>
     <span class="n">system</span><span class="o">=</span><span class="n">mm_system</span><span class="p">,</span>
