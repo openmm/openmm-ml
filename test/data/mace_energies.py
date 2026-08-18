@@ -23,6 +23,12 @@ results['mace-omat-0-medium'] = atoms.get_potential_energy()
 atoms.calc = mace_omol('extra_large')
 results['mace-omol-0-extra-large'] = atoms.get_potential_energy()
 try:
+    import les
+    atoms.calc = mace_off('https://github.com/ChengUCB/les_fit/blob/main/MACELES-OFF/MACELES-OFF_small_converted.model?raw=true')
+    results['mace-les-off-small'] = atoms.get_potential_energy()
+except ImportError:
+    print('No MACELES reference energies will be generated; you must first install LES from https://github.com/ChengUCB/les')
+try:
     import graph_longrange
     atoms.calc = mace_polar('polar-1-s')
     results['mace-polar-1-small'] = atoms.get_potential_energy()

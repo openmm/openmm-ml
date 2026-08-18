@@ -8,8 +8,9 @@ can set up a simulation that uses a standard, pretrained model to represent some
 The current release of OpenMM-ML supports the following potential functions.
 
 - [MACE](https://arxiv.org/abs/2206.07697) models, including the pre-trained [MACE-OFF23](https://arxiv.org/abs/2312.15211),
-  [MACE-MPA-0](https://github.com/ACEsuit/mace-foundations), [MACE-OMAT-0](https://github.com/ACEsuit/mace-foundations),
-  MACE-OMOL-0, and [MACE-POLAR-1](https://mace-docs.readthedocs.io/en/latest/guide/polar_mace.html) models, utilizing the [MACE implementation](https://github.com/ACEsuit/mace).
+  [MACE-MPA-0](https://github.com/ACEsuit/mace-foundations), [MACE-OMAT-0](https://github.com/ACEsuit/mace-foundations), MACE-OMOL-0,
+  [MACELES-OFF](https://github.com/ChengUCB/les_fit), and [MACE-POLAR-1](https://mace-docs.readthedocs.io/en/latest/guide/polar_mace.html)
+  models, utilizing the [MACE implementation](https://github.com/ACEsuit/mace).
 
 - The pretrained [AIMNet2](https://doi.org/10.1039/D4SC08572H) model.
 
