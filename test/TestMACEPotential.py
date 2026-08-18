@@ -25,12 +25,15 @@ class TestMACE:
         'mace-mpa-0-medium': -8839.299589829867,
         'mace-omat-0-small': -8726.63865431241,
         'mace-omat-0-medium': -8679.026847088873,
-        'mace-omol-0-extra-large': -712903.4934289698
+        'mace-omol-0-extra-large': -712903.4934289698,
+        'mace-les-off-small': -713467.9354591698
     }
 
     @pytest.mark.parametrize("model", ['mace-off23-small', 'mace-off23-medium', 'mace-off23-large', 'mace-off24-medium',
-                                       'mace-mpa-0-medium', 'mace-omat-0-small', 'mace-omat-0-medium', 'mace-omol-0-extra-large'])
+                                       'mace-mpa-0-medium', 'mace-omat-0-small', 'mace-omat-0-medium', 'mace-omol-0-extra-large', 'mace-les-off-small'])
     def testCreatePureMLSystem(self, platform_int, model):
+        if 'mace-les' in model:
+            pytest.importorskip("les", reason="les is not installed")
         pdb = app.PDBFile(os.path.join(test_data_dir, "toluene", "toluene.pdb"))
         potential = MLPotential(model)
         system = potential.createSystem(pdb.topology, returnEnergyType='energy')

@@ -57,7 +57,8 @@ class MACEPotentialImpl(MLPotentialImpl):
     >>> potential = MLPotential('mace-off23-small')
 
     Other available models include 'mace-off23-medium', 'mace-off23-large', 'mace-off24-medium',
-    'mace-mpa-0-medium', 'mace-omat-0-small', 'mace-omat-0-medium', and 'mace-omol-0-extra-large'.
+    'mace-mpa-0-medium', 'mace-omat-0-small', 'mace-omat-0-medium', 'mace-omol-0-extra-large',
+    and 'mace-les-off-small'.
 
     To use a locally trained MACE model, provide the path to the model file. For example:
 
@@ -89,16 +90,17 @@ class MACEPotentialImpl(MLPotentialImpl):
         The path to the locally trained MACE model if ``name`` is 'mace'.
     """
 
-    # (Function name, model name, restrictive license, long-range)
+    # (Function name, model name, restrictive license name or None, long-range)
     KNOWN_MODELS = {
-        'mace-off23-small': ('mace_off', 'small', True, False),
-        'mace-off23-medium': ('mace_off', 'medium', True, False),
-        'mace-off23-large': ('mace_off', 'large', True, False),
-        'mace-off24-medium': ('mace_off', 'https://github.com/ACEsuit/mace-off/blob/main/mace_off24/MACE-OFF24_medium.model?raw=true', True, False),
-        'mace-mpa-0-medium': ('mace_mp', 'medium-mpa-0', False, False),
-        'mace-omat-0-small': ('mace_mp', 'small-omat-0', True, False),
-        'mace-omat-0-medium': ('mace_mp', 'medium-omat-0', True, False),
-        'mace-omol-0-extra-large': ('mace_omol', 'extra_large', True, False),
+        'mace-off23-small': ('mace_off', 'small', 'ASL', False),
+        'mace-off23-medium': ('mace_off', 'medium', 'ASL', False),
+        'mace-off23-large': ('mace_off', 'large', 'ASL', False),
+        'mace-off24-medium': ('mace_off', 'https://github.com/ACEsuit/mace-off/blob/main/mace_off24/MACE-OFF24_medium.model?raw=true', 'ASL', False),
+        'mace-mpa-0-medium': ('mace_mp', 'medium-mpa-0', None, False),
+        'mace-omat-0-small': ('mace_mp', 'small-omat-0', 'ASL', False),
+        'mace-omat-0-medium': ('mace_mp', 'medium-omat-0', 'ASL', False),
+        'mace-omol-0-extra-large': ('mace_omol', 'extra_large', 'ASL', False),
+        'mace-les-off-small': ('mace_off', 'https://github.com/ChengUCB/les_fit/blob/main/MACELES-OFF/MACELES-OFF_small_converted.model?raw=true', 'CC BY-NC 4.0', True),
     }
 
     def __init__(self, name: str, modelPath) -> None:
@@ -111,7 +113,7 @@ class MACEPotentialImpl(MLPotentialImpl):
             The name of the MACE model.
             Options include 'mace-off23-small', 'mace-off23-medium', 'mace-off23-large',
             'mace-off24-medium', 'mace-mpa-0-medium', 'mace-omat-0-small', 'mace-omat-0-medium',
-            'mace-omol-0-extra-large', and 'mace'.
+            'mace-omol-0-extra-large', 'mace-les-off-small', and 'mace'.
         modelPath : str, optional
             The path to the locally trained MACE model if ``name`` is 'mace'.
         """
@@ -170,11 +172,11 @@ class MACEPotentialImpl(MLPotentialImpl):
                 'mace_mp': mace_mp,
                 'mace_omol': mace_omol,
             }
-            fnName, name, warn, _ = MACEPotentialImpl.KNOWN_MODELS[self.name]
+            fnName, name, restrictiveLicense, _ = MACEPotentialImpl.KNOWN_MODELS[self.name]
             model = functions[fnName](model=name, device=device, return_raw_model=True).to(device)
-            if warn:
+            if restrictiveLicense is not None:
                 import logging
-                logging.warning(f'The model {self.name} is distributed under the restrictive ASL license.  Commercial use is not permitted.')
+                logging.warning(f'The model {self.name} is distributed under the restrictive {restrictiveLicense} license.  Commercial use is not permitted.')
         elif self.name == "mace":
             if self.modelPath is not None:
                 model = torch.load(self.modelPath, map_location=device).to(device)

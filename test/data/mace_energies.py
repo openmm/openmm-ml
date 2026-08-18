@@ -22,6 +22,12 @@ atoms.calc = mace_mp('medium-omat-0')
 results['mace-omat-0-medium'] = atoms.get_potential_energy()
 atoms.calc = mace_omol('extra_large')
 results['mace-omol-0-extra-large'] = atoms.get_potential_energy()
+try:
+    import les
+    atoms.calc = mace_off('https://github.com/ChengUCB/les_fit/blob/main/MACELES-OFF/MACELES-OFF_small_converted.model?raw=true')
+    results['mace-les-off-small'] = atoms.get_potential_energy()
+except ImportError:
+    print('No MACELES reference energies will be generated; you must first install LES from https://github.com/ChengUCB/les')
 atoms = ase.io.read('alanine-dipeptide/alanine-dipeptide-explicit.pdb')
 atoms.calc = mace_off('small')
 results['alanine-dipeptide'] = atoms.get_potential_energy()

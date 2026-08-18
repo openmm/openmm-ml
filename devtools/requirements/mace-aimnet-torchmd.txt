@@ -5,3 +5,4 @@ torchmd-net
 ase
 huggingface-hub
 torchani
+git+https://github.com/ChengUCB/les@v0.2.0
