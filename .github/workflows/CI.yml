@@ -10,9 +10,11 @@ on:
 
 jobs:
   build_test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.runner }}
+
     strategy:
       matrix:
+        runner: ["ubuntu-latest", ["self-hosted", "cuda"]]
         python-version: ["3.14"]
         requirements: ["mace-aimnet-torchmd", "nequip", "fennix"]
         include:
