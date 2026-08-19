@@ -36,6 +36,7 @@ jobs:
           environment-name: build-env
           create-args: >-
             python=${{ matrix.python-version }}
+            gcc_linux-64<15
           init-shell: bash
 
       - name: "Install dependencies with pip"
