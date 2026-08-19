@@ -15,9 +15,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        runner: ["ubuntu-latest", ["self-hosted", "cuda"]]
+        configuration: ["cpu", "cuda"]
         requirements: ["mace-aimnet-torchmd", "nequip", "fennix", "orb"]
         include:
+          - configuration: "cpu"
+            runs-on: "ubuntu-latest"
+            conda-pkgs: ""
+            openmm-pkg: "openmm"
+          - configuration: "cuda"
+            runs-on: ["self-hosted", "cuda"]
+            conda-pkgs: "c-compiler<=1.9.0"
+            openmm-pkg: "openmm[cuda12]"
           - requirements: "mace-aimnet-torchmd"
             python-version: "3.14"
           - requirements: "nequip"
@@ -36,13 +44,13 @@ jobs:
           environment-name: build-env
           create-args: >-
             python=${{ matrix.python-version }}
-            c-compiler<=1.9.0
+            ${{ matrix.conda-pkgs }}
           init-shell: bash
 
       - name: "Install dependencies with pip"
         shell: bash -l {0}
         run: |
-          pip install --pre openmm[cuda12]
+          pip install --pre ${{ matrix.openmm-pkg }}
           pip install -v -r devtools/requirements/${{ matrix.requirements }}.txt
 
       - name: "Install OpenMM-ML"
