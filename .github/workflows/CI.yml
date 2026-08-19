@@ -19,11 +19,11 @@ jobs:
         requirements: ["mace-aimnet-torchmd", "nequip", "fennix", "orb"]
         include:
           - configuration: "cpu"
-            runs-on: "ubuntu-latest"
+            runner: "ubuntu-latest"
             conda-pkgs: ""
             openmm-pkg: "openmm"
           - configuration: "cuda"
-            runs-on: ["self-hosted", "cuda"]
+            runner: ["self-hosted", "cuda"]
             conda-pkgs: "c-compiler<=1.9.0"
             openmm-pkg: "openmm[cuda12]"
           - requirements: "mace-aimnet-torchmd"
