@@ -34,6 +34,7 @@ from openmmml.embeddings import utilities
 import openmm
 import openmm.app
 import copy
+import typing
 
 class MechanicalEmbeddingFactory(EmbeddingFactory):
     """This is the factory that creates MechanicalEmbedding objects."""
@@ -72,7 +73,8 @@ class MechanicalEmbedding(Embedding):
                           atoms: list[int],
                           forceGroup: int,
                           interpolate: bool,
-                          **args) -> openmm.System:
+                          returnInfo: bool = False,
+                          **args) -> openmm.System | dict[str, typing.Any]:
 
         periodic = system.usesPeriodicBoundaryConditions()
 
@@ -167,7 +169,6 @@ class MechanicalEmbedding(Embedding):
             for atom in range(newSystem.getNumParticles()):
                 excludeForce.addParticle(mmLongRangeForce.getParticleParameters(atom)[0] if atom in atomSet else 0, 1, 0)
 
-        # TODO: there should be a way to extract this topology.
         newTopology = copy.deepcopy(topology)
         if interpolate:
             # For interpolation setup to work, we need to modify the original
@@ -176,7 +177,8 @@ class MechanicalEmbedding(Embedding):
             systemList = [system, newSystem]
         else:
             systemList = [newSystem]
-        atomsWithCaps = atoms + utilities.addLinkAtomSites(newTopology, systemList, linkBonds, args.get("linkAtomDistances", []))
+        capIndices, oldToNew = utilities.addLinkAtomSites(newTopology, systemList, linkBonds, args.get("linkAtomDistances", []))
+        atomsWithCaps = atoms + capIndices
 
         if interpolate:
             interpolator = utilities.InterpolationHelper()
@@ -197,4 +199,7 @@ class MechanicalEmbedding(Embedding):
 
             potential.addForces(newTopology, newSystem, atomsWithCaps, forceGroup, **args)
 
-        return newSystem
+        if returnInfo:
+            return dict(system=newSystem, topology=newTopology, oldToNew=oldToNew)
+        else:
+            return newSystem

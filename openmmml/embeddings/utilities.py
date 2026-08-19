@@ -86,7 +86,7 @@ def findLinkBonds(topology: openmm.app.Topology, atoms: list[int]) -> list[tuple
 
     return linkBonds
 
-def addLinkAtomSites(topology: openmm.app.Topology, systems: list[openmm.System], linkBonds: list[tuple[int, int]], linkAtomDistances: list[tuple[int, int, unit.Quantity]]) -> list[int]:
+def addLinkAtomSites(topology: openmm.app.Topology, systems: list[openmm.System], linkBonds: list[tuple[int, int]], linkAtomDistances: list[tuple[int, int, unit.Quantity]]) -> tuple[list[int], list[int]]:
     """
     Adds virtual sites to systems and a topology for the link-atom method.
 
@@ -111,7 +111,13 @@ def addLinkAtomSites(topology: openmm.app.Topology, systems: list[openmm.System]
 
     Returns
     -------
-    A list of indices corresponding to the virtual sites added to the systems.
+    A list of indices corresponding to the virtual sites added to the systems,
+    and a list serving as a mapping from atom indices in the original Topology
+    to those in the modified Topology.
+
+    The current implementation always appends virtual sites to the end of each
+    System and the Topology (in a new Chain), so the mapping will always be an
+    identity mapping.
     """
 
     linkAtomDistanceTable = {}
@@ -120,30 +126,32 @@ def addLinkAtomSites(topology: openmm.app.Topology, systems: list[openmm.System]
 
     # Update the topology with virtual sites to be added, and load data from it.
 
-    residues = [atom.residue for atom in topology.atoms()]
+    oldToNew = list(range(topology.getNumAtoms()))
     siteIndices = []
-    for site, (atom1, _) in enumerate(linkBonds):
-        siteIndices.append(topology.addAtom(f"V{site}", openmm.app.element.hydrogen, residues[atom1]).index)
+    if linkBonds:
+        siteChain = topology.addChain()
+    for site in range(len(linkBonds)):
+        siteIndices.append(topology.addAtom(f"V{site}", openmm.app.element.hydrogen, topology.addResidue(f"V{site}", siteChain)).index)
     atomicNumbers = [atom.element.atomic_number for atom in topology.atoms()]
 
     # Add virtual sites to the systems.
 
-    for atom1, atom2 in linkBonds:
-        key = min(atom1, atom2), max(atom1, atom2)
+    for mlAtom, mmAtom in linkBonds:
+        key = min(mlAtom, mmAtom), max(mlAtom, mmAtom)
         if key in linkAtomDistanceTable:
             distance = linkAtomDistanceTable[key]
         else:
-            distance = COVALENT_RADII[atomicNumbers[atom1]] + COVALENT_RADII[1]
+            distance = COVALENT_RADII[atomicNumbers[mlAtom]] + COVALENT_RADII[1]
 
         for system in systems:
-            site = openmm.LocalCoordinatesSite([atom1, atom2], [1.0, 0.0], [-1.0, 1.0], [0.0, 0.0], [distance, 0.0, 0.0])
+            site = openmm.LocalCoordinatesSite([mlAtom, mmAtom], [1.0, 0.0], [-1.0, 1.0], [0.0, 0.0], [distance, 0.0, 0.0])
             system.setVirtualSite(system.addParticle(0.0), site)
 
             for force in system.getForces():
                 if isinstance(force, openmm.NonbondedForce):
                     force.addParticle(0.0, 0.0, 0.0)
 
-    return siteIndices
+    return siteIndices, oldToNew
 
 def removeBonds(system: openmm.System, atoms: list[int], removeInSet: bool, linkBonds: list[tuple[int, int]] | None = None) -> openmm.System:
     """

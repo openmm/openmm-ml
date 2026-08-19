@@ -334,3 +334,30 @@ class TestMechanicalEmbedding:
             interpolate_context.setParameter("lambda_interpolate", lambda_value)
             interpolate_energy = interpolate_context.getState(energy=True).getPotentialEnergy().value_in_unit(openmm.unit.kilojoule_per_mole)
             assert np.isclose(interpolate_energy, mixed_energy * lambda_value + mm_energy * (1 - lambda_value), rtol=0, atol=atol)
+
+    def testLinkAtomInfo(self, platform_int):
+        """
+        Ensure the returnInfo keyword works with the link-atom method.
+        """
+
+        pdb = openmm.app.PDBFile(os.path.join(test_data_dir, "ethanol", "ethanol.pdb"))
+        mm_force_field = openmm.app.ForceField(os.path.join(test_data_dir, "ethanol", "ethanol.xml"))
+        ml_potential = MLPotential("mace-off23-small")
+        mm_system = mm_force_field.createSystem(pdb.topology)
+
+        original_count = mm_system.getNumParticles()
+        mixed_system = ml_potential.createMixedSystem(pdb.topology, mm_system, [0, 1, 3, 4, 5], returnInfo=False)
+        mixed_info = ml_potential.createMixedSystem(pdb.topology, mm_system, [0, 1, 3, 4, 5], returnInfo=True)
+
+        assert isinstance(mixed_system, openmm.System)
+        assert isinstance(mixed_info["system"], openmm.System)
+        assert isinstance(mixed_info["topology"], openmm.app.Topology)
+
+        # Make sure the inputs were not modified.
+        assert mm_system.getNumParticles() == pdb.topology.getNumAtoms() == original_count
+        # Make sure the outputs have been modified and match.
+        assert mixed_system.getNumParticles() == mixed_info["system"].getNumParticles() == mixed_info["topology"].getNumAtoms() > original_count
+        # Make sure the virtual sites were appended to the end.
+        assert mixed_info["oldToNew"] == list(range(original_count))
+        for i in range(mixed_system.getNumParticles()):
+            assert mixed_system.isVirtualSite(i) == (i >= original_count)

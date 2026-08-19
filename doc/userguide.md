@@ -374,6 +374,30 @@ to specify which behavior your model uses when doing mechanical embedding in a p
 will be raised to inform you if this information is needed and not provided; OpenMM-ML will not assume either choice
 automatically.
 
+#### Molecules Spanning the ML-MM Region
+
+OpenMM-ML's mechanical embedding implementation supports the link-atom method for molecules having bonds crossing the
+boundary between the ML and MM regions.  If a molecule in the `Topology` provided contains bonds spanning the regions,
+then the molecule will appear as is to the MM force field, but will have these bonds capped by hydrogen atoms when its
+fragment(s) within the ML region are evaluated by the ML potential.
+
+The fictitious link atoms added are implemented as virtual sites which will be inserted into the `System` and `Topology`
+in use.  By default, `createMixedSystem()` only returns the `System`, but passing `returnInfo=True` returns a dictionary
+instead, with keys `system` (the `System`), `topology` (a modified copy of the `Topology` with the added sites), and
+`oldToNew` (a list of atom indices serving as a mapping from those in the original `Topology` to those in the modified
+one).  Since they are non-physical sites added only for implementing the method, the link atoms will be added to their
+own chain in the `Topology` separate from any existing chains.
+
+Each link atom is maintained at a fixed distance along its respective bond crossing the boundary.  By default, this
+distance is chosen based on the covalent radius of the atom on the ML side of the bond.  To override these distances,
+pass `linkAtomDistances=[...]` to `createMixedSystem()` with a list of tuples `(atom1, atom2, distance)` for each pair
+of atoms for which to use a custom distance.
+
+To avoid double-counting bonded interactions between the MM force field and ML potential, OpenMM-ML will delete:
+- All MM bonds contained completely within the ML region.
+- All MM angles and torsions contained completely within the union of the ML region with the set of atoms directly
+  bonded to the ML region.
+
 ## Other Packages
 
 OpenMM-ML is based on a plugin architecture, allowing other packages to provide their own interfaces to it.  The
