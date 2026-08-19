@@ -25,7 +25,7 @@ jobs:
           - configuration: "cuda"
             runner: ["self-hosted", "cuda"]
             conda-pkgs: "c-compiler<=1.9.0"
-            openmm-pkg: "openmm[cuda12]"
+            openmm-pkg: "openmm[cuda13]"
           - requirements: "mace-aimnet-torchmd"
             python-version: "3.14"
           - requirements: "nequip"
@@ -50,7 +50,7 @@ jobs:
       - name: "Install dependencies with pip"
         shell: bash -l {0}
         run: |
-          pip install --pre ${{ matrix.openmm-pkg }}
+          pip install ${{ matrix.openmm-pkg }}
           pip install -v -r devtools/requirements/${{ matrix.requirements }}.txt
 
       - name: "Install OpenMM-ML"
