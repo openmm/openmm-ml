@@ -25,7 +25,7 @@ jobs:
           - configuration: "cuda"
             runner: ["self-hosted", "cuda"]
             conda-pkgs: "c-compiler<=1.9.0"
-            openmm-pkg: "openmm[cuda13]"
+            openmm-pkg: "openmm[cuda12]"
           - requirements: "mace-aimnet-torchmd"
             python-version: "3.14"
           - requirements: "nequip"
