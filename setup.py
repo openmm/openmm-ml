@@ -38,7 +38,7 @@ setup(
     classifiers=CLASSIFIERS.splitlines(),
     packages=find_packages(),
     zip_safe=False,
-    install_requires=['numpy', 'openmm >= 8.5.2'],
+    install_requires=['numpy', 'openmm >= 8.6.0'],
     entry_points={
         'openmmml.potentials': [
             # Custom AIMNet2 model supplied by path.

@@ -199,10 +199,6 @@ class NequIPPotentialImpl(MLPotentialImpl):
         else:
             if len(atomTypes) != len(includedAtoms):
                 raise ValueError("The length of atomTypes must be equal to the number of ML atoms in the system.")
-        if atoms is None:
-            indices = None
-        else:
-            indices = np.array(atoms)
         atomTypes = torch.tensor(atomTypes, dtype=torch.long, requires_grad=False, device=device)
         periodic = (topology.getPeriodicBoxVectors() is not None) or system.usesPeriodicBoundaryConditions()
         pbc = torch.tensor([periodic, periodic, periodic], dtype=torch.bool, requires_grad=False, device=device)
@@ -216,22 +212,20 @@ class NequIPPotentialImpl(MLPotentialImpl):
                           cutoff=cutoff,
                           lengthScale=self.lengthScale,
                           energyScale=self.energyScale,
-                          indices=indices,
                           periodic=periodic,
                           pbc=pbc)
         force = openmm.PythonForce(compute)
         force.setForceGroup(forceGroup)
         force.setUsesPeriodicBoundaryConditions(periodic)
+        if atoms is not None:
+            force.setParticles(atoms)
         system.addForce(force)
 
-def _computeNequIP(state, model, atomTypes, cutoff, lengthScale, energyScale, indices, periodic, pbc):
+def _computeNequIP(state, model, atomTypes, cutoff, lengthScale, energyScale, periodic, pbc):
     import torch
     from nequip.data._nl import compute_neighborlist_
     positions = state.getPositions(asNumpy=True).value_in_unit(unit.nanometer)/lengthScale
-    numAtoms = positions.shape[0]
     positions = torch.tensor(positions, dtype=torch.float64, device=atomTypes.device)
-    if indices is not None:
-        positions = positions[indices]
     inputDict = {
         "pos": positions,
         "atom_types": atomTypes,
@@ -243,8 +237,4 @@ def _computeNequIP(state, model, atomTypes, cutoff, lengthScale, energyScale, in
     out = model(inputDict)
     energy = out["total_energy"] * energyScale
     forces = out["forces"].detach().cpu().numpy()
-    if indices is not None:
-        f = np.zeros((numAtoms, 3), dtype=np.float64)
-        f[indices] = forces
-        forces = f
     return energy, forces*energyScale/lengthScale

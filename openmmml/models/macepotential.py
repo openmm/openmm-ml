@@ -214,10 +214,6 @@ class MACEPotentialImpl(MLPotentialImpl):
             torch.tensor(atomic_numbers_to_indices(atomicNumbers, z_table=zTable), dtype=torch.long, device=device).unsqueeze(-1),
             num_classes=len(zTable))
 
-        if atoms is None:
-            indices = None
-        else:
-            indices = np.array(atoms)
         periodic = (topology.getPeriodicBoxVectors() is not None) or system.usesPeriodicBoundaryConditions()
 
         # Create the PythonForce and add it to the System.
@@ -231,11 +227,12 @@ class MACEPotentialImpl(MLPotentialImpl):
                           returnEnergyType=returnEnergyType,
                           charge=torch.tensor([float(args.get('charge', 0))], dtype=dtype, device=device, requires_grad=False),
                           multiplicity=torch.tensor([float(args.get('multiplicity', 1))], dtype=dtype, device=device, requires_grad=False),
-                          indices=indices,
                           periodic=periodic)
         force = openmm.PythonForce(compute)
         force.setForceGroup(forceGroup)
         force.setUsesPeriodicBoundaryConditions(periodic)
+        if atoms is not None:
+            force.setParticles(atoms)
         system.addForce(force)
 
     def getMLLongRange(self) -> bool | None:
@@ -245,15 +242,12 @@ class MACEPotentialImpl(MLPotentialImpl):
         return None
 
 
-def _computeMACE(state, model, ptr, node_attrs, batch, pbc, returnEnergyType, charge, multiplicity, indices, periodic):
+def _computeMACE(state, model, ptr, node_attrs, batch, pbc, returnEnergyType, charge, multiplicity, periodic):
     import torch
     from mace.data.neighborhood import get_neighborhood
     energyScale = 96.4853
     lengthScale = 10.0
     positions = state.getPositions(asNumpy=True).value_in_unit(unit.angstrom)
-    numAtoms = positions.shape[0]
-    if indices is not None:
-        positions = positions[indices]
     if periodic:
         cell = state.getPeriodicBoxVectors(asNumpy=True).value_in_unit(unit.angstrom)
     else:
@@ -276,8 +270,4 @@ def _computeMACE(state, model, ptr, node_attrs, batch, pbc, returnEnergyType, ch
     results = model(inputDict, compute_force=True)
     energy = float(results[returnEnergyType].detach())*energyScale
     forces = (results["forces"]*energyScale*lengthScale).detach().cpu().numpy()
-    if indices is not None:
-        f = np.zeros((numAtoms, 3), dtype=(np.float64 if dtype == torch.float64 else np.float32))
-        f[indices] = forces
-        forces = f
     return energy, forces

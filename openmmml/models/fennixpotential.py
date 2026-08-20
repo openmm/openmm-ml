@@ -135,10 +135,8 @@ class FeNNixPotentialImpl(MLPotentialImpl):
 
         # Get the atoms that should be included.
         includedAtoms = list(topology.atoms())
-        indices = None
         if atoms is not None:
             includedAtoms = [includedAtoms[i] for i in atoms]
-            indices = np.array(atoms, dtype=int)
 
         # Prepare inputs to the model that remain constant from step to step.
         species = jnp.array([atom.element.atomic_number for atom in includedAtoms], dtype=jnp.int32)
@@ -151,9 +149,11 @@ class FeNNixPotentialImpl(MLPotentialImpl):
 
         # Create the PythonForce and add it to the System.
         periodic = (topology.getPeriodicBoxVectors() is not None) or system.usesPeriodicBoundaryConditions()
-        force = openmm.PythonForce(_ComputeFeNNix(model, energyScale, forceScale, indices, inputs, periodic, useDouble))
+        force = openmm.PythonForce(_ComputeFeNNix(model, energyScale, forceScale, inputs, periodic, useDouble))
         force.setForceGroup(forceGroup)
         force.setUsesPeriodicBoundaryConditions(periodic)
+        if atoms is not None:
+            force.setParticles(atoms)
         system.addForce(force)
 
     def getMLLongRange(self) -> bool | None:
@@ -164,11 +164,10 @@ class FeNNixPotentialImpl(MLPotentialImpl):
 
 
 class _ComputeFeNNix:
-    def __init__(self, model, energyScale, forceScale, indices, inputs, periodic, useDouble):
+    def __init__(self, model, energyScale, forceScale, inputs, periodic, useDouble):
         self.model = model
         self.energyScale = energyScale
         self.forceScale = forceScale
-        self.indices = indices
         self.inputs = inputs
         self.periodic = periodic
         self.useDouble = useDouble
@@ -179,9 +178,6 @@ class _ComputeFeNNix:
 
         # Load coordinates and box vectors from the state.
         positions = state.getPositions(asNumpy=True).value_in_unit(unit.angstrom)
-        numAtoms = positions.shape[0]
-        if self.indices is not None:
-            positions = positions[self.indices]
         if self.periodic:
             cells = state.getPeriodicBoxVectors(asNumpy=True).value_in_unit(unit.angstrom).reshape(1, 3, 3)
 
@@ -194,11 +190,7 @@ class _ComputeFeNNix:
             jaxEnergy, jaxForces = modelOutputs[:2]
             energy = jaxEnergy.item() * self.energyScale
             jaxForces *= self.forceScale
-            if self.indices is None:
-                forces = np.asarray(jaxForces)
-            else:
-                forces = np.zeros((numAtoms, 3), dtype=jaxForces.dtype)
-                forces[self.indices] = jaxForces
+            forces = np.asarray(jaxForces)
 
         return energy, forces
 
