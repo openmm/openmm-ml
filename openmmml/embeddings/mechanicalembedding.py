@@ -33,6 +33,7 @@ from openmmml.mlpotential import MLPotentialImpl, Embedding, EmbeddingFactory
 from openmmml.embeddings import utilities
 import openmm
 import openmm.app
+import copy
 
 class MechanicalEmbeddingFactory(EmbeddingFactory):
     """This is the factory that creates MechanicalEmbedding objects."""
@@ -123,7 +124,8 @@ class MechanicalEmbedding(Embedding):
         # Create the new system with ML-ML interactions to be computed by the ML
         # potential removed.
 
-        newSystem = utilities.removeBonds(system, atoms, True)
+        linkBonds = utilities.findLinkBonds(topology, atoms)
+        newSystem = utilities.removeBonds(system, atoms, True, linkBonds=linkBonds)
 
         for force in newSystem.getForces():
             if isinstance(force, openmm.NonbondedForce):
@@ -165,10 +167,21 @@ class MechanicalEmbedding(Embedding):
             for atom in range(newSystem.getNumParticles()):
                 excludeForce.addParticle(mmLongRangeForce.getParticleParameters(atom)[0] if atom in atomSet else 0, 1, 0)
 
+        # TODO: there should be a way to extract this topology.
+        newTopology = copy.deepcopy(topology)
+        if interpolate:
+            # For interpolation setup to work, we need to modify the original
+            # system so that its NonbondedForce also has the virtual site.
+            system = copy.deepcopy(system)
+            systemList = [system, newSystem]
+        else:
+            systemList = [newSystem]
+        atomsWithCaps = atoms + utilities.addLinkAtomSites(newTopology, systemList, linkBonds, args.get("linkAtomDistances", []))
+
         if interpolate:
             interpolator = utilities.InterpolationHelper()
-            interpolator.addMLPotentialTerms(potential, topology, atoms, forceGroup, **args)
-            interpolator.addMMBondedTerms(system, atoms)
+            interpolator.addMLPotentialTerms(potential, newTopology, atomsWithCaps, forceGroup, **args)
+            interpolator.addMMBondedTerms(system, atoms, linkBonds)
             interpolator.setupNonbonded(newSystem, system)
             if excludeLongRange:
                 interpolator.addMLTerm(excludeForce, "-{}")
@@ -182,6 +195,6 @@ class MechanicalEmbedding(Embedding):
                 cvForce.addCollectiveVariable("excludeForce", excludeForce)
                 newSystem.addForce(cvForce)
 
-            potential.addForces(topology, newSystem, atoms, forceGroup, **args)
+            potential.addForces(newTopology, newSystem, atomsWithCaps, forceGroup, **args)
 
         return newSystem
