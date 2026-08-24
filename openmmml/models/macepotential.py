@@ -58,7 +58,7 @@ class MACEPotentialImpl(MLPotentialImpl):
 
     Other available models include 'mace-off23-medium', 'mace-off23-large', 'mace-off24-medium',
     'mace-mpa-0-medium', 'mace-omat-0-small', 'mace-omat-0-medium', 'mace-omol-0-extra-large',
-    and 'mace-les-off-small'.
+    'mace-les-off-small', 'mace-polar-1-small', 'mace-polar-1-medium', and 'mace-polar-1-large'.
 
     To use a locally trained MACE model, provide the path to the model file. For example:
 
@@ -101,6 +101,9 @@ class MACEPotentialImpl(MLPotentialImpl):
         'mace-omat-0-medium': ('mace_mp', 'medium-omat-0', 'ASL', False),
         'mace-omol-0-extra-large': ('mace_omol', 'extra_large', 'ASL', False),
         'mace-les-off-small': ('mace_off', 'https://github.com/ChengUCB/les_fit/blob/main/MACELES-OFF/MACELES-OFF_small_converted.model?raw=true', 'CC BY-NC 4.0', True),
+        'mace-polar-1-small': ('mace_polar', 'polar-1-s', None, True),
+        'mace-polar-1-medium': ('mace_polar', 'polar-1-m', None, True),
+        'mace-polar-1-large': ('mace_polar', 'polar-1-l', None, True),
     }
 
     def __init__(self, name: str, modelPath) -> None:
@@ -113,7 +116,8 @@ class MACEPotentialImpl(MLPotentialImpl):
             The name of the MACE model.
             Options include 'mace-off23-small', 'mace-off23-medium', 'mace-off23-large',
             'mace-off24-medium', 'mace-mpa-0-medium', 'mace-omat-0-small', 'mace-omat-0-medium',
-            'mace-omol-0-extra-large', 'mace-les-off-small', and 'mace'.
+            'mace-omol-0-extra-large', 'mace-les-off-small', 'mace-polar-1-small',
+            'mace-polar-1-medium', 'mace-polar-1-large', and 'mace'.
         modelPath : str, optional
             The path to the locally trained MACE model if ``name`` is 'mace'.
         """
@@ -153,7 +157,7 @@ class MACEPotentialImpl(MLPotentialImpl):
         import torch
         try:
             from mace.tools import utils, to_one_hot, atomic_numbers_to_indices
-            from mace.calculators.foundations_models import mace_off, mace_mp, mace_omol
+            from mace.calculators.foundations_models import mace_off, mace_mp, mace_omol, mace_polar
         except ImportError as e:
             raise ImportError(f"Failed to import mace with error: {e}. Install mace with 'pip install mace-torch'.")
         try:
@@ -171,6 +175,7 @@ class MACEPotentialImpl(MLPotentialImpl):
                 'mace_off': mace_off,
                 'mace_mp': mace_mp,
                 'mace_omol': mace_omol,
+                'mace_polar': mace_polar,
             }
             fnName, name, restrictiveLicense, _ = MACEPotentialImpl.KNOWN_MODELS[self.name]
             model = functions[fnName](model=name, device=device, return_raw_model=True).to(device)
@@ -261,6 +266,7 @@ def _computeMACE(state, model, ptr, node_attrs, batch, pbc, returnEnergyType, ch
     dtype = node_attrs.dtype
     cutoff = float(model.r_max.detach())
     edgeIndex, shifts, _, _ = get_neighborhood(positions, cutoff, [periodic, periodic, periodic], cell)
+    cellTensor = torch.tensor(cell, dtype=dtype, device=ptr.device)
     inputDict = {
         "ptr": ptr,
         "node_attrs": node_attrs,
@@ -269,9 +275,13 @@ def _computeMACE(state, model, ptr, node_attrs, batch, pbc, returnEnergyType, ch
         "positions": torch.tensor(positions, dtype=dtype, device=ptr.device),
         "edge_index": torch.tensor(edgeIndex, dtype=torch.int64, device=ptr.device),
         "shifts": torch.tensor(shifts, dtype=dtype, device=ptr.device),
-        "cell": torch.tensor(cell, dtype=dtype, device=ptr.device),
+        "cell": cellTensor,
+        "rcell": 2 * torch.pi * torch.linalg.inv(cellTensor.mT),
+        "volume": torch.linalg.det(cellTensor),
         "total_charge": charge,
-        "total_spin": multiplicity
+        "total_spin": multiplicity,
+        "external_field": torch.zeros((1, 3), dtype=dtype, device=ptr.device),
+        "fermi_level": torch.zeros((1,), dtype=dtype, device=ptr.device)
     }
     results = model(inputDict, compute_force=True)
     energy = float(results[returnEnergyType].detach())*energyScale
