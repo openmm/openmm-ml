@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>openmmml.models.macepotential.MACEPotentialImpl &#8212; OpenMM ML 1.7dev_772aa70 documentation</title>
+    <title>openmmml.models.macepotential.MACEPotentialImpl &#8212; OpenMM ML 1.7dev_45c0895 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
 
-    <script src="../_static/documentation_options.js?v=21f713fd"></script>
+    <script src="../_static/documentation_options.js?v=d148c53d"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'generated/openmmml.models.macepotential.MACEPotentialImpl';</script>
@@ -483,7 +483,7 @@ This implementation supports both foundation models and locally trained MACE mod
 </div>
 <p>Other available models include ‘mace-off23-medium’, ‘mace-off23-large’, ‘mace-off24-medium’,
 ‘mace-mpa-0-medium’, ‘mace-omat-0-small’, ‘mace-omat-0-medium’, ‘mace-omol-0-extra-large’,
-and ‘mace-les-off-small’.</p>
+‘mace-les-off-small’, ‘mace-polar-1-small’, ‘mace-polar-1-medium’, and ‘mace-polar-1-large’.</p>
 <p>To use a locally trained MACE model, provide the path to the model file. For example:</p>
 <div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">potential</span> <span class="o">=</span> <span class="n">MLPotential</span><span class="p">(</span><span class="s1">'mace'</span><span class="p">,</span> <span class="n">modelPath</span><span class="o">=</span><span class="s1">'MACE.model'</span><span class="p">)</span>
 </pre></div>
@@ -536,7 +536,8 @@ self-energy, instead of the default interaction energy, by setting <code class="
 <li><p><strong>name</strong> (<em>str</em>) – The name of the MACE model.
 Options include ‘mace-off23-small’, ‘mace-off23-medium’, ‘mace-off23-large’,
 ‘mace-off24-medium’, ‘mace-mpa-0-medium’, ‘mace-omat-0-small’, ‘mace-omat-0-medium’,
-‘mace-omol-0-extra-large’, ‘mace-les-off-small’, and ‘mace’.</p></li>
+‘mace-omol-0-extra-large’, ‘mace-les-off-small’, ‘mace-polar-1-small’,
+‘mace-polar-1-medium’, ‘mace-polar-1-large’, and ‘mace’.</p></li>
 <li><p><strong>modelPath</strong> (<em>str</em><em>, </em><em>optional</em>) – The path to the locally trained MACE model if <code class="docutils literal notranslate"><span class="pre">name</span></code> is ‘mace’.</p></li>
 </ul>
 </dd>

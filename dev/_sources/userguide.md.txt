@@ -90,6 +90,7 @@ are supported.
 | `mace-omat-0-small`<br>`mace-omat-0-medium` | Pretrained [MACE-OMAT-0](https://github.com/ACEsuit/mace-foundations) models |
 | `mace-omol-0-extra-large` | Pretrained MACE-OMOL-0 model |
 | `mace-les-off-small` | Pretrained [MACELES-OFF](https://github.com/ChengUCB/les_fit) model (requires [LES](https://github.com/ChengUCB/les) plugin) |
+| `mace-polar-1-small`<br>`mace-polar-1-medium`<br>`mace-polar-1-large` | Pretrained [MACE-POLAR-1](https://mace-docs.readthedocs.io/en/latest/guide/polar_mace.html) models (requires [`graph_longrange`](https://github.com/WillBaldwin0/graph_electrostatics)) |
 | `mace` | Custom MACE models specified with the `modelPath` argument |
 
 When creating MACE models, the following keyword arguments to the `MLPotential` constructor are supported.
