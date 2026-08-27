@@ -136,7 +136,14 @@ def addLinkAtomSites(topology: openmm.app.Topology, systems: list[openmm.System]
 
     # Add virtual sites to the systems.
 
+    mmAtoms = set()
     for mlAtom, mmAtom in linkBonds:
+        # Nothing in the implementation prevents multiple link bonds to the same
+        # MM atom, but this would place virtual sites too close to each other.
+        if mmAtom in mmAtoms:
+            raise ValueError(f"Multiple link bonds to MM atom {mmAtom}")
+        mmAtoms.add(mmAtom)
+
         key = min(mlAtom, mmAtom), max(mlAtom, mmAtom)
         if key in linkAtomDistanceTable:
             distance = linkAtomDistanceTable[key]
@@ -153,30 +160,28 @@ def addLinkAtomSites(topology: openmm.app.Topology, systems: list[openmm.System]
 
     return siteIndices, oldToNew
 
-def removeBonds(system: openmm.System, atoms: list[int], removeInSet: bool, linkBonds: list[tuple[int, int]] | None = None) -> openmm.System:
+def removeBonds(system: openmm.System, topology: openmm.app.Topology, atoms: list[int], removeInSet: bool) -> openmm.System:
     """
     Copy a System, removing all bonded interactions between atoms in (or not in)
     a particular set.
 
-    If `linkBonds` is specified, an expanded set of atoms including those bonded
-    to atoms in the set by bonds in `linkBonds` will be used for the angles and
-    torsions.  This behavior is appropriate for use with the link-atom method.
+    Bonds spanning the set and its complement will not be removed.  Angles and
+    torsions will be removed if they would remain in a subset of the topology
+    including the specified set of atoms, bonds between them, and any link atoms
+    and bonds that would be inserted due to bonds leaving the set.
 
     Parameters
     ----------
     system: System
         The System to copy.
+    topology: Topology
+        A corresponding Topology used to identify bonds in the System.
     atoms: list[int]
         A set of atom indices.
     removeInSet: bool
         If True, any bonded term connecting atoms in the specified set is
         removed.  If False, any term that does *not* connect atoms in the
         specified set is removed.
-    linkBonds: list[tuple[int, int]], optional
-        A list of bonds spanning the specified set of atoms and its complement.
-        The first index in each pair should be that of an atom in the set, and
-        the second likewise out of the set.  This is the format returned by
-        `findLinkBonds()`.
 
     Returns
     -------
@@ -185,14 +190,21 @@ def removeBonds(system: openmm.System, atoms: list[int], removeInSet: bool, link
     """
 
     atomSet = set(atoms)
+    expandedAtomSet = set(atomSet)
 
-    if linkBonds is None:
-        expandedAtomSet = atomSet
-    else:
-        expandedAtomSet = set(atomSet)
-        for atom1, atom2 in linkBonds:
-            assert atom1 in atomSet
+    bondedToAtom = [set() for _ in topology.atoms()]
+    for bond in topology.bonds():
+        atom1 = bond.atom1.index
+        atom2 = bond.atom2.index
+        bondedToAtom[atom1].add(atom2)
+        bondedToAtom[atom2].add(atom1)
+        if atom1 in atomSet:
             expandedAtomSet.add(atom2)
+        if atom2 in atomSet:
+            expandedAtomSet.add(atom1)
+
+    def isBondedTo(a1, a2):
+        return a1 in bondedToAtom[a2]
 
     # Create an XML representation of the System.
 
@@ -200,28 +212,55 @@ def removeBonds(system: openmm.System, atoms: list[int], removeInSet: bool, link
     xml = openmm.XmlSerializer.serialize(system)
     root = ET.fromstring(xml)
 
-    # This function decides whether a bonded interaction should be removed.
+    # These functions decide whether a bonded interaction should be removed.
 
-    def shouldRemove(termAtoms, checkSet):
-        return all(a in checkSet for a in termAtoms) == removeInSet
+    def isBondInSet(a1, a2):
+        return a1 in atomSet and a2 in atomSet
+
+    def isAngleInSet(a1, a2, a3):
+        return a1 in expandedAtomSet and a2 in atomSet and a3 in expandedAtomSet
+
+    def isTorsionInSet(a1, a2, a3, a4):
+        if isBondedTo(a1, a2) and isBondedTo(a2, a3) and isBondedTo(a3, a4):
+            return a2 in atomSet and a3 in atomSet
+        elif isBondedTo(a1, a2) and isBondedTo(a1, a3) and isBondedTo(a1, a4):
+            return a1 in atomSet
+        elif isBondedTo(a2, a1) and isBondedTo(a2, a3) and isBondedTo(a2, a4):
+            return a2 in atomSet
+        elif isBondedTo(a3, a1) and isBondedTo(a3, a2) and isBondedTo(a3, a4):
+            return a3 in atomSet
+        elif isBondedTo(a4, a1) and isBondedTo(a4, a2) and isBondedTo(a4, a3):
+            return a4 in atomSet
+        else:
+            raise ValueError("Unrecognized torsion kind (neither proper nor improper)")
+
+    def isCMAPInSet(a1, a2, a3, a4, b1, b2, b3, b4):
+        return (
+            a1 in expandedAtomSet and a2 in atomSet and a3 in atomSet and a4 in expandedAtomSet and
+            b1 in expandedAtomSet and b2 in atomSet and b3 in atomSet and b4 in expandedAtomSet
+        )
 
     # Remove bonds, angles, and torsions.
 
     for bonds in root.findall('./Forces/Force/Bonds'):
         for bond in bonds.findall('Bond'):
             bondAtoms = [int(bond.attrib[p]) for p in ('p1', 'p2')]
-            if shouldRemove(bondAtoms, atomSet):
+            if isBondInSet(*bondAtoms) == removeInSet:
                 bonds.remove(bond)
     for angles in root.findall('./Forces/Force/Angles'):
         for angle in angles.findall('Angle'):
             angleAtoms = [int(angle.attrib[p]) for p in ('p1', 'p2', 'p3')]
-            if shouldRemove(angleAtoms, expandedAtomSet):
+            if isAngleInSet(*angleAtoms) == removeInSet:
                 angles.remove(angle)
     for torsions in root.findall('./Forces/Force/Torsions'):
         for torsion in torsions.findall('Torsion'):
-            torsionLabels =  ('p1', 'p2', 'p3', 'p4') if 'p1' in torsion.attrib else ('a1', 'a2', 'a3', 'a4', 'b1', 'b2', 'b3', 'b4')
-            torsionAtoms = [int(torsion.attrib[p]) for p in torsionLabels]
-            if shouldRemove(torsionAtoms, expandedAtomSet):
+            if 'p1' in torsion.attrib:
+                torsionAtoms = [int(torsion.attrib[p]) for p in ('p1', 'p2', 'p3', 'p4')]
+                inSet = isTorsionInSet(*torsionAtoms)
+            else:
+                cmapAtoms = [int(torsion.attrib[p]) for p in ('a1', 'a2', 'a3', 'a4', 'b1', 'b2', 'b3', 'b4')]
+                inSet = isCMAPInSet(*cmapAtoms)
+            if inSet == removeInSet:
                 torsions.remove(torsion)
 
     # Create a new System from it.
@@ -337,7 +376,7 @@ class InterpolationHelper:
         for force in tempSystem.getForces():
             self.addMLTerm(copy.deepcopy(force))
 
-    def addMMBondedTerms(self, mmSystem: openmm.System, atoms: list[int], linkBonds: list[tuple[int, int]] | None = None) -> None:
+    def addMMBondedTerms(self, mmSystem: openmm.System, topology: openmm.app.Topology, atoms: list[int]) -> None:
         """
         Helper function to add all bonded forces removed from the ML region of
         an ML/MM system as MM terms for interpolation.
@@ -348,14 +387,13 @@ class InterpolationHelper:
             A pure MM system containing all (ML and MM region) bonded terms.
             This will not be modified and is only used as a reference for the
             terms to interpolate.
+        topology: openmm.app.Topology
+            A corresponding Topology used to find the bonds in the System.
         atoms: list[int]
             The indices of the ML region atoms in the ML/MM system.
-        linkBonds: list[tuple[int, int]], optional
-            A list of bonds spanning the ML and MM regions.  See `removeBonds()`
-            for details.
         """
 
-        bondedSystem = removeBonds(mmSystem, atoms, False, linkBonds)
+        bondedSystem = removeBonds(mmSystem, topology, atoms, False)
         for force in bondedSystem.getForces():
             if hasattr(force, "addBond") or hasattr(force, "addAngle") or hasattr(force, "addTorsion"):
                 self.addMMTerm(copy.deepcopy(force))

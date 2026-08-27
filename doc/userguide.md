@@ -395,10 +395,14 @@ distance is chosen based on the covalent radius of the atom on the ML side of th
 pass `linkAtomDistances=[...]` to `createMixedSystem()` with a list of tuples `(atom1, atom2, distance)` for each pair
 of atoms for which to use a custom distance.
 
+Multiple link bonds from the same atom in the ML region are supported.  However, OpenMM-ML will raise an error if an ML
+subset is given that would create more than one link bond to the same atom in the MM region.  Such a configuration would
+place the associated link atoms too close to one another.
+
 To avoid double-counting bonded interactions between the MM force field and ML potential, OpenMM-ML will delete:
 - All MM bonds contained completely within the ML region.
-- All MM angles and torsions contained completely within the union of the ML region with the set of atoms directly
-  bonded to the ML region.
+- All MM angles and torsions contained completely within the ML region, but accounting for the presence of any link
+  atoms and bonds leaving the region.
 
 ## Other Packages
 

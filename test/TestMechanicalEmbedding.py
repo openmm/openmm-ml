@@ -16,11 +16,36 @@ atol = 0.01
 
 @pytest.mark.parametrize("platform_int", list(platform_ints))
 class TestMechanicalEmbedding:
-
     def getTopologyPositionsSubset(self, topology, positions, subset):
         modeller = openmm.app.Modeller(topology, positions)
         modeller.delete([atom for atom in topology.atoms() if atom.index not in subset])
         return modeller.getTopology(), modeller.getPositions()
+
+    def getBondedTerms(self, system):
+        bonds = set()
+        angles = set()
+        torsions = set()
+        cmaps = set()
+
+        for force in system.getForces():
+            if isinstance(force, openmm.HarmonicBondForce):
+                for i in range(force.getNumBonds()):
+                    bond = tuple(force.getBondParameters(i)[:2])
+                    bonds.add(min(bond, bond[::-1]))
+            elif isinstance(force, openmm.HarmonicAngleForce):
+                for i in range(force.getNumAngles()):
+                    angle = tuple(force.getAngleParameters(i)[:3])
+                    angles.add(min(angle, angle[::-1]))
+            elif isinstance(force, openmm.PeriodicTorsionForce):
+                for i in range(force.getNumTorsions()):
+                    torsion = tuple(force.getTorsionParameters(i)[:4])
+                    torsions.add(min(torsion, torsion[::-1]))
+            elif isinstance(force, openmm.CMAPTorsionForce):
+                for i in range(force.getNumTorsions()):
+                    cmap = tuple(force.getTorsionParameters(i)[1:])
+                    cmaps.add((min(cmap[:4], cmap[:4][::-1]), min(cmap[4:], cmap[4:][::-1])))
+
+        return bonds, angles, torsions, cmaps
 
     @pytest.mark.parametrize("periodic", (False, True))
     @pytest.mark.parametrize("interpolate", (False, True))
@@ -243,30 +268,9 @@ class TestMechanicalEmbedding:
             args["linkAtomDistances"] = [(1, 2, 0.12)]
         mixed_system = ml_potential.createMixedSystem(pdb.topology, mm_system, [0, 1, 3, 4, 5], interpolate=False, **args)
 
-        def get_terms(system):
-            bonds = set()
-            bond_force, = (force for force in system.getForces() if isinstance(force, openmm.HarmonicBondForce))
-            for i in range(bond_force.getNumBonds()):
-                bond = tuple(bond_force.getBondParameters(i)[:2])
-                bonds.add(min(bond, bond[::-1]))
-
-            angles = set()
-            angle_force, = (force for force in system.getForces() if isinstance(force, openmm.HarmonicAngleForce))
-            for i in range(angle_force.getNumAngles()):
-                angle = tuple(angle_force.getAngleParameters(i)[:3])
-                angles.add(min(angle, angle[::-1]))
-
-            torsions = set()
-            torsion_force, = (force for force in system.getForces() if isinstance(force, openmm.PeriodicTorsionForce))
-            for i in range(torsion_force.getNumTorsions()):
-                torsion = tuple(torsion_force.getTorsionParameters(i)[:4])
-                torsions.add(min(torsion, torsion[::-1]))
-
-            return bonds, angles, torsions
-
         # Get all of the bonded terms in both systems.
-        mm_bonds, mm_angles, mm_torsions = get_terms(mm_system)
-        mixed_bonds, mixed_angles, mixed_torsions = get_terms(mixed_system)
+        mm_bonds, mm_angles, mm_torsions, _ = self.getBondedTerms(mm_system)
+        mixed_bonds, mixed_angles, mixed_torsions, _ = self.getBondedTerms(mixed_system)
 
         # No bonded terms should be added to the mixed system.
         assert not mixed_bonds - mm_bonds
@@ -302,6 +306,116 @@ class TestMechanicalEmbedding:
         openmm.LocalEnergyMinimizer.minimize(context)
         context.getIntegrator().step(1000)
         check_positions()
+
+    def testLinkAtomForbidden(self, platform_int):
+        """
+        Ensure that multiple ML-MM bonds to the same MM atom are disallowed.
+        """
+
+        pdb = openmm.app.PDBFile(os.path.join(test_data_dir, "ethanol", "ethanol.pdb"))
+        mm_force_field = openmm.app.ForceField(os.path.join(test_data_dir, "ethanol", "ethanol.xml"))
+        ml_potential = MLPotential("mace-off23-small")
+
+        mm_system = mm_force_field.createSystem(pdb.topology)
+        with pytest.raises(ValueError, match="Multiple link bonds to MM atom 1"):
+            ml_potential.createMixedSystem(pdb.topology, mm_system, [0, 3, 4, 5])
+
+    def testLinkAtomMultipleRegions(self, platform_int):
+        """
+        Check that the correct bonded terms are present in a molecule with
+        multiple ML and MM subregions.
+        """
+
+        topology = openmm.app.Topology()
+        chain = topology.addChain()
+        atoms = [topology.addAtom("X", openmm.app.element.carbon, topology.addResidue("X", chain)) for _ in range(22)]
+        for pair in zip(atoms[:-1], atoms[1:]):
+            topology.addBond(*pair)
+
+        mm_system = openmm.System()
+
+        bond_force = openmm.HarmonicBondForce()
+        for i in range(len(atoms) - 1):
+            bond_force.addBond(i, i + 1, 1, 1)
+        mm_system.addForce(bond_force)
+
+        angle_force = openmm.HarmonicAngleForce()
+        for i in range(len(atoms) - 2):
+            angle_force.addAngle(i, i + 1, i + 2, 1, 1)
+        mm_system.addForce(angle_force)
+
+        torsion_force = openmm.PeriodicTorsionForce()
+        for i in range(len(atoms) - 3):
+            torsion_force.addTorsion(i, i + 1, i + 2, i + 3, 1, 0, 1)
+        mm_system.addForce(torsion_force)
+
+        cmap_force = openmm.CMAPTorsionForce()
+        for i in range(len(atoms) - 4):
+            cmap_force.addTorsion(0, i, i + 1, i + 2, i + 3, i + 1, i + 2, i + 3, i + 4)
+        mm_system.addForce(cmap_force)
+
+        """
+        The following should cover all the possible configurations of up to
+        five atoms forward or in reverse (excluding forbidden ML-MM-ML).
+
+             0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21
+            ML-ML-ML-ML-ML-MM-MM-MM-MM-MM-ML-ML-ML-MM-MM-MM-ML-MM-MM-ML-ML-MM
+        """
+        mixed_system = MLPotential("mace-off23-small").createMixedSystem(topology, mm_system, [0, 1, 2, 3, 4, 10, 11, 12, 16, 19, 20])
+        mixed_bonds, mixed_angles, mixed_torsions, mixed_cmaps = self.getBondedTerms(mixed_system)
+
+        assert mixed_bonds == {(i, i + 1) for i in [4, 5, 6, 7, 8, 9, 12, 13, 14, 15, 16, 17, 18, 20]}
+        assert mixed_angles == {(i, i + 1, i + 2) for i in [4, 5, 6, 7, 8, 12, 13, 14, 16, 17]}
+        assert mixed_torsions == {(i, i + 1, i + 2, i + 3) for i in [3, 4, 5, 6, 7, 8, 11, 12, 13, 14, 15, 16, 17]}
+        assert mixed_cmaps == {((i, i + 1, i + 2, i + 3), (i + 1, i + 2, i + 3, i + 4)) for i in [2, 3, 4, 5, 6, 7, 8, 10, 11, 12, 13, 14, 15, 16, 17]}
+
+    def testLinkAtomImpropers(self, platform_int):
+        """
+        Check that the correct improper terms are present in a molecule with
+        multiple ML and MM subregions.
+        """
+
+        topology = openmm.app.Topology()
+        chain = topology.addChain()
+        atoms = [topology.addAtom("X", openmm.app.element.carbon, topology.addResidue("X", chain)) for _ in range(8)]
+        topology.addBond(atoms[0], atoms[1])
+        topology.addBond(atoms[1], atoms[2])
+        topology.addBond(atoms[2], atoms[3])
+        topology.addBond(atoms[3], atoms[4])
+        topology.addBond(atoms[1], atoms[5])
+        topology.addBond(atoms[2], atoms[6])
+        topology.addBond(atoms[3], atoms[7])
+
+        mm_system = openmm.System()
+        torsion_force = openmm.PeriodicTorsionForce()
+        torsion_force.addTorsion(0, 1, 2, 5, 1, 0, 1)
+        torsion_force.addTorsion(1, 0, 2, 5, 1, 0, 1)
+        torsion_force.addTorsion(2, 0, 1, 5, 1, 0, 1)
+        torsion_force.addTorsion(5, 0, 1, 2, 1, 0, 1)
+        torsion_force.addTorsion(1, 2, 3, 6, 1, 0, 1)
+        torsion_force.addTorsion(2, 1, 3, 6, 1, 0, 1)
+        torsion_force.addTorsion(3, 1, 2, 6, 1, 0, 1)
+        torsion_force.addTorsion(6, 1, 2, 3, 1, 0, 1)
+        torsion_force.addTorsion(2, 3, 4, 7, 1, 0, 1)
+        torsion_force.addTorsion(3, 2, 4, 7, 1, 0, 1)
+        torsion_force.addTorsion(4, 2, 3, 7, 1, 0, 1)
+        torsion_force.addTorsion(7, 2, 3, 4, 1, 0, 1)
+        mm_system.addForce(torsion_force)
+
+        """
+        An improper is added for each of the three improper centers and with
+        the central atom as each of the four possible atoms.
+
+              MM5         ML7
+               |           |
+        MM0 - MM1 - ML2 - ML3 - MM4
+                     |
+                    MM6
+        """
+        mixed_system = MLPotential("mace-off23-small").createMixedSystem(topology, mm_system, [2, 3, 7])
+        _, _, mixed_torsions, _ = self.getBondedTerms(mixed_system)
+
+        assert mixed_torsions == {(0, 1, 2, 5), (1, 0, 2, 5), (2, 0, 1, 5), (2, 1, 0, 5)}
 
     def testLinkAtomInterpolation(self, platform_int):
         """

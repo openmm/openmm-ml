@@ -127,7 +127,7 @@ class MechanicalEmbedding(Embedding):
         # potential removed.
 
         linkBonds = utilities.findLinkBonds(topology, atoms)
-        newSystem = utilities.removeBonds(system, atoms, True, linkBonds=linkBonds)
+        newSystem = utilities.removeBonds(system, topology, atoms, True)
 
         for force in newSystem.getForces():
             if isinstance(force, openmm.NonbondedForce):
@@ -183,7 +183,7 @@ class MechanicalEmbedding(Embedding):
         if interpolate:
             interpolator = utilities.InterpolationHelper()
             interpolator.addMLPotentialTerms(potential, newTopology, atomsWithCaps, forceGroup, **args)
-            interpolator.addMMBondedTerms(system, atoms, linkBonds)
+            interpolator.addMMBondedTerms(system, topology, atoms)
             interpolator.setupNonbonded(newSystem, system)
             if excludeLongRange:
                 interpolator.addMLTerm(excludeForce, "-{}")
