@@ -309,14 +309,19 @@ When using Orb models, the following extra keyword arguments to `createSystem()`
 
 OpenMM-ML can use an arbitrary [ASE](https://ase-lib.org/) Calculator to perform calculations.  This allows it to use
 any model or code for which a Calculator is available, including a wide variety of MLIPs and quantum chemistry programs.
-Simply pass the [Calculator](https://ase-lib.org/ase/calculators/calculators.html) to `createSystem()`:
+Simply pass the [Calculator](https://docs.ase-lib.org/ase/calculators/calculators.html) to `createSystem()`.  For example,
+the following uses [fairchem](https://github.com/facebookresearch/fairchem) to simulate a system with the UMA-s-1.2.1.
+model.
 
 ```python
+from fairchem.core import pretrained_mlip, FAIRChemCalculator
+predictor = pretrained_mlip.get_predict_unit("uma-s-1p2p1", device="cuda")
+calculator = FAIRChemCalculator(predictor, task_name="omol")
 potential = MLPotential('ase')
 system = potential.createSystem(topology, calculator=calculator)
 ```
 
-An ASE [Atoms](https://ase-lib.org/ase/atoms.html) object is created automatically based on the OpenMM Topology.  You
+An ASE [Atoms](https://docs.ase-lib.org/ase/atoms.html) object is created automatically based on the OpenMM Topology.  You
 can optionally provide values to add to its `info` dict.  Some Calculators use this as a mechanism to specify parameters
 like total charge and spin multiplicity:
 
