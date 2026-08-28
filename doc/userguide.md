@@ -310,7 +310,7 @@ When using Orb models, the following extra keyword arguments to `createSystem()`
 OpenMM-ML can use an arbitrary [ASE](https://ase-lib.org/) Calculator to perform calculations.  This allows it to use
 any model or code for which a Calculator is available, including a wide variety of MLIPs and quantum chemistry programs.
 Simply pass the [Calculator](https://docs.ase-lib.org/ase/calculators/calculators.html) to `createSystem()`.  For example,
-the following uses [fairchem](https://github.com/facebookresearch/fairchem) to simulate a system with the UMA-s-1.2.1.
+the following uses [fairchem](https://github.com/facebookresearch/fairchem) to simulate a system with the UMA-s-1.2.1
 model.
 
 ```python
