@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>User Guide &#8212; OpenMM ML 1.7dev_45c0895 documentation</title>
+    <title>User Guide &#8212; OpenMM ML 1.7dev_501c3a0 documentation</title>
   
   
   
@@ -27,23 +27,23 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
-<link href="_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+  <link href="_static/styles/theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
+  <script defer src="_static/scripts/fontawesome.js?digest=cb8930eaaf36d9849b67"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
-<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
 
-    <script src="_static/documentation_options.js?v=d148c53d"></script>
+    <script src="_static/documentation_options.js?v=3c6dfee7"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'userguide';</script>
     <script>
-        DOCUMENTATION_OPTIONS.theme_version = '0.20.0';
+        DOCUMENTATION_OPTIONS.theme_version = '0.21.0';
         DOCUMENTATION_OPTIONS.theme_switcher_json_url = 'https://openmm.github.io/openmm-ml/dev/_static/versions.json';
         DOCUMENTATION_OPTIONS.theme_switcher_version_match = 'dev';
         DOCUMENTATION_OPTIONS.show_version_warning_banner =
@@ -1006,12 +1006,17 @@ from Orbital Materials.  The following model names are supported.</p>
 <h3>ASE<a class="headerlink" href="#ase" title="Link to this heading">#</a></h3>
 <p>OpenMM-ML can use an arbitrary <a class="reference external" href="https://ase-lib.org/">ASE</a> Calculator to perform calculations.  This allows it to use
 any model or code for which a Calculator is available, including a wide variety of MLIPs and quantum chemistry programs.
-Simply pass the <a class="reference external" href="https://ase-lib.org/ase/calculators/calculators.html">Calculator</a> to <code class="docutils literal notranslate"><span class="pre">createSystem()</span></code>:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">potential</span> <span class="o">=</span> <span class="n">MLPotential</span><span class="p">(</span><span class="s1">'ase'</span><span class="p">)</span>
+Simply pass the <a class="reference external" href="https://docs.ase-lib.org/ase/calculators/calculators.html">Calculator</a> to <code class="docutils literal notranslate"><span class="pre">createSystem()</span></code>.  For example,
+the following uses <a class="reference external" href="https://github.com/facebookresearch/fairchem">fairchem</a> to simulate a system with the UMA-s-1.2.1
+model.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">fairchem.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">pretrained_mlip</span><span class="p">,</span> <span class="n">FAIRChemCalculator</span>
+<span class="n">predictor</span> <span class="o">=</span> <span class="n">pretrained_mlip</span><span class="o">.</span><span class="n">get_predict_unit</span><span class="p">(</span><span class="s2">"uma-s-1p2p1"</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="s2">"cuda"</span><span class="p">)</span>
+<span class="n">calculator</span> <span class="o">=</span> <span class="n">FAIRChemCalculator</span><span class="p">(</span><span class="n">predictor</span><span class="p">,</span> <span class="n">task_name</span><span class="o">=</span><span class="s2">"omol"</span><span class="p">)</span>
+<span class="n">potential</span> <span class="o">=</span> <span class="n">MLPotential</span><span class="p">(</span><span class="s1">'ase'</span><span class="p">)</span>
 <span class="n">system</span> <span class="o">=</span> <span class="n">potential</span><span class="o">.</span><span class="n">createSystem</span><span class="p">(</span><span class="n">topology</span><span class="p">,</span> <span class="n">calculator</span><span class="o">=</span><span class="n">calculator</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>An ASE <a class="reference external" href="https://ase-lib.org/ase/atoms.html">Atoms</a> object is created automatically based on the OpenMM Topology.  You
+<p>An ASE <a class="reference external" href="https://docs.ase-lib.org/ase/atoms.html">Atoms</a> object is created automatically based on the OpenMM Topology.  You
 can optionally provide values to add to its <code class="docutils literal notranslate"><span class="pre">info</span></code> dict.  Some Calculators use this as a mechanism to specify parameters
 like total charge and spin multiplicity:</p>
 <div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">system</span> <span class="o">=</span> <span class="n">potential</span><span class="o">.</span><span class="n">createSystem</span><span class="p">(</span><span class="n">topology</span><span class="p">,</span> <span class="n">calculator</span><span class="o">=</span><span class="n">calculator</span><span class="p">,</span> <span class="n">info</span><span class="o">=</span><span class="p">{</span><span class="s1">'charge'</span><span class="p">:</span><span class="mi">2</span><span class="p">})</span>
@@ -1193,8 +1198,8 @@ OpenMM-ML.</p>
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
-<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
+  <script defer src="_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -1228,7 +1233,7 @@ OpenMM-ML.</p>
         <div class="footer-item">
 <p class="theme-version">
   <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.20.0.
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.21.0.
 </p></div>
       
     </div>
