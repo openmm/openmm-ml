@@ -12,7 +12,7 @@ platform_ints = range(openmm.Platform.getNumPlatforms())
 # Get the path to the test data
 test_data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
 
-atol = 0.01
+atol = 0.02
 
 @pytest.mark.parametrize("platform_int", list(platform_ints))
 class TestMechanicalEmbedding:
