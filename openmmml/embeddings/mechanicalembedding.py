@@ -154,7 +154,7 @@ class MechanicalEmbedding(Embedding):
                 force.setExceptionsUsePeriodicBoundaryConditions(periodic)
 
             elif isinstance(force, openmm.CustomNonbondedForce):
-                utilities.makeCustomNonbondedExclusions(force, atoms)
+                utilities.addCustomNonbondedExclusions(force, atoms)
 
         if excludeLongRange:
             # Prepare a force to calculate the PME energy of the ML-ML region.

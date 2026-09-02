@@ -49,12 +49,16 @@ class TestMechanicalEmbedding:
 
     @pytest.mark.parametrize("periodic", (False, True))
     @pytest.mark.parametrize("interpolate", (False, True))
-    def testEmbedding(self, platform_int, periodic, interpolate):
+    @pytest.mark.parametrize("ff_family", ("amber", "charmm"))
+    def testEmbedding(self, platform_int, periodic, interpolate, ff_family):
         """
         Mechanical embedding for a non-periodic system, or for a periodic
         long-range system (in both cases, all periodic images if any are present
         are included or excluded, so the verification calculation is the same).
         """
+
+        if ff_family == "charmm" and interpolate:
+            pytest.skip("Interpolation not yet supported with CustomNonbondedForce")
 
         pdb = openmm.app.PDBFile(os.path.join(test_data_dir, "alanine-dipeptide", "alanine-dipeptide-explicit.pdb"))
         topology_ml_mm = pdb.topology
@@ -63,7 +67,14 @@ class TestMechanicalEmbedding:
         subset = [atom.index for atom in topology_ml_mm.atoms() if atom.residue.chain.index == 0]
         topology_ml, positions_ml = self.getTopologyPositionsSubset(topology_ml_mm, positions_ml_mm, set(subset))
 
-        mm_force_field = openmm.app.ForceField("amber19-all.xml", "amber19/tip3pfb.xml")
+        if ff_family == "amber":
+            # Amber will result in an ordinary NonbondedForce only
+            mm_force_field = openmm.app.ForceField("amber19-all.xml", "amber19/tip3pfb.xml")
+        elif ff_family == "charmm":
+            # CHARMM has NBFix and so a CustomNonbondedForce will also be used
+            mm_force_field = openmm.app.ForceField("charmm36_2024.xml", "charmm36_2024/water.xml")
+        else:
+            raise NotImplementedError
         ml_potential = MLPotential("ase")
 
         from mace.calculators.foundations_models import mace_off
@@ -79,6 +90,8 @@ class TestMechanicalEmbedding:
         for force in mm_system_ml.getForces():
             if isinstance(force, openmm.NonbondedForce):
                 force.setUseDispersionCorrection(False)
+            elif isinstance(force, openmm.CustomNonbondedForce):
+                force.setUseLongRangeCorrection(False)
 
         platform = openmm.Platform.getPlatform(platform_int)
         mm_context_ml_mm = openmm.Context(mm_system_ml_mm, openmm.VerletIntegrator(0.001), platform)
@@ -237,7 +250,8 @@ class TestMechanicalEmbedding:
                 assert ((atom_1, atom_2) in mixed_constraints or (atom_2, atom_1) in mixed_constraints) != remove
 
     @pytest.mark.parametrize("override_distance", (False, True))
-    def testLinkAtomTerms(self, platform_int, override_distance):
+    @pytest.mark.parametrize("ff_name", ("ethanol.xml", "ethanol_ljforce.xml"))
+    def testLinkAtomTerms(self, platform_int, override_distance, ff_name):
         """
         Test for presence of the appropriate terms and positions of the virtual
         sites in the link-atom method.
@@ -259,7 +273,7 @@ class TestMechanicalEmbedding:
         else:
             expected_ch_distance = 0.107 # From default covalent radii.
 
-        mm_force_field = openmm.app.ForceField(os.path.join(test_data_dir, "ethanol", "ethanol.xml"))
+        mm_force_field = openmm.app.ForceField(os.path.join(test_data_dir, "ethanol", ff_name))
         ml_potential = MLPotential("mace-off23-small")
 
         mm_system = mm_force_field.createSystem(pdb.topology)

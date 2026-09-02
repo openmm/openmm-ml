@@ -168,11 +168,13 @@ class MLPotentialImpl(object):
         A newly created System object that uses this potential function and the
         requested embedding method to model the Topology, or a dictionary of
         key-value pairs if the implementation supports returnInfo and it is
-        True.  The dictionary must contain the System as 'system', a (possibly
-        modified) Topology as 'topology', and a list mapping atom indices in the
-        original Topology to those in the returned Topology as 'oldToNew'.  If
-        the implementation does not support returnInfo, it must not modify the
-        Topology.
+        True.  The dictionary must contain the System as 'system', a Topology
+        (that may be different from the one provided) as 'topology', and a list
+        mapping atom indices in the original Topology to those in the returned
+        Topology as 'oldToNew'.  If the implementation does not support
+        returnInfo, the System returned must be compatible with the provided
+        Topology.  In no case may the implementation modify the given Topology
+        in place; it must copy it first or create a new Topology.
         """
 
         raise NotImplementedError('Subclasses must implement createMixedSystem()')

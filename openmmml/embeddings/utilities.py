@@ -154,9 +154,26 @@ def addLinkAtomSites(topology: openmm.app.Topology, systems: list[openmm.System]
             site = openmm.LocalCoordinatesSite([mlAtom, mmAtom], [1.0, 0.0], [-1.0, 1.0], [0.0, 0.0], [distance, 0.0, 0.0])
             system.setVirtualSite(system.addParticle(0.0), site)
 
+            needExclusions = False
             for force in system.getForces():
                 if isinstance(force, openmm.NonbondedForce):
                     force.addParticle(0.0, 0.0, 0.0)
+                elif isinstance(force, openmm.CustomNonbondedForce):
+                    force.addParticle([0] * force.getNumPerParticleParameters())
+                    needExclusions = True
+
+            # If there was a CustomNonbondedForce, the virtual site will need to
+            # have an exclusion with every other particle.  To make the set of
+            # exclusions equal, this is also required for the NonbondedForce.
+            if needExclusions:
+                excludeAtom = system.getNumParticles() - 1
+                for force in system.getForces():
+                    if isinstance(force, openmm.NonbondedForce):
+                        for otherAtom in range(excludeAtom):
+                            force.addException(otherAtom, excludeAtom, 0.0, 0.0, 0.0)
+                    elif isinstance(force, openmm.CustomNonbondedForce):
+                        for otherAtom in range(excludeAtom):
+                            force.addExclusion(otherAtom, excludeAtom)
 
     return siteIndices, oldToNew
 
