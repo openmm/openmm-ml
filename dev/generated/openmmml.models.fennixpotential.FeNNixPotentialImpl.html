@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>openmmml.models.fennixpotential.FeNNixPotentialImpl &#8212; OpenMM ML 1.7dev_501c3a0 documentation</title>
+    <title>openmmml.models.fennixpotential.FeNNixPotentialImpl &#8212; OpenMM ML 1.7dev_2296f12 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
 <link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
 
-    <script src="../_static/documentation_options.js?v=3c6dfee7"></script>
+    <script src="../_static/documentation_options.js?v=d83ad840"></script>
     <script src="../_static/doctools.js?v=fd6eb6e6"></script>
     <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'generated/openmmml.models.fennixpotential.FeNNixPotentialImpl';</script>
@@ -569,7 +569,7 @@ override it, always returns None.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="openmmml.models.fennixpotential.FeNNixPotentialImpl.createMixedSystem">
-<span class="sig-name descname"><span class="pre">createMixedSystem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">topology</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Topology</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">system</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">System</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atoms</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">forceGroup</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interpolate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">embedding</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">System</span></span></span><a class="headerlink" href="#openmmml.models.fennixpotential.FeNNixPotentialImpl.createMixedSystem" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">createMixedSystem</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">topology</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Topology</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">system</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">System</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">atoms</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">forceGroup</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interpolate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">embedding</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">returnInfo</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">System</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Any</span><span class="p"><span class="pre">]</span></span></span></span><a class="headerlink" href="#openmmml.models.fennixpotential.FeNNixPotentialImpl.createMixedSystem" title="Link to this definition">#</a></dt>
 <dd><p>Creates a mixed system using a potential-specific embedding method.</p>
 <p>This is invoked by MLPotential.createMixedSystem().  It will only be
 called with one of the names returned by getSupportedEmbeddings().  If
@@ -592,13 +592,23 @@ this potential</p></li>
 conventional and ML potentials</p></li>
 <li><p><strong>embedding</strong> (<em>str</em>) – the name of the embedding method (will always be one in the list
 returned by the getSupportedEmbeddings() method)</p></li>
+<li><p><strong>returnInfo</strong> (<em>bool</em>) – whether to return a dictionary of key-value pairs containing a new
+System with additional information, instead of the System alone</p></li>
 <li><p><strong>args</strong> – any additional arguments for the potential or embedding method</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p><ul class="simple">
-<li><p><em>a newly created System object that uses this potential function and the</em></p></li>
-<li><p><em>requested embedding method to model the Topology</em></p></li>
+<li><p><em>A newly created System object that uses this potential function and the</em></p></li>
+<li><p><em>requested embedding method to model the Topology, or a dictionary of</em></p></li>
+<li><p><em>key-value pairs if the implementation supports returnInfo and it is</em></p></li>
+<li><p><em>True.  The dictionary must contain the System as ‘system’, a Topology</em></p></li>
+<li><p><em>(that may be different from the one provided) as ‘topology’, and a list</em></p></li>
+<li><p><em>mapping atom indices in the original Topology to those in the returned</em></p></li>
+<li><p><em>Topology as ‘oldToNew’.  If the implementation does not support</em></p></li>
+<li><p><em>returnInfo, the System returned must be compatible with the provided</em></p></li>
+<li><p><em>Topology.  In no case may the implementation modify the given Topology</em></p></li>
+<li><p><em>in place; it must copy it first or create a new Topology.</em></p></li>
 </ul>
 </p>
 </dd>

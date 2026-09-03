@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>User Guide &#8212; OpenMM ML 1.7dev_501c3a0 documentation</title>
+    <title>User Guide &#8212; OpenMM ML 1.7dev_2296f12 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
 
-    <script src="_static/documentation_options.js?v=3c6dfee7"></script>
+    <script src="_static/documentation_options.js?v=d83ad840"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'userguide';</script>
@@ -1088,6 +1088,32 @@ to specify which behavior your model uses when doing mechanical embedding in a p
 <code class="docutils literal notranslate"><span class="pre">mlLongRange=False</span></code> to <code class="docutils literal notranslate"><span class="pre">createMixedSystem()</span></code> if your model is not long-range, and <code class="docutils literal notranslate"><span class="pre">mlLongRange=True</span></code> if it is.  An error
 will be raised to inform you if this information is needed and not provided; OpenMM-ML will not assume either choice
 automatically.</p>
+<section id="molecules-spanning-the-ml-mm-region">
+<h4>Molecules Spanning the ML-MM Region<a class="headerlink" href="#molecules-spanning-the-ml-mm-region" title="Link to this heading">#</a></h4>
+<p>OpenMM-ML’s mechanical embedding implementation supports the link-atom method for molecules having bonds crossing the
+boundary between the ML and MM regions.  If a molecule in the <code class="docutils literal notranslate"><span class="pre">Topology</span></code> provided contains bonds spanning the regions,
+then the molecule will appear as is to the MM force field, but will have these bonds capped by hydrogen atoms when its
+fragment(s) within the ML region are evaluated by the ML potential.</p>
+<p>The fictitious link atoms added are implemented as virtual sites which will be inserted into the <code class="docutils literal notranslate"><span class="pre">System</span></code> and <code class="docutils literal notranslate"><span class="pre">Topology</span></code>
+in use.  By default, <code class="docutils literal notranslate"><span class="pre">createMixedSystem()</span></code> only returns the <code class="docutils literal notranslate"><span class="pre">System</span></code>, but passing <code class="docutils literal notranslate"><span class="pre">returnInfo=True</span></code> returns a dictionary
+instead, with keys <code class="docutils literal notranslate"><span class="pre">system</span></code> (the <code class="docutils literal notranslate"><span class="pre">System</span></code>), <code class="docutils literal notranslate"><span class="pre">topology</span></code> (a modified copy of the <code class="docutils literal notranslate"><span class="pre">Topology</span></code> with the added sites), and
+<code class="docutils literal notranslate"><span class="pre">oldToNew</span></code> (a list of atom indices serving as a mapping from those in the original <code class="docutils literal notranslate"><span class="pre">Topology</span></code> to those in the modified
+one).  Since they are non-physical sites added only for implementing the method, the link atoms will be added to their
+own chain in the <code class="docutils literal notranslate"><span class="pre">Topology</span></code> separate from any existing chains.</p>
+<p>Each link atom is maintained at a fixed distance along its respective bond crossing the boundary.  By default, this
+distance is chosen based on the covalent radius of the atom on the ML side of the bond.  To override these distances,
+pass <code class="docutils literal notranslate"><span class="pre">linkAtomDistances=[...]</span></code> to <code class="docutils literal notranslate"><span class="pre">createMixedSystem()</span></code> with a list of tuples <code class="docutils literal notranslate"><span class="pre">(atom1,</span> <span class="pre">atom2,</span> <span class="pre">distance)</span></code> for each pair
+of atoms for which to use a custom distance.</p>
+<p>Multiple link bonds from the same atom in the ML region are supported.  However, OpenMM-ML will raise an error if an ML
+subset is given that would create more than one link bond to the same atom in the MM region.  Such a configuration would
+place the associated link atoms too close to one another.</p>
+<p>To avoid double-counting bonded interactions between the MM force field and ML potential, OpenMM-ML will delete:</p>
+<ul class="simple">
+<li><p>All MM bonds contained completely within the ML region.</p></li>
+<li><p>All MM angles and torsions contained completely within the ML region, but accounting for the presence of any link
+atoms and bonds leaving the region.</p></li>
+</ul>
+</section>
 </section>
 </section>
 <section id="other-packages">
@@ -1169,7 +1195,10 @@ OpenMM-ML.</p>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#embeddings">Embeddings</a><ul class="nav section-nav flex-column">
-<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mechanical-embedding">Mechanical Embedding</a></li>
+<li class="toc-h3 nav-item toc-entry"><a class="reference internal nav-link" href="#mechanical-embedding">Mechanical Embedding</a><ul class="nav section-nav flex-column">
+<li class="toc-h4 nav-item toc-entry"><a class="reference internal nav-link" href="#molecules-spanning-the-ml-mm-region">Molecules Spanning the ML-MM Region</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#other-packages">Other Packages</a></li>
