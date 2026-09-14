@@ -195,7 +195,7 @@ class _ComputeFeNNix:
         return energy, forces
 
     def __getstate__(self):
-        return (self.model.to_dict(), self.energyScale, self.forceScale, self.indices, self.inputs, self.periodic, self.useDouble)
+        return (self.model.to_dict(), self.energyScale, self.forceScale, self.inputs, self.periodic, self.useDouble)
 
     def __setstate__(self, pickle_state):
         import fennol
