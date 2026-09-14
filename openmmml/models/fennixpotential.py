@@ -199,5 +199,5 @@ class _ComputeFeNNix:
 
     def __setstate__(self, pickle_state):
         import fennol
-        model_dict, self.energyScale, self.forceScale, self.indices, self.inputs, self.periodic, self.useDouble = pickle_state
+        model_dict, self.energyScale, self.forceScale, self.inputs, self.periodic, self.useDouble = pickle_state
         self.model = fennol.FENNIX(**model_dict)
