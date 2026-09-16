@@ -95,8 +95,11 @@ def _enable_polarmace_external_sources(model):
         )
     except ImportError as exc:
         raise ImportError(
-            "PolarMACE electrostatic embedding requires a graph_longrange "
-            "release that provides the external-source energy and feature blocks."
+            "PolarMACE electrostatic embedding requires the external-source energy "
+            "and feature blocks from graph_longrange. Install the external_field "
+            "branch:\n"
+            "  pip install 'git+https://github.com/WillBaldwin0/"
+            "graph_electrostatics.git@external_field'"
         ) from exc
 
     model.electric_potential_descriptor = (
