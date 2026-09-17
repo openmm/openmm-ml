@@ -256,7 +256,8 @@ class MACEPotentialImpl(MLPotentialImpl):
     >>> system = potential.createSystem(topology, precision='single')
 
     By default, the implementation uses the precision of the loaded MACE model.
-    Single precision is faster; double precision is more accurate.
+    According to the MACE documentation, 'single' precision is recommended for MD (faster but
+    less accurate), while 'double' precision is recommended for geometry optimization.
 
     By default the reported energy is ``interaction_energy``. PolarMACE is an
     exception: it automatically uses the full ``energy`` output because that is
@@ -396,15 +397,6 @@ class MACEPotentialImpl(MLPotentialImpl):
 
         assert returnEnergyType in ["interaction_energy", "energy"], f"Unsupported returnEnergyType: '{returnEnergyType}'. Supported options are 'interaction_energy' or 'energy'."
 
-        if precision is None:
-            dtype = None
-        elif precision == "single":
-            dtype = torch.float32
-        elif precision == "double":
-            dtype = torch.float64
-        else:
-            raise ValueError(f"Unsupported precision {precision} for the model. Supported values are 'single' and 'double'.")
-
         model, device = self._loadModel(args)
         if model.__class__.__name__ in ("PolarMACE", "PolarMACEExternalSources"):
             returnEnergyType = "energy"
@@ -419,6 +411,12 @@ class MACEPotentialImpl(MLPotentialImpl):
         modelDefaultDtype = next(model.parameters()).dtype
         if precision is None:
             dtype = modelDefaultDtype
+        elif precision == "single":
+            dtype = torch.float32
+        elif precision == "double":
+            dtype = torch.float64
+        else:
+            raise ValueError(f"Unsupported precision {precision} for the model. Supported values are 'single' and 'double'.")
         if dtype != modelDefaultDtype:
             print(f"Model dtype is {modelDefaultDtype} and requested dtype is {dtype}. The model will be converted to the requested dtype.")
             model = model.to(dtype)
