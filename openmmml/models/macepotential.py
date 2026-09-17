@@ -37,7 +37,7 @@ from functools import partial
 import numpy as np
 
 
-def _prepare_external_sources(model, data, compute_force: bool):
+def _prepareExternalSources(model, data, computeForce: bool):
     import torch
 
     positions = data.get("mm_positions")
@@ -45,15 +45,15 @@ def _prepare_external_sources(model, data, compute_force: bool):
     if positions is None or charges is None:
         return None
 
-    ml_positions = data["positions"]
-    positions = positions.to(ml_positions).clone().requires_grad_(compute_force)
-    charges = charges.to(ml_positions).reshape(-1)
+    mlPositions = data["positions"]
+    positions = positions.to(mlPositions).clone().requires_grad_(computeForce)
+    charges = charges.to(mlPositions).reshape(-1)
     if positions.shape[0] != charges.shape[0]:
         raise ValueError("MM positions and charges must have the same length.")
 
     width = (int(model.atomic_multipoles_max_l) + 1) ** 2
-    features = torch.zeros((len(charges), width), device=ml_positions.device,
-                           dtype=ml_positions.dtype)
+    features = torch.zeros((len(charges), width), device=mlPositions.device,
+                           dtype=mlPositions.dtype)
     features[:, 0] = charges
 
     transform = getattr(model, "_charges_to_mul_ir", None)
@@ -74,7 +74,7 @@ def _prepare_external_sources(model, data, compute_force: bool):
     return {"positions": positions, "features": features, "batch": batch}
 
 
-def _enable_polarmace_external_sources(model):
+def _enablePolarMACEExternalSources(model):
     """Wrap PolarMACE with dynamic MM electrostatic sources in eager mode."""
     import torch
 
@@ -140,7 +140,7 @@ def _enable_polarmace_external_sources(model):
             compute_atomic_stresses: bool = False,
             **kwargs,
         ):
-            external = _prepare_external_sources(self.model, data, compute_force)
+            external = _prepareExternalSources(self.model, data, compute_force)
             if external is None:
                 return self.model(
                     data,
@@ -169,15 +169,15 @@ def _enable_polarmace_external_sources(model):
                     "energies and Cartesian forces only."
                 )
 
-            external_kwargs = {
+            externalKwargs = {
                 "external_feats": external["features"],
                 "external_positions": external["positions"],
                 "external_batch": external["batch"],
             }
             self.model.electric_potential_descriptor.set_external_sources(
-                **external_kwargs
+                **externalKwargs
             )
-            self.model.coulomb_energy.set_external_sources(**external_kwargs)
+            self.model.coulomb_energy.set_external_sources(**externalKwargs)
             try:
                 result = self.model(
                     data,
@@ -192,7 +192,7 @@ def _enable_polarmace_external_sources(model):
                     **kwargs,
                 )
                 if compute_force:
-                    ml_gradient, mm_gradient = torch.autograd.grad(
+                    mlGradient, mmGradient = torch.autograd.grad(
                         outputs=[result["energy"]],
                         inputs=[data["positions"], external["positions"]],
                         grad_outputs=[torch.ones_like(result["energy"])],
@@ -202,13 +202,13 @@ def _enable_polarmace_external_sources(model):
                     )
                     result["forces"] = (
                         torch.zeros_like(data["positions"])
-                        if ml_gradient is None
-                        else -ml_gradient
+                        if mlGradient is None
+                        else -mlGradient
                     )
                     result["mm_forces"] = (
                         torch.zeros_like(external["positions"])
-                        if mm_gradient is None
-                        else -mm_gradient
+                        if mmGradient is None
+                        else -mmGradient
                     )
                 else:
                     result["mm_forces"] = None
@@ -329,11 +329,11 @@ class MACEPotentialImpl(MLPotentialImpl):
                 'mace_omol': mace_omol,
                 'mace_polar': mace_polar,
             }
-            loader_name, model_name, restrictive_license, _, _ = self.KNOWN_MODELS[self.name]
-            model = loaders[loader_name](model=model_name, device=device, return_raw_model=True).to(device)
-            if restrictive_license is not None:
+            loaderName, modelName, restrictiveLicense, _, _ = self.KNOWN_MODELS[self.name]
+            model = loaders[loaderName](model=modelName, device=device, return_raw_model=True).to(device)
+            if restrictiveLicense is not None:
                 import logging
-                logging.warning(f'The model {self.name} is distributed under the restrictive {restrictive_license} license. Commercial use is not permitted.')
+                logging.warning(f'The model {self.name} is distributed under the restrictive {restrictiveLicense} license. Commercial use is not permitted.')
         elif self.name == "mace":
             if self.modelPath is None:
                 raise ValueError("No modelPath provided for local MACE model.")
@@ -343,7 +343,7 @@ class MACEPotentialImpl(MLPotentialImpl):
         else:
             raise ValueError(f"Unsupported MACE model: {self.name}")
         if model.__class__.__name__ == "PolarMACE":
-            model = _enable_polarmace_external_sources(model)
+            model = _enablePolarMACEExternalSources(model)
         return model, device
 
     def addForces(
@@ -401,12 +401,13 @@ class MACEPotentialImpl(MLPotentialImpl):
         if model.__class__.__name__ in ("PolarMACE", "PolarMACEExternalSources"):
             returnEnergyType = "energy"
 
-        use_mm_embedding = _should_use_mm_embedding(model, atoms, embedding)
+        _validateMMEmbedding(model, atoms, embedding)
+        useMMEmbedding = embedding == "electrostatic"
 
-        included_atoms = list(topology.atoms())
+        includedAtoms = list(topology.atoms())
         if atoms is not None:
-            included_atoms = [included_atoms[i] for i in atoms]
-        atomic_numbers = [atom.element.atomic_number for atom in included_atoms]
+            includedAtoms = [includedAtoms[i] for i in atoms]
+        atomicNumbers = [atom.element.atomic_number for atom in includedAtoms]
 
         modelDefaultDtype = next(model.parameters()).dtype
         if precision is None:
@@ -421,43 +422,46 @@ class MACEPotentialImpl(MLPotentialImpl):
             print(f"Model dtype is {modelDefaultDtype} and requested dtype is {dtype}. The model will be converted to the requested dtype.")
             model = model.to(dtype)
 
-        model_device = device
+        modelDevice = device
         try:
-            model_device = next(model.parameters()).device
+            modelDevice = next(model.parameters()).device
         except (AttributeError, StopIteration):
             pass
 
         zTable = utils.AtomicNumberTable([int(z) for z in model.atomic_numbers])
         nodeAttrs = to_one_hot(
-            torch.tensor(atomic_numbers_to_indices(atomic_numbers, z_table=zTable), dtype=torch.long, device=model_device).unsqueeze(-1),
+            torch.tensor(atomic_numbers_to_indices(atomicNumbers, z_table=zTable), dtype=torch.long, device=modelDevice).unsqueeze(-1),
             num_classes=len(zTable))
 
-        mmInfo = None
-        if use_mm_embedding:
-            mmInfo = _prepareMMEmbedding(system, atoms, customNonbondedChargeParameter)
+        mmIndices = mmCharges = None
+        if useMMEmbedding:
+            embeddingData = _prepareMMEmbedding(system, atoms, customNonbondedChargeParameter)
+            mmIndices = embeddingData["mm_atoms"]
+            mmCharges = embeddingData["mm_charges"]
         # The electrostatic path needs FULL-system positions inside the callback: it reads MM
         # coordinates and returns MM back-reaction forces.  PythonForce.setParticles() would hand
         # the callback only the ML atoms, so that path keeps the explicit index slice/scatter and
         # does not call setParticles().  The plain ML path uses upstream's restriction instead.
-        indices = np.array(atoms) if (atoms is not None and mmInfo is not None) else None
+        mlIndices = np.array(atoms) if (atoms is not None and mmIndices is not None) else None
         periodic = (topology.getPeriodicBoxVectors() is not None) or system.usesPeriodicBoundaryConditions()
 
         compute = partial(_computeMACE,
                           model=model,
-                          ptr=torch.tensor([0, nodeAttrs.shape[0]], dtype=torch.long, device=model_device, requires_grad=False),
-                          node_attrs=nodeAttrs.to(dtype),
-                          batch=torch.zeros(nodeAttrs.shape[0], dtype=torch.long, device=model_device, requires_grad=False),
-                          pbc=torch.tensor([periodic, periodic, periodic], dtype=torch.bool, device=model_device, requires_grad=False),
+                          ptr=torch.tensor([0, nodeAttrs.shape[0]], dtype=torch.long, device=modelDevice, requires_grad=False),
+                          nodeAttrs=nodeAttrs.to(dtype),
+                          batch=torch.zeros(nodeAttrs.shape[0], dtype=torch.long, device=modelDevice, requires_grad=False),
+                          pbc=torch.tensor([periodic, periodic, periodic], dtype=torch.bool, device=modelDevice, requires_grad=False),
                           returnEnergyType=returnEnergyType,
-                          charge=torch.tensor([float(args.get('charge', 0))], dtype=dtype, device=model_device, requires_grad=False),
-                          multiplicity=torch.tensor([float(args.get('multiplicity', 1))], dtype=dtype, device=model_device, requires_grad=False),
+                          charge=torch.tensor([float(args.get('charge', 0))], dtype=dtype, device=modelDevice, requires_grad=False),
+                          multiplicity=torch.tensor([float(args.get('multiplicity', 1))], dtype=dtype, device=modelDevice, requires_grad=False),
                           periodic=periodic,
-                          indices=indices,
-                          mmInfo=mmInfo)
+                          mlIndices=mlIndices,
+                          mmIndices=mmIndices,
+                          mmCharges=mmCharges)
         force = openmm.PythonForce(compute)
         force.setForceGroup(forceGroup)
         force.setUsesPeriodicBoundaryConditions(periodic)
-        if atoms is not None and mmInfo is None:
+        if atoms is not None and mmIndices is None:
             force.setParticles(atoms)
         system.addForce(force)
 
@@ -503,13 +507,16 @@ class MACEPotentialImpl(MLPotentialImpl):
 
         # Validate model support before modifying the input system.
         model, device = self._loadModel(args)
-        _should_use_mm_embedding(model, atoms, embedding)
+        _validateMMEmbedding(model, atoms, embedding)
 
         # Validate the force-field setup before creating the modified system.
         # Multiple charge sources would make the MM charges ambiguous.
         nonbondedForces = [f for f in system.getForces() if isinstance(f, openmm.NonbondedForce)]
         if len(nonbondedForces) > 1:
-            raise ValueError("Multiple NonbondedForce objects encountered; electrostatic embedding requires exactly one.")
+            raise ValueError(
+                "Multiple NonbondedForce objects encountered; electrostatic embedding "
+                "requires exactly one."
+            )
 
         # The callback uses fixed charges and cannot follow charge offsets.
         for force in nonbondedForces:
@@ -524,9 +531,15 @@ class MACEPotentialImpl(MLPotentialImpl):
             # A CustomNonbondedForce's energy expression is arbitrary, so
             # whether it contains electrostatics cannot be determined here.
             if customNonbondedHasCharges is None:
-                raise ValueError("The System contains a CustomNonbondedForce and it is unknown whether it includes electrostatic interactions; pass customNonbondedHasCharges to specify.")
+                raise ValueError(
+                    "The System contains a CustomNonbondedForce and it is unknown whether it "
+                    "includes electrostatic interactions; pass customNonbondedHasCharges to specify."
+                )
             if customNonbondedHasCharges and customNonbondedChargeParameter is None:
-                raise ValueError("A CustomNonbondedForce includes electrostatic interactions, so customNonbondedChargeParameter must name the per-particle parameter holding the charge.")
+                raise ValueError(
+                    "A CustomNonbondedForce includes electrostatic interactions, so "
+                    "customNonbondedChargeParameter must name the per-particle parameter holding the charge."
+                )
 
         # A named charge parameter must exist in every custom force we modify.  Checked here, before
         # the system is copied, so an unusable name fails before any surgery.
@@ -589,17 +602,24 @@ def _customNonbondedChargeIndex(force: openmm.CustomNonbondedForce, name: str) -
     return names.index(name)
 
 
-def _supports_mm_embedding(model) -> bool:
+def _supportsMMEmbedding(model) -> bool:
     return bool(getattr(model, "supports_external_electrostatics", False))
 
 
-def _should_use_mm_embedding(model, atoms: Optional[Iterable[int]], embedding: str) -> bool:
-    """Validate the only MACE-specific embedding: electrostatic."""
+def _validateMMEmbedding(model, atoms: Optional[Iterable[int]], embedding: str) -> None:
+    """Raise if this model and atom selection cannot provide the requested embedding.
+
+    Only "electrostatic" is MACE-specific; "mechanical" is handled by the generic embedding
+    plugin and needs nothing from us.
+    """
     if embedding == "mechanical":
-        return False
+        return
     if embedding != "electrostatic":
-        raise ValueError(f"Unsupported embedding mode '{embedding}'.")
-    if not _supports_mm_embedding(model):
+        raise ValueError(
+            f"Unsupported embedding mode '{embedding}'; MACE implements 'electrostatic' "
+            "and delegates 'mechanical' to the generic embedding."
+        )
+    if not _supportsMMEmbedding(model):
         raise ValueError(
             f"embedding='{embedding}' requires a model that accepts MM charges "
             f"and positions (PolarMACE); got {model.__class__.__name__}."
@@ -609,7 +629,6 @@ def _should_use_mm_embedding(model, atoms: Optional[Iterable[int]], embedding: s
             f"embedding='{embedding}' requires an ML subset; it cannot be used "
             "with createSystem()."
         )
-    return True
 
 
 def _prepareMMEmbedding(system: openmm.System, atoms: Optional[Iterable[int]],
@@ -618,18 +637,18 @@ def _prepareMMEmbedding(system: openmm.System, atoms: Optional[Iterable[int]],
     if atoms is None:
         return None
 
-    num_particles = int(system.getNumParticles())
-    ml_atoms = np.asarray(list(atoms), dtype=np.int64)
-    ml_set = set(int(i) for i in ml_atoms.tolist())
-    mm_atoms = np.asarray(
-        [i for i in range(num_particles) if i not in ml_set], dtype=np.int64
+    numParticles = int(system.getNumParticles())
+    mlAtoms = np.asarray(list(atoms), dtype=np.int64)
+    mlSet = set(int(i) for i in mlAtoms.tolist())
+    mmAtoms = np.asarray(
+        [i for i in range(numParticles) if i not in mlSet], dtype=np.int64
     )
 
     # The charges given to the model have to come from wherever the force field
     # actually keeps them, which is the same force createMixedSystem zeroed the
     # ML charges in.  When that is a CustomNonbondedForce the caller has named
     # the parameter holding them.
-    mm_charges = np.empty(len(mm_atoms), dtype=np.float64)
+    mmCharges = np.empty(len(mmAtoms), dtype=np.float64)
 
     if customNonbondedChargeParameter is not None:
         custom = None
@@ -643,12 +662,12 @@ def _prepareMMEmbedding(system: openmm.System, atoms: Optional[Iterable[int]],
                     break
         if custom is None:
             raise ValueError(f"No CustomNonbondedForce defines a per-particle parameter '{customNonbondedChargeParameter}'.")
-        for row, atom_index in enumerate(mm_atoms):
-            mm_charges[row] = custom.getParticleParameters(int(atom_index))[chargeIndex]
+        for row, atomIndex in enumerate(mmAtoms):
+            mmCharges[row] = custom.getParticleParameters(int(atomIndex))[chargeIndex]
         return {
-            "ml_atoms": ml_atoms,
-            "mm_atoms": mm_atoms,
-            "mm_charges": mm_charges,
+            "ml_atoms": mlAtoms,
+            "mm_atoms": mmAtoms,
+            "mm_charges": mmCharges,
         }
 
     nonbonded = None
@@ -661,49 +680,50 @@ def _prepareMMEmbedding(system: openmm.System, atoms: Optional[Iterable[int]],
             "PolarMACE MM embedding requires a NonbondedForce to source MM charges."
         )
 
-    for row, atom_index in enumerate(mm_atoms):
-        charge, _, _ = nonbonded.getParticleParameters(int(atom_index))
-        mm_charges[row] = charge.value_in_unit(unit.elementary_charge)
+    for row, atomIndex in enumerate(mmAtoms):
+        charge, _, _ = nonbonded.getParticleParameters(int(atomIndex))
+        mmCharges[row] = charge.value_in_unit(unit.elementary_charge)
 
     return {
-        "ml_atoms": ml_atoms,
-        "mm_atoms": mm_atoms,
-        "mm_charges": mm_charges,
+        "ml_atoms": mlAtoms,
+        "mm_atoms": mmAtoms,
+        "mm_charges": mmCharges,
     }
 
 
-def _computeMACE(state, model, ptr, node_attrs, batch, pbc, returnEnergyType, charge, multiplicity, periodic, indices=None, mmInfo=None):
+def _computeMACE(state, model, ptr, nodeAttrs, batch, pbc, returnEnergyType, charge,
+                 multiplicity, periodic, mlIndices=None, mmIndices=None, mmCharges=None):
     import torch
     from mace.data.neighborhood import get_neighborhood
     energyScale = 96.4853
     lengthScale = 10.0
-    # With setParticles() (indices is None) the state already holds only the ML atoms; on the
+    # With setParticles() (mlIndices is None) the state already holds only the ML atoms; on the
     # electrostatic path it holds the whole system and the ML subset is sliced out here.
-    positions_full = state.getPositions(asNumpy=True).value_in_unit(unit.angstrom)
-    numAtoms = positions_full.shape[0]
-    positions = positions_full if indices is None else positions_full[indices]
+    positionsFull = state.getPositions(asNumpy=True).value_in_unit(unit.angstrom)
+    numAtoms = positionsFull.shape[0]
+    positions = positionsFull if mlIndices is None else positionsFull[mlIndices]
     if periodic:
         cell = state.getPeriodicBoxVectors(asNumpy=True).value_in_unit(unit.angstrom)
     else:
         cell = np.identity(3, dtype=np.float64)
-    dtype = node_attrs.dtype
+    dtype = nodeAttrs.dtype
     cutoff = float(model.r_max.detach())
     edgeIndex, shifts, _, _ = get_neighborhood(positions, cutoff, [periodic, periodic, periodic], cell)
-    cell_tensor = torch.tensor(cell, dtype=dtype, device=ptr.device)
-    volume = torch.linalg.det(cell_tensor)
+    cellTensor = torch.tensor(cell, dtype=dtype, device=ptr.device)
+    volume = torch.linalg.det(cellTensor)
     if torch.abs(volume) > 0:
-        rcell = 2 * torch.pi * torch.linalg.inv(cell_tensor.mT)
+        rcell = 2 * torch.pi * torch.linalg.inv(cellTensor.mT)
     else:
         rcell = torch.zeros((3, 3), dtype=dtype, device=ptr.device)
     inputDict = {
         "ptr": ptr,
-        "node_attrs": node_attrs,
+        "node_attrs": nodeAttrs,
         "batch": batch,
         "pbc": pbc,
         "positions": torch.tensor(positions, dtype=dtype, device=ptr.device),
         "edge_index": torch.tensor(edgeIndex, dtype=torch.int64, device=ptr.device),
         "shifts": torch.tensor(shifts, dtype=dtype, device=ptr.device),
-        "cell": cell_tensor,
+        "cell": cellTensor,
         "rcell": rcell,
         "volume": volume.reshape(-1),
         "total_charge": charge,
@@ -711,34 +731,37 @@ def _computeMACE(state, model, ptr, node_attrs, batch, pbc, returnEnergyType, ch
         "external_field": torch.zeros((charge.shape[0], 3), dtype=dtype, device=ptr.device),
         "fermi_level": torch.zeros((1,), dtype=dtype, device=ptr.device)
     }
-    # load mm position and charges
-    if mmInfo is not None:
-        mm_positions = positions_full[mmInfo["mm_atoms"]]
+    # Add the MM positions and charges for electrostatic embedding.
+    if mmIndices is not None:
+        mmPositions = positionsFull[mmIndices]
         inputDict["mm_positions"] = torch.tensor(
-            mm_positions, dtype=dtype, device=ptr.device
+            mmPositions, dtype=dtype, device=ptr.device
         )
         inputDict["mm_charges"] = torch.tensor(
-            mmInfo["mm_charges"], dtype=dtype, device=ptr.device
+            mmCharges, dtype=dtype, device=ptr.device
         )
         inputDict["mm_source_batch"] = torch.zeros(
-            len(mmInfo["mm_atoms"]), dtype=torch.long, device=ptr.device
+            len(mmIndices), dtype=torch.long, device=ptr.device
         )
-    # eval and get results
+    # Evaluate the model and convert the energy and forces to OpenMM units.
     results = model(inputDict, compute_force=True)
     energy = float(results[returnEnergyType].detach())*energyScale
     forces = (results["forces"]*energyScale*lengthScale).detach().cpu().numpy()
-    mm_forces = results.get("mm_forces")
+    mmForces = results.get("mm_forces")
 
-    if mmInfo is not None and mm_forces is None:
-        raise ValueError("The model returned no 'mm_forces' although MM charges were supplied; it does not implement electrostatic embedding.")
-    if mm_forces is not None:
-        mm_forces = (mm_forces * energyScale * lengthScale).detach().cpu().numpy()
+    if mmIndices is not None and mmForces is None:
+        raise ValueError(
+            "The model returned no 'mm_forces' although MM charges were supplied; "
+            "it does not implement electrostatic embedding."
+        )
+    if mmForces is not None:
+        mmForces = (mmForces * energyScale * lengthScale).detach().cpu().numpy()
 
     # Scatter ML and MM forces back to the full system.
-    if indices is not None:
+    if mlIndices is not None:
         f = np.zeros((numAtoms, 3), dtype=(np.float64 if dtype == torch.float64 else np.float32))
-        f[indices] = forces
-        if mmInfo is not None and mm_forces is not None:
-            f[mmInfo["mm_atoms"]] += mm_forces.astype(f.dtype, copy=False)
+        f[mlIndices] = forces
+        if mmIndices is not None and mmForces is not None:
+            f[mmIndices] += mmForces.astype(f.dtype, copy=False)
         forces = f
     return energy, forces
