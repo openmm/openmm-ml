@@ -384,10 +384,7 @@ class MACEPotentialImpl(MLPotentialImpl):
             ``createMixedSystem``; there is normally no reason to pass it here
             directly. ``mechanical`` (the default) does not pass MM positions
             or charges into MACE. ``electrostatic`` passes them into PolarMACE
-            and scatters the returned ``mm_forces`` back onto the MM atoms; the
-            removal of the classical ML-MM Coulomb that this assumes is done by
-            ``createMixedSystem``, not here. It is an error to request it for a
-            model that cannot accept MM charges.
+            and scatters the returned ``mm_forces`` back onto the MM atoms.
         """
         import torch
         try:
@@ -438,10 +435,7 @@ class MACEPotentialImpl(MLPotentialImpl):
             embeddingData = _prepareMMEmbedding(system, atoms, customNonbondedChargeParameter)
             mmIndices = embeddingData["mm_atoms"]
             mmCharges = embeddingData["mm_charges"]
-        # The electrostatic path needs FULL-system positions inside the callback: it reads MM
-        # coordinates and returns MM back-reaction forces.  PythonForce.setParticles() would hand
-        # the callback only the ML atoms, so that path keeps the explicit index slice/scatter and
-        # does not call setParticles().  The plain ML path uses upstream's restriction instead.
+        
         mlIndices = np.array(atoms) if (atoms is not None and mmIndices is not None) else None
         periodic = (topology.getPeriodicBoxVectors() is not None) or system.usesPeriodicBoundaryConditions()
 
@@ -496,12 +490,9 @@ class MACEPotentialImpl(MLPotentialImpl):
         needed, ``customNonbondedChargeParameter``.
         """
 
-        # Internal invariant: the framework only calls this method for names
-        # returned by getSupportedEmbeddings(); this is not user-facing validation.
         if embedding != "electrostatic":
             raise ValueError(f"Unsupported embedding type: {embedding}")
 
-        # Interpolation of the model's MM electrostatics is not implemented.
         if interpolate:
             raise ValueError("Electrostatic embedding does not support interpolation.")
 
@@ -509,8 +500,7 @@ class MACEPotentialImpl(MLPotentialImpl):
         model, device = self._loadModel(args)
         _validateMMEmbedding(model, atoms, embedding)
 
-        # Validate the force-field setup before creating the modified system.
-        # Multiple charge sources would make the MM charges ambiguous.
+        # Validate the force-field setup
         nonbondedForces = [f for f in system.getForces() if isinstance(f, openmm.NonbondedForce)]
         if len(nonbondedForces) > 1:
             raise ValueError(
@@ -518,7 +508,7 @@ class MACEPotentialImpl(MLPotentialImpl):
                 "requires exactly one."
             )
 
-        # The callback uses fixed charges and cannot follow charge offsets.
+        # Electrostatic embedding does not support following charge offsets.
         for force in nonbondedForces:
             for index in range(force.getNumParticleParameterOffsets()):
                 if force.getParticleParameterOffset(index)[2] != 0:
@@ -607,11 +597,6 @@ def _supportsMMEmbedding(model) -> bool:
 
 
 def _validateMMEmbedding(model, atoms: Optional[Iterable[int]], embedding: str) -> None:
-    """Raise if this model and atom selection cannot provide the requested embedding.
-
-    Only "electrostatic" is MACE-specific; "mechanical" is handled by the generic embedding
-    plugin and needs nothing from us.
-    """
     if embedding == "mechanical":
         return
     if embedding != "electrostatic":
@@ -631,74 +616,75 @@ def _validateMMEmbedding(model, atoms: Optional[Iterable[int]], embedding: str) 
         )
 
 
-def _prepareMMEmbedding(system: openmm.System, atoms: Optional[Iterable[int]],
-                        customNonbondedChargeParameter: Optional[str] = None):
-    """Extract the MM complement and its charges from the system's NonbondedForce."""
+def _prepareMMEmbedding(
+    system: openmm.System,
+    atoms: Optional[Iterable[int]],
+    customNonbondedChargeParameter: Optional[str] = None,
+):
+    """Extract MM atoms and charges from a standard or custom nonbonded force."""
     if atoms is None:
         return None
 
-    numParticles = int(system.getNumParticles())
     mlAtoms = np.asarray(list(atoms), dtype=np.int64)
-    mlSet = set(int(i) for i in mlAtoms.tolist())
+    mlSet = set(mlAtoms)
     mmAtoms = np.asarray(
-        [i for i in range(numParticles) if i not in mlSet], dtype=np.int64
+        [i for i in range(system.getNumParticles()) if i not in mlSet],
+        dtype=np.int64,
     )
 
-    # The charges given to the model have to come from wherever the force field
-    # actually keeps them, which is the same force createMixedSystem zeroed the
-    # ML charges in.  When that is a CustomNonbondedForce the caller has named
-    # the parameter holding them.
-    mmCharges = np.empty(len(mmAtoms), dtype=np.float64)
-
     if customNonbondedChargeParameter is not None:
-        custom = None
         for force in system.getForces():
-            if isinstance(force, openmm.CustomNonbondedForce):
-                names = [force.getPerParticleParameterName(i)
-                         for i in range(force.getNumPerParticleParameters())]
-                if customNonbondedChargeParameter in names:
-                    custom = force
-                    chargeIndex = names.index(customNonbondedChargeParameter)
-                    break
-        if custom is None:
-            raise ValueError(f"No CustomNonbondedForce defines a per-particle parameter '{customNonbondedChargeParameter}'.")
-        for row, atomIndex in enumerate(mmAtoms):
-            mmCharges[row] = custom.getParticleParameters(int(atomIndex))[chargeIndex]
-        return {
-            "ml_atoms": mlAtoms,
-            "mm_atoms": mmAtoms,
-            "mm_charges": mmCharges,
-        }
+            if not isinstance(force, openmm.CustomNonbondedForce):
+                continue
+            names = [
+                force.getPerParticleParameterName(i)
+                for i in range(force.getNumPerParticleParameters())
+            ]
+            if customNonbondedChargeParameter in names:
+                chargeIndex = names.index(customNonbondedChargeParameter)
+                break
+        else:
+            raise ValueError(
+                "No CustomNonbondedForce defines a per-particle parameter "
+                f"{customNonbondedChargeParameter!r}."
+            )
 
-    nonbonded = None
-    for force in system.getForces():
-        if isinstance(force, openmm.NonbondedForce):
-            nonbonded = force
-            break
-    if nonbonded is None:
-        raise ValueError(
-            "PolarMACE MM embedding requires a NonbondedForce to source MM charges."
+        def getCharge(i):
+            return force.getParticleParameters(i)[chargeIndex]
+
+    else:
+        force = next(
+            (f for f in system.getForces()
+             if isinstance(f, openmm.NonbondedForce)),
+            None,
         )
+        if force is None:
+            raise ValueError(
+                "PolarMACE MM embedding requires a NonbondedForce "
+                "to source MM charges."
+            )
 
-    for row, atomIndex in enumerate(mmAtoms):
-        charge, _, _ = nonbonded.getParticleParameters(int(atomIndex))
-        mmCharges[row] = charge.value_in_unit(unit.elementary_charge)
+        def getCharge(i):
+            return force.getParticleParameters(i)[0].value_in_unit(
+                unit.elementary_charge
+            )
 
     return {
         "ml_atoms": mlAtoms,
         "mm_atoms": mmAtoms,
-        "mm_charges": mmCharges,
+        "mm_charges": np.asarray(
+            [getCharge(int(i)) for i in mmAtoms],
+            dtype=np.float64,
+        ),
     }
 
 
-def _computeMACE(state, model, ptr, nodeAttrs, batch, pbc, returnEnergyType, charge,
+def _computeMACE(state, model, ptr, node_attrs, batch, pbc, returnEnergyType, charge,
                  multiplicity, periodic, mlIndices=None, mmIndices=None, mmCharges=None):
     import torch
     from mace.data.neighborhood import get_neighborhood
     energyScale = 96.4853
     lengthScale = 10.0
-    # With setParticles() (mlIndices is None) the state already holds only the ML atoms; on the
-    # electrostatic path it holds the whole system and the ML subset is sliced out here.
     positionsFull = state.getPositions(asNumpy=True).value_in_unit(unit.angstrom)
     numAtoms = positionsFull.shape[0]
     positions = positionsFull if mlIndices is None else positionsFull[mlIndices]
@@ -706,7 +692,7 @@ def _computeMACE(state, model, ptr, nodeAttrs, batch, pbc, returnEnergyType, cha
         cell = state.getPeriodicBoxVectors(asNumpy=True).value_in_unit(unit.angstrom)
     else:
         cell = np.identity(3, dtype=np.float64)
-    dtype = nodeAttrs.dtype
+    dtype = node_attrs.dtype
     cutoff = float(model.r_max.detach())
     edgeIndex, shifts, _, _ = get_neighborhood(positions, cutoff, [periodic, periodic, periodic], cell)
     cellTensor = torch.tensor(cell, dtype=dtype, device=ptr.device)
@@ -717,7 +703,7 @@ def _computeMACE(state, model, ptr, nodeAttrs, batch, pbc, returnEnergyType, cha
         rcell = torch.zeros((3, 3), dtype=dtype, device=ptr.device)
     inputDict = {
         "ptr": ptr,
-        "node_attrs": nodeAttrs,
+        "node_attrs": node_attrs,
         "batch": batch,
         "pbc": pbc,
         "positions": torch.tensor(positions, dtype=dtype, device=ptr.device),
