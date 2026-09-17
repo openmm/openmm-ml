@@ -431,10 +431,14 @@ class MACEPotentialImpl(MLPotentialImpl):
             torch.tensor(atomic_numbers_to_indices(atomic_numbers, z_table=zTable), dtype=torch.long, device=model_device).unsqueeze(-1),
             num_classes=len(zTable))
 
-        indices = None if atoms is None else np.array(atoms)
         mmInfo = None
         if use_mm_embedding:
             mmInfo = _prepareMMEmbedding(system, atoms, customNonbondedChargeParameter)
+        # The electrostatic path needs FULL-system positions inside the callback: it reads MM
+        # coordinates and returns MM back-reaction forces.  PythonForce.setParticles() would hand
+        # the callback only the ML atoms, so that path keeps the explicit index slice/scatter and
+        # does not call setParticles().  The plain ML path uses upstream's restriction instead.
+        indices = np.array(atoms) if (atoms is not None and mmInfo is not None) else None
         periodic = (topology.getPeriodicBoxVectors() is not None) or system.usesPeriodicBoundaryConditions()
 
         compute = partial(_computeMACE,
@@ -446,12 +450,14 @@ class MACEPotentialImpl(MLPotentialImpl):
                           returnEnergyType=returnEnergyType,
                           charge=torch.tensor([float(args.get('charge', 0))], dtype=dtype, device=model_device, requires_grad=False),
                           multiplicity=torch.tensor([float(args.get('multiplicity', 1))], dtype=dtype, device=model_device, requires_grad=False),
-                          indices=indices,
                           periodic=periodic,
+                          indices=indices,
                           mmInfo=mmInfo)
         force = openmm.PythonForce(compute)
         force.setForceGroup(forceGroup)
         force.setUsesPeriodicBoundaryConditions(periodic)
+        if atoms is not None and mmInfo is None:
+            force.setParticles(atoms)
         system.addForce(force)
 
     def getMLLongRange(self) -> bool | None:
@@ -653,18 +659,16 @@ def _prepareMMEmbedding(system: openmm.System, atoms: Optional[Iterable[int]],
     }
 
 
-def _computeMACE(state, model, ptr, node_attrs, batch, pbc, returnEnergyType, charge, multiplicity, indices, periodic, mmInfo=None):
+def _computeMACE(state, model, ptr, node_attrs, batch, pbc, returnEnergyType, charge, multiplicity, periodic, indices=None, mmInfo=None):
     import torch
     from mace.data.neighborhood import get_neighborhood
     energyScale = 96.4853
     lengthScale = 10.0
+    # With setParticles() (indices is None) the state already holds only the ML atoms; on the
+    # electrostatic path it holds the whole system and the ML subset is sliced out here.
     positions_full = state.getPositions(asNumpy=True).value_in_unit(unit.angstrom)
     numAtoms = positions_full.shape[0]
-    if indices is not None:
-        positions = positions_full[indices]
-    else:
-        positions = positions_full
-
+    positions = positions_full if indices is None else positions_full[indices]
     if periodic:
         cell = state.getPeriodicBoxVectors(asNumpy=True).value_in_unit(unit.angstrom)
     else:

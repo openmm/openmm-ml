@@ -134,11 +134,8 @@ class AIMNet2PotentialImpl(MLPotentialImpl):
         # Create the PyTorch model that will be invoked by OpenMM.
 
         includedAtoms = list(topology.atoms())
-        if atoms is None:
-            indices = None
-        else:
+        if atoms is not None:
             includedAtoms = [includedAtoms[i] for i in atoms]
-            indices = np.array(atoms)
         numbers = torch.tensor([[atom.element.atomic_number for atom in includedAtoms]], device=device)
         charge = torch.tensor([args.get('charge', 0)], dtype=torch.float32, device=device)
         multiplicity = torch.tensor([args.get('multiplicity', 1)], dtype=torch.float32, device=device)
@@ -146,10 +143,12 @@ class AIMNet2PotentialImpl(MLPotentialImpl):
 
         # Create the PythonForce and add it to the System.
 
-        compute = partial(_computeAIMNet2, model=model, numbers=numbers, charge=charge, multiplicity=multiplicity, indices=indices, periodic=periodic)
+        compute = partial(_computeAIMNet2, model=model, numbers=numbers, charge=charge, multiplicity=multiplicity, periodic=periodic)
         force = openmm.PythonForce(compute)
         force.setForceGroup(forceGroup)
         force.setUsesPeriodicBoundaryConditions(periodic)
+        if atoms is not None:
+            force.setParticles(atoms)
         system.addForce(force)
 
     def getMLLongRange(self) -> bool | None:
@@ -163,12 +162,9 @@ class AIMNet2PotentialImpl(MLPotentialImpl):
         # supported model has different behavior, this must be updated.
         return False
 
-def _computeAIMNet2(state, model, numbers, charge, multiplicity, indices, periodic):
+def _computeAIMNet2(state, model, numbers, charge, multiplicity, periodic):
     import torch
     positions = torch.tensor(state.getPositions(asNumpy=True).value_in_unit(unit.angstrom), dtype=torch.float32, device=numbers.device)
-    numAtoms = positions.shape[0]
-    if indices is not None:
-        positions = positions[indices]
     args = {'coord': positions.unsqueeze(0),
             'numbers': numbers,
             'charge': charge,
@@ -180,8 +176,4 @@ def _computeAIMNet2(state, model, numbers, charge, multiplicity, indices, period
     energyScale = (unit.ev/unit.item).conversion_factor_to(unit.kilojoules_per_mole)
     energy = float(energyScale*result["energy"].sum().detach())
     forces = (10.0*energyScale*result["forces"]).detach().cpu().numpy()[0]
-    if indices is not None:
-        f = np.zeros((numAtoms, 3), dtype=np.float32)
-        f[indices] = forces
-        forces = f
     return energy, forces

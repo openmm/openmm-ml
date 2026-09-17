@@ -82,11 +82,8 @@ class ASEPotentialImpl(MLPotentialImpl):
         if any(atom.element is None for atom in topology.atoms()):
             raise ValueError('All atoms in the Topology must have elements defined.')
         includedAtoms = list(topology.atoms())
-        if atoms is None:
-            indices = None
-        else:
+        if atoms is not None:
             includedAtoms = [includedAtoms[i] for i in atoms]
-            indices = np.array(atoms)
         if 'aseAtoms' in args:
             # The user provided an Atoms object.
 
@@ -109,26 +106,21 @@ class ASEPotentialImpl(MLPotentialImpl):
 
         # Create the PythonForce and add it to the System.
 
-        compute = partial(_computeASE, atoms=aseAtoms, indices=indices)
+        compute = partial(_computeASE, atoms=aseAtoms)
         force = openmm.PythonForce(compute)
         force.setForceGroup(forceGroup)
         force.setUsesPeriodicBoundaryConditions(any(aseAtoms.get_pbc()))
+        if atoms is not None:
+            force.setParticles(atoms)
         system.addForce(force)
 
 
-def _computeASE(state, atoms, indices):
+def _computeASE(state, atoms):
     import ase.units
     positions = state.getPositions(asNumpy=True).value_in_unit(unit.angstrom)
-    numAtoms = positions.shape[0]
-    if indices is not None:
-        positions = positions[indices]
     atoms.set_positions(positions)
     if any(atoms.get_pbc()):
         atoms.set_cell(state.getPeriodicBoxVectors(asNumpy=True).value_in_unit(unit.angstrom))
     energy = atoms.get_potential_energy(apply_constraint=False)
     forces = atoms.get_forces(apply_constraint=False)
-    if indices is not None:
-        f = np.zeros((numAtoms, 3), dtype=np.float32)
-        f[indices] = forces
-        forces = f
     return energy/(ase.units.kJ/ase.units.mol), forces*10/(ase.units.kJ/ase.units.mol)
