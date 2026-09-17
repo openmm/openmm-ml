@@ -6,4 +6,4 @@ ase
 huggingface-hub
 torchani
 git+https://github.com/ChengUCB/les.git@v0.2.0
-git+https://github.com/WillBaldwin0/graph_electrostatics.git@v0.4.0
+git+https://github.com/WillBaldwin0/graph_electrostatics.git@external_field
