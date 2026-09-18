@@ -1,0 +1,7 @@
+pytest
+pygit2
+mace-torch
+loguru
+torchani==2.2.4
+setuptools<81
+git+https://github.com/chemle/emle-engine.git@6cb9bbd14008788ae83bd9d39a27b11e0e3407f7

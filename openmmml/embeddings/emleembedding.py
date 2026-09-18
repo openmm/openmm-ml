@@ -105,7 +105,7 @@ class EMLEEmbedding(Embedding):
         # potential removed.
 
         periodic = system.usesPeriodicBoundaryConditions()
-        newSystem = utilities.removeBonds(system, atoms, True)
+        newSystem = utilities.removeBonds(system, topology, atoms, True)
         numAtoms = newSystem.getNumParticles()
 
         allCharges = [0.0] * numAtoms
@@ -188,7 +188,7 @@ class EMLEEmbedding(Embedding):
             interpolator = utilities.InterpolationHelper()
             interpolator.addMLPotentialTerms(potential, topology, atoms, forceGroup, **args)
             interpolator.addMLTerm(emleForce)
-            interpolator.addMMBondedTerms(system, atoms)
+            interpolator.addMMBondedTerms(system, topology, atoms)
             interpolator.setupNonbonded(newSystem, system)
             interpolator.setupInterpolation(newSystem)
 
