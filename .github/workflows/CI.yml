@@ -10,14 +10,30 @@ on:
 
 jobs:
   build_test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.runner }}
+
     strategy:
+      fail-fast: false
       matrix:
-        python-version: ["3.14"]
-        requirements: ["mace-aimnet-torchmd", "nequip", "fennix"]
+        configuration: ["cpu", "cuda"]
+        requirements: ["mace-aimnet-torchmd", "nequip", "fennix", "orb"]
         include:
-          - python-version: "3.12"
-            requirements: "orb"
+          - configuration: "cpu"
+            runner: "ubuntu-latest"
+            conda-pkgs: ""
+            openmm-pkg: "openmm"
+          - configuration: "cuda"
+            runner: ["self-hosted", "cuda"]
+            conda-pkgs: "c-compiler<=1.9.0"
+            openmm-pkg: "openmm[cuda12]"
+          - requirements: "mace-aimnet-torchmd"
+            python-version: "3.14"
+          - requirements: "nequip"
+            python-version: "3.14"
+          - requirements: "fennix"
+            python-version: "3.14"
+          - requirements: "orb"
+            python-version: "3.12"
 
     steps:
       - uses: actions/checkout@v2
@@ -28,18 +44,24 @@ jobs:
           environment-name: build-env
           create-args: >-
             python=${{ matrix.python-version }}
+            ${{ matrix.conda-pkgs }}
           init-shell: bash
 
       - name: "Install dependencies with pip"
         shell: bash -l {0}
         run: |
-          pip install --pre openmm
+          pip install ${{ matrix.openmm-pkg }}
           pip install -v -r devtools/requirements/${{ matrix.requirements }}.txt
 
       - name: "Install OpenMM-ML"
         shell: bash -l {0}
         run: |
           pip install .
+
+      - name: "Check OpenMM platforms available"
+        shell: bash -l {0}
+        run: |
+          python -m openmm.testInstallation
 
       - name: "Run tests"
         shell: bash -l {0}

@@ -89,6 +89,8 @@ are supported.
 | `mace-mpa-0-medium` | Pretrained [MACE-MPA-0](https://github.com/ACEsuit/mace-foundations) model |
 | `mace-omat-0-small`<br>`mace-omat-0-medium` | Pretrained [MACE-OMAT-0](https://github.com/ACEsuit/mace-foundations) models |
 | `mace-omol-0-extra-large` | Pretrained MACE-OMOL-0 model |
+| `mace-les-off-small` | Pretrained [MACELES-OFF](https://github.com/ChengUCB/les_fit) model (requires [LES](https://github.com/ChengUCB/les) plugin) |
+| `mace-polar-1-small`<br>`mace-polar-1-medium`<br>`mace-polar-1-large` | Pretrained [MACE-POLAR-1](https://mace-docs.readthedocs.io/en/latest/guide/polar_mace.html) models (requires [`graph_longrange`](https://github.com/WillBaldwin0/graph_electrostatics)) |
 | `mace` | Custom MACE models specified with the `modelPath` argument |
 
 When creating MACE models, the following keyword arguments to the `MLPotential` constructor are supported.
@@ -307,14 +309,19 @@ When using Orb models, the following extra keyword arguments to `createSystem()`
 
 OpenMM-ML can use an arbitrary [ASE](https://ase-lib.org/) Calculator to perform calculations.  This allows it to use
 any model or code for which a Calculator is available, including a wide variety of MLIPs and quantum chemistry programs.
-Simply pass the [Calculator](https://ase-lib.org/ase/calculators/calculators.html) to `createSystem()`:
+Simply pass the [Calculator](https://docs.ase-lib.org/ase/calculators/calculators.html) to `createSystem()`.  For example,
+the following uses [fairchem](https://github.com/facebookresearch/fairchem) to simulate a system with the UMA-s-1.2.1
+model.
 
 ```python
+from fairchem.core import pretrained_mlip, FAIRChemCalculator
+predictor = pretrained_mlip.get_predict_unit("uma-s-1p2p1", device="cuda")
+calculator = FAIRChemCalculator(predictor, task_name="omol")
 potential = MLPotential('ase')
 system = potential.createSystem(topology, calculator=calculator)
 ```
 
-An ASE [Atoms](https://ase-lib.org/ase/atoms.html) object is created automatically based on the OpenMM Topology.  You
+An ASE [Atoms](https://docs.ase-lib.org/ase/atoms.html) object is created automatically based on the OpenMM Topology.  You
 can optionally provide values to add to its `info` dict.  Some Calculators use this as a mechanism to specify parameters
 like total charge and spin multiplicity:
 
@@ -373,6 +380,34 @@ to specify which behavior your model uses when doing mechanical embedding in a p
 `mlLongRange=False` to `createMixedSystem()` if your model is not long-range, and `mlLongRange=True` if it is.  An error
 will be raised to inform you if this information is needed and not provided; OpenMM-ML will not assume either choice
 automatically.
+
+#### Molecules Spanning the ML-MM Region
+
+OpenMM-ML's mechanical embedding implementation supports the link-atom method for molecules having bonds crossing the
+boundary between the ML and MM regions.  If a molecule in the `Topology` provided contains bonds spanning the regions,
+then the molecule will appear as is to the MM force field, but will have these bonds capped by hydrogen atoms when its
+fragment(s) within the ML region are evaluated by the ML potential.
+
+The fictitious link atoms added are implemented as virtual sites which will be inserted into the `System` and `Topology`
+in use.  By default, `createMixedSystem()` only returns the `System`, but passing `returnInfo=True` returns a dictionary
+instead, with keys `system` (the `System`), `topology` (a modified copy of the `Topology` with the added sites), and
+`oldToNew` (a list of atom indices serving as a mapping from those in the original `Topology` to those in the modified
+one).  Since they are non-physical sites added only for implementing the method, the link atoms will be added to their
+own chain in the `Topology` separate from any existing chains.
+
+Each link atom is maintained at a fixed distance along its respective bond crossing the boundary.  By default, this
+distance is chosen based on the covalent radius of the atom on the ML side of the bond.  To override these distances,
+pass `linkAtomDistances=[...]` to `createMixedSystem()` with a list of tuples `(atom1, atom2, distance)` for each pair
+of atoms for which to use a custom distance.
+
+Multiple link bonds from the same atom in the ML region are supported.  However, OpenMM-ML will raise an error if an ML
+subset is given that would create more than one link bond to the same atom in the MM region.  Such a configuration would
+place the associated link atoms too close to one another.
+
+To avoid double-counting bonded interactions between the MM force field and ML potential, OpenMM-ML will delete:
+- All MM bonds contained completely within the ML region.
+- All MM angles and torsions contained completely within the ML region, but accounting for the presence of any link
+  atoms and bonds leaving the region.
 
 ### EMLE
 

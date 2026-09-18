@@ -1,0 +1,96 @@
+<ForceField>
+  <AtomTypes>
+    <Type class="#0" element="O" mass="15.99943" name="#0" />
+    <Type class="#1" element="C" mass="12.01078" name="#1" />
+    <Type class="#2" element="C" mass="12.01078" name="#2" />
+    <Type class="#3" element="H" mass="1.007947" name="#3" />
+    <Type class="#4" element="H" mass="1.007947" name="#4" />
+    <Type class="#5" element="H" mass="1.007947" name="#5" />
+    <Type class="#6" element="H" mass="1.007947" name="#6" />
+    <Type class="#7" element="H" mass="1.007947" name="#7" />
+    <Type class="#8" element="H" mass="1.007947" name="#8" />
+  </AtomTypes>
+  <NonbondedForce coulomb14scale="0.8333333333" lj14scale="0.5">
+    <UseAttributeFromResidue name="charge" />
+    <Atom class="#0" epsilon="0" sigma="0" />
+    <Atom class="#1" epsilon="0" sigma="0" />
+    <Atom class="#2" epsilon="0" sigma="0" />
+    <Atom class="#3" epsilon="0" sigma="0" />
+    <Atom class="#4" epsilon="0" sigma="0" />
+    <Atom class="#5" epsilon="0" sigma="0" />
+    <Atom class="#6" epsilon="0" sigma="0" />
+    <Atom class="#7" epsilon="0" sigma="0" />
+    <Atom class="#8" epsilon="0" sigma="0" />
+  </NonbondedForce>
+  <LennardJonesForce lj14scale="0.5">
+    <Atom class="#0" epsilon="0.5663498573445624" sigma="0.3023721294308333" />
+    <Atom class="#1" epsilon="0.5044644278506009" sigma="0.33879710734289814" />
+    <Atom class="#2" epsilon="0.5044644278506009" sigma="0.33879710734289814" />
+    <Atom class="#3" epsilon="5.15493364040156e-05" sigma="0.05330964133900715" />
+    <Atom class="#4" epsilon="0.07916117199426585" sigma="0.25586037672254885" />
+    <Atom class="#5" epsilon="0.07916117199426585" sigma="0.25586037672254885" />
+    <Atom class="#6" epsilon="0.0559245203811804" sigma="0.2663934101837758" />
+    <Atom class="#7" epsilon="0.0559245203811804" sigma="0.2663934101837758" />
+    <Atom class="#8" epsilon="0.0559245203811804" sigma="0.2663934101837758" />
+  </LennardJonesForce>
+  <HarmonicBondForce>
+    <Bond class1="#0" class2="#1" k="164978.72078219842" length="0.14225976947429997" />
+    <Bond class1="#0" class2="#3" k="477521.52724761766" length="0.09711625418245" />
+    <Bond class1="#1" class2="#2" k="191596.16303465402" length="0.1525970013793" />
+    <Bond class1="#1" class2="#4" k="284832.6804974164" length="0.1092445809108" />
+    <Bond class1="#1" class2="#5" k="284832.6804974164" length="0.1092445809108" />
+    <Bond class1="#2" class2="#6" k="284832.6804974164" length="0.1092445809108" />
+    <Bond class1="#2" class2="#7" k="284832.6804974164" length="0.1092445809108" />
+    <Bond class1="#2" class2="#8" k="284832.6804974164" length="0.1092445809108" />
+  </HarmonicBondForce>
+  <HarmonicAngleForce>
+    <Angle angle="1.9137632227721684" class1="#0" class2="#1" class3="#2" k="417.1119631909894" />
+    <Angle angle="1.9137632227721684" class1="#0" class2="#1" class3="#4" k="417.1119631909894" />
+    <Angle angle="1.9137632227721684" class1="#0" class2="#1" class3="#5" k="417.1119631909894" />
+    <Angle angle="1.8967821629564474" class1="#1" class2="#0" class3="#3" k="871.6626355816855" />
+    <Angle angle="1.9137632227721684" class1="#1" class2="#2" class3="#6" k="417.1119631909894" />
+    <Angle angle="1.9137632227721684" class1="#1" class2="#2" class3="#7" k="417.1119631909894" />
+    <Angle angle="1.9137632227721684" class1="#1" class2="#2" class3="#8" k="417.1119631909894" />
+    <Angle angle="1.9137632227721684" class1="#2" class2="#1" class3="#4" k="417.1119631909894" />
+    <Angle angle="1.9137632227721684" class1="#2" class2="#1" class3="#5" k="417.1119631909894" />
+    <Angle angle="1.8850428776126391" class1="#4" class2="#1" class3="#5" k="164.98310955456407" />
+    <Angle angle="1.8850428776126391" class1="#6" class2="#2" class3="#7" k="164.98310955456407" />
+    <Angle angle="1.8850428776126391" class1="#6" class2="#2" class3="#8" k="164.98310955456407" />
+    <Angle angle="1.8850428776126391" class1="#7" class2="#2" class3="#8" k="164.98310955456407" />
+  </HarmonicAngleForce>
+  <PeriodicTorsionForce ordering="smirnoff">
+    <Proper class1="#0" class2="#1" class3="#2" class4="#6" k1="0.4214062547427152" k2="1.8180184088155873" periodicity1="3" periodicity2="1" phase1="0.0" phase2="0.0" />
+    <Proper class1="#0" class2="#1" class3="#2" class4="#7" k1="0.4214062547427152" k2="1.8180184088155873" periodicity1="3" periodicity2="1" phase1="0.0" phase2="0.0" />
+    <Proper class1="#0" class2="#1" class3="#2" class4="#8" k1="0.4214062547427152" k2="1.8180184088155873" periodicity1="3" periodicity2="1" phase1="0.0" phase2="0.0" />
+    <Proper class1="#2" class2="#1" class3="#0" class4="#3" k1="1.6808675050338522" k2="1.0062986644235417" periodicity1="3" periodicity2="1" phase1="0.0" phase2="0.0" />
+    <Proper class1="#3" class2="#0" class3="#1" class4="#4" k1="1.7725587317925706" periodicity1="3" phase1="0.0" />
+    <Proper class1="#3" class2="#0" class3="#1" class4="#5" k1="1.7725587317925706" periodicity1="3" phase1="0.0" />
+    <Proper class1="#4" class2="#1" class3="#2" class4="#6" k1="1.0008524355503976" periodicity1="3" phase1="0.0" />
+    <Proper class1="#4" class2="#1" class3="#2" class4="#7" k1="1.0008524355503976" periodicity1="3" phase1="0.0" />
+    <Proper class1="#4" class2="#1" class3="#2" class4="#8" k1="1.0008524355503976" periodicity1="3" phase1="0.0" />
+    <Proper class1="#5" class2="#1" class3="#2" class4="#6" k1="1.0008524355503976" periodicity1="3" phase1="0.0" />
+    <Proper class1="#5" class2="#1" class3="#2" class4="#7" k1="1.0008524355503976" periodicity1="3" phase1="0.0" />
+    <Proper class1="#5" class2="#1" class3="#2" class4="#8" k1="1.0008524355503976" periodicity1="3" phase1="0.0" />
+  </PeriodicTorsionForce>
+  <Residues>
+    <Residue name="ethanol">
+      <Atom charge="-0.60293" name="#0" type="#0" />
+      <Atom charge="0.13245" name="#1" type="#1" />
+      <Atom charge="-0.09629" name="#2" type="#2" />
+      <Atom charge="0.39826" name="#3" type="#3" />
+      <Atom charge="0.01728" name="#4" type="#4" />
+      <Atom charge="0.01728" name="#5" type="#5" />
+      <Atom charge="0.04465" name="#6" type="#6" />
+      <Atom charge="0.04465" name="#7" type="#7" />
+      <Atom charge="0.04465" name="#8" type="#8" />
+      <Bond atomName1="#0" atomName2="#1" />
+      <Bond atomName1="#1" atomName2="#2" />
+      <Bond atomName1="#0" atomName2="#3" />
+      <Bond atomName1="#1" atomName2="#4" />
+      <Bond atomName1="#1" atomName2="#5" />
+      <Bond atomName1="#2" atomName2="#6" />
+      <Bond atomName1="#2" atomName2="#7" />
+      <Bond atomName1="#2" atomName2="#8" />
+    </Residue>
+  </Residues>
+</ForceField>

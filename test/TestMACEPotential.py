@@ -15,9 +15,31 @@ test_data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
 
 @pytest.mark.parametrize("platform_int", list(platform_ints))
 class TestMACE:
+
+    # Reference energies are calculated with MACECalculator
+    refEnergy = {
+        'mace-off23-small': -713468.6327560507,
+        'mace-off23-medium': -713468.0563706581,
+        'mace-off23-large': -713467.7476380612,
+        'mace-off24-medium': -713467.9394350434,
+        'mace-mpa-0-medium': -8839.299589829867,
+        'mace-omat-0-small': -8726.63865431241,
+        'mace-omat-0-medium': -8679.026847088873,
+        'mace-omol-0-extra-large': -712903.4934289698,
+        'mace-les-off-small': -713467.9354591698,
+        'mace-polar-1-small': -712903.1710073923,
+        'mace-polar-1-medium': -712903.4536792638,
+        'mace-polar-1-large': -712903.7834631138,
+    }
+
     @pytest.mark.parametrize("model", ['mace-off23-small', 'mace-off23-medium', 'mace-off23-large', 'mace-off24-medium',
-                                       'mace-mpa-0-medium', 'mace-omat-0-small', 'mace-omat-0-medium', 'mace-omol-0-extra-large'])
+                                       'mace-mpa-0-medium', 'mace-omat-0-small', 'mace-omat-0-medium', 'mace-omol-0-extra-large',
+                                       'mace-les-off-small', 'mace-polar-1-small', 'mace-polar-1-medium', 'mace-polar-1-large'])
     def testCreatePureMLSystem(self, platform_int, model):
+        if 'mace-les' in model:
+            pytest.importorskip("les", reason="les is not installed")
+        if 'mace-polar' in model:
+            pytest.importorskip("graph_longrange", reason="graph_electrostatics is not installed")
         pdb = app.PDBFile(os.path.join(test_data_dir, "toluene", "toluene.pdb"))
         potential = MLPotential(model)
         system = potential.createSystem(pdb.topology, returnEnergyType='energy')
@@ -25,16 +47,7 @@ class TestMACE:
         context = mm.Context(system, mm.VerletIntegrator(0.001), platform)
         context.setPositions(pdb.getPositions(asNumpy=True))
         energyML = context.getState(energy=True).getPotentialEnergy().value_in_unit(unit.kilojoules_per_mole)
-        # Reference energies are calculated with MACECalculator
-        refEnergy = {'mace-off23-small': -713468.6327560507,
-                     'mace-off23-medium': -713468.0563706581,
-                     'mace-off23-large': -713467.7476380612,
-                     'mace-off24-medium': -713467.9394350434,
-                     'mace-mpa-0-medium': -8839.299589829867,
-                     'mace-omat-0-small': -8726.63865431241,
-                     'mace-omat-0-medium': -8679.026847088873,
-                     'mace-omol-0-extra-large': -712903.4934289698}
-        assert np.isclose(refEnergy[model], energyML, rtol=1e-6)
+        assert np.isclose(self.refEnergy[model], energyML, rtol=1e-6)
 
     def testPeriodicSystem(self, platform_int):
         pdb = app.PDBFile(os.path.join(test_data_dir, "alanine-dipeptide", "alanine-dipeptide-explicit.pdb"))
@@ -72,3 +85,23 @@ class TestMACE:
         interpEnergy2 = interpContext.getState(getEnergy=True).getPotentialEnergy().value_in_unit(unit.kilojoules_per_mole)
         assert np.isclose(mixedEnergy, interpEnergy1, rtol=1e-5)
         assert np.isclose(mmEnergy, interpEnergy2, rtol=1e-5)
+
+    @pytest.mark.parametrize("precision", ["single", "double"])
+    def testPrecisionApplied(self, platform_int, precision):
+        pdb = app.PDBFile(os.path.join(test_data_dir, "toluene", "toluene.pdb"))
+        potential = MLPotential('mace-off23-small')
+
+        # Specifying precision single/double.
+        system = potential.createSystem(pdb.topology, returnEnergyType='energy', precision=precision)
+        platform = mm.Platform.getPlatform(platform_int)
+        context = mm.Context(system, mm.VerletIntegrator(0.001), platform)
+        context.setPositions(pdb.positions)
+
+        # Inconsistent dtypes will crash the simulation.
+        energyML = context.getState(energy=True, forces=True).getPotentialEnergy().value_in_unit(unit.kilojoules_per_mole)
+
+        # The energy should be physically meaningful under both precisions
+        assert np.isfinite(energyML), \
+            "Energy is not finite under precision {}".format(precision)
+        assert np.isclose(energyML, self.refEnergy['mace-off23-small'], rtol=1e-6),\
+            "Energy is not close to reference under precision {}".format(precision)

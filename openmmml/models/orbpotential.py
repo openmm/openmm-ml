@@ -95,10 +95,8 @@ class OrbPotentialImpl(MLPotentialImpl):
 
         # Get the atoms that should be included.
         includedAtoms = list(topology.atoms())
-        indices = None
         if atoms is not None:
             includedAtoms = [includedAtoms[i] for i in atoms]
-            indices = np.array(atoms, dtype=int)
 
         # Set up the ASE Atoms object that will be fed to the model.
         numbers = [atom.element.atomic_number for atom in includedAtoms]
@@ -107,23 +105,21 @@ class OrbPotentialImpl(MLPotentialImpl):
         aseAtoms.info['charge'] = charge
         aseAtoms.info['spin'] = multiplicity
 
-        compute = partial(_computeOrb, atoms=aseAtoms, indices=indices, periodic=periodic, device=device, model=model, adapter=adapter, conservative=conservative)
+        compute = partial(_computeOrb, atoms=aseAtoms, periodic=periodic, device=device, model=model, adapter=adapter, conservative=conservative)
         force = openmm.PythonForce(compute)
         force.setForceGroup(forceGroup)
         force.setUsesPeriodicBoundaryConditions(any(aseAtoms.get_pbc()))
+        if atoms is not None:
+            force.setParticles(atoms)
         system.addForce(force)
 
     def getMLLongRange(self) -> bool | None:
         return False
 
-def _computeOrb(state, atoms, indices, periodic, device, model, adapter, conservative):
+def _computeOrb(state, atoms, periodic, device, model, adapter, conservative):
     import ase.units
-    import numpy as np
 
     positions = state.getPositions(asNumpy=True).value_in_unit(unit.angstrom)
-    numAtoms = positions.shape[0]
-    if indices is not None:
-        positions = positions[indices]
     atoms.set_positions(positions)
     if periodic:
         atoms.set_cell(state.getPeriodicBoxVectors(asNumpy=True).value_in_unit(unit.angstrom))
@@ -131,8 +127,4 @@ def _computeOrb(state, atoms, indices, periodic, device, model, adapter, conserv
     result = model.predict(adapter.from_ase_atoms(atoms, device=device))
     energy = result["energy"].item()
     forces = result[model.grad_forces_name if conservative else "forces"].numpy(force=True)
-    if indices is not None:
-        f = np.zeros((numAtoms, 3), dtype=forces.dtype)
-        f[indices] = forces
-        forces = f
     return energy / (ase.units.kJ / ase.units.mol), forces / (ase.units.kJ / (ase.units.mol * ase.units.nm))

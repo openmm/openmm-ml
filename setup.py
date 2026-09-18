@@ -6,7 +6,7 @@ from setuptools import setup, find_packages
 DOCLINES = __doc__.split("\n")
 
 ########################
-__version__ = '1.7'
+__version__ = '1.8'
 VERSION = __version__
 ISRELEASED = False
 ########################
@@ -38,7 +38,7 @@ setup(
     classifiers=CLASSIFIERS.splitlines(),
     packages=find_packages(),
     zip_safe=False,
-    install_requires=['numpy', 'openmm >= 8.5.2'],
+    install_requires=['numpy', 'openmm >= 8.6.1'],
     entry_points={
         'openmmml.potentials': [
             # Custom AIMNet2 model supplied by path.
@@ -69,6 +69,10 @@ setup(
             'mace-omat-0-small = openmmml.models.macepotential:MACEPotentialImplFactory',
             'mace-omat-0-medium = openmmml.models.macepotential:MACEPotentialImplFactory',
             'mace-omol-0-extra-large = openmmml.models.macepotential:MACEPotentialImplFactory',
+            'mace-les-off-small = openmmml.models.macepotential:MACEPotentialImplFactory',
+            'mace-polar-1-small = openmmml.models.macepotential:MACEPotentialImplFactory',
+            'mace-polar-1-medium = openmmml.models.macepotential:MACEPotentialImplFactory',
+            'mace-polar-1-large = openmmml.models.macepotential:MACEPotentialImplFactory',
             'nequip = openmmml.models.nequippotential:NequIPPotentialImplFactory',
             'orb-v3-conservative-inf-omat = openmmml.models.orbpotential:OrbPotentialImplFactory',
             'orb-v3-conservative-omol = openmmml.models.orbpotential:OrbPotentialImplFactory',

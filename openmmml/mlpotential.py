@@ -35,6 +35,7 @@ from collections.abc import Iterable
 import os
 import shutil
 import tempfile
+import typing
 import urllib.request
 import sys
 if sys.version_info < (3, 10):
@@ -124,7 +125,8 @@ class MLPotentialImpl(object):
                           forceGroup: int,
                           interpolate: bool,
                           embedding: str,
-                          **args) -> openmm.System:
+                          returnInfo: bool = False,
+                          **args) -> openmm.System | dict[str, typing.Any]:
         """Creates a mixed system using a potential-specific embedding method.
 
         This is invoked by MLPotential.createMixedSystem().  It will only be
@@ -155,13 +157,24 @@ class MLPotentialImpl(object):
         embedding: str
             the name of the embedding method (will always be one in the list
             returned by the getSupportedEmbeddings() method)
+        returnInfo: bool
+            whether to return a dictionary of key-value pairs containing a new
+            System with additional information, instead of the System alone
         args:
             any additional arguments for the potential or embedding method
 
         Returns
         -------
-        a newly created System object that uses this potential function and the
-        requested embedding method to model the Topology
+        A newly created System object that uses this potential function and the
+        requested embedding method to model the Topology, or a dictionary of
+        key-value pairs if the implementation supports returnInfo and it is
+        True.  The dictionary must contain the System as 'system', a Topology
+        (that may be different from the one provided) as 'topology', and a list
+        mapping atom indices in the original Topology to those in the returned
+        Topology as 'oldToNew'.  If the implementation does not support
+        returnInfo, the System returned must be compatible with the provided
+        Topology.  In no case may the implementation modify the given Topology
+        in place; it must copy it first or create a new Topology.
         """
 
         raise NotImplementedError('Subclasses must implement createMixedSystem()')
@@ -316,7 +329,8 @@ class MLPotential(object):
                           forceGroup: int = 0,
                           interpolate: bool = False,
                           embedding: str = 'mechanical',
-                          **args) -> openmm.System:
+                          returnInfo: bool = False,
+                          **args) -> openmm.System | dict[str, typing.Any]:
         """Create a System that is partly modeled with this potential and partly
         with a conventional force field.
 
@@ -361,6 +375,9 @@ class MLPotential(object):
             methods may be available, as well as embedding methods specific to
             the ML potential selected.  MLPotential.getSupportedEmbeddings()
             will report all embedding methods accepted by the potential.
+        returnInfo: bool
+            whether to return a dictionary of key-value pairs containing a new
+            System with additional information, instead of the System alone
         args:
             particular potential functions or embedding methods may define
             additional arguments that can be used to customize them.  See the
@@ -369,7 +386,12 @@ class MLPotential(object):
 
         Returns
         -------
-        a newly created System object that uses this potential function to model the Topology
+        A newly created System object that uses this potential function and the
+        requested embedding method to model the Topology, or a dictionary of
+        key-value pairs if returnInfo is True.  The dictionary will contain the
+        System as 'system', a (possibly modified) Topology as 'topology', and a
+        list mapping atom indices in the original Topology to those in the
+        returned Topology as 'oldToNew'.
         """
 
         atomList = list(atoms)
@@ -377,11 +399,21 @@ class MLPotential(object):
         # See if we are given an embedding name that the potential can handle.
         customEmbeddings = self._impl.getSupportedEmbeddings()
         if embedding in customEmbeddings:
-            system = self._impl.createMixedSystem(topology, system, atomList, forceGroup, interpolate, embedding, **args)
+            systemOrInfo = self._impl.createMixedSystem(topology, system, atomList, forceGroup, interpolate, embedding, returnInfo=returnInfo, **args)
         else:
             # Fall back on an embedding plugin.
             embeddingInstance = MLPotential._embeddingFactories[embedding].createEmbedding(embedding)
-            system = embeddingInstance.createMixedSystem(self._impl, topology, system, atomList, forceGroup, interpolate, **args)
+            systemOrInfo = embeddingInstance.createMixedSystem(self._impl, topology, system, atomList, forceGroup, interpolate, returnInfo=returnInfo, **args)
+
+        if returnInfo:
+            if isinstance(systemOrInfo, openmm.System):
+                # The potential or embedding didn't support returnInfo.
+                info = dict(system=systemOrInfo, topology=topology, oldToNew=list(range(topology.getNumAtoms())))
+            else:
+                info = systemOrInfo
+            system = info["system"]
+        else:
+            system = systemOrInfo
 
         if removeConstraints:
             # Remove all constraints with both atoms in the ML subset.
@@ -394,7 +426,7 @@ class MLPotential(object):
             for constraint in reversed(constraintsToRemove):
                 system.removeConstraint(constraint)
 
-        return system
+        return info if returnInfo else system
 
     def getSupportedEmbeddings(self) -> list[str]:
         """Retrieves a list of the names of all of the supported embedding
@@ -482,7 +514,8 @@ class Embedding:
                           atoms: list[int],
                           forceGroup: int,
                           interpolate: bool,
-                          **args):
+                          returnInfo: bool = False,
+                          **args) -> openmm.System | dict[str, typing.Any]:
         """Creates a mixed system using the embedding method.
 
         This is invoked by MLPotential.createMixedSystem().  It must be

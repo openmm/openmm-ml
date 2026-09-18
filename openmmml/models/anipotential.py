@@ -93,10 +93,6 @@ class ANIPotentialImpl(MLPotentialImpl):
         if atoms is not None:
             includedAtoms = [includedAtoms[i] for i in atoms]
         species = torch.tensor([[atom.element.atomic_number for atom in includedAtoms]], device=device)
-        if atoms is None:
-            indices = None
-        else:
-            indices = np.array(atoms)
         periodic = topology.getPeriodicBoxVectors() is not None or system.usesPeriodicBoundaryConditions()
         if periodic:
             pbc = torch.tensor([True, True, True], dtype=torch.bool, device=device)
@@ -108,24 +104,21 @@ class ANIPotentialImpl(MLPotentialImpl):
         compute = partial(_computeANI,
                           model=model,
                           species=species,
-                          pbc=pbc,
-                          indices=indices)
+                          pbc=pbc)
         force = openmm.PythonForce(compute)
         force.setForceGroup(forceGroup)
         force.setUsesPeriodicBoundaryConditions(periodic)
+        if atoms is not None:
+            force.setParticles(atoms)
         system.addForce(force)
 
     def getMLLongRange(self) -> bool | None:
         return False
 
-def _computeANI(state, model, species, pbc, indices):
+def _computeANI(state, model, species, pbc):
     import torch
-    import numpy as np
     import torchani
     positions = state.getPositions(asNumpy=True).value_in_unit(unit.angstrom)
-    numAtoms = positions.shape[0]
-    if indices is not None:
-        positions = positions[indices]
     positions = torch.tensor(positions, dtype=torch.float32, device=species.device)
     if pbc is None:
         boxvectors = None
@@ -140,8 +133,4 @@ def _computeANI(state, model, species, pbc, indices):
     energy *= torchani.units.hartree2kjoulemol(1)
     energy.backward()
     forces = (-positions.grad[0]).detach().cpu().numpy()
-    if indices is not None:
-        f = np.zeros((numAtoms, 3), dtype=np.float32)
-        f[indices] = forces
-        forces = f
     return energy, forces

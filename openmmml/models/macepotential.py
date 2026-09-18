@@ -57,7 +57,8 @@ class MACEPotentialImpl(MLPotentialImpl):
     >>> potential = MLPotential('mace-off23-small')
 
     Other available models include 'mace-off23-medium', 'mace-off23-large', 'mace-off24-medium',
-    'mace-mpa-0-medium', 'mace-omat-0-small', 'mace-omat-0-medium', and 'mace-omol-0-extra-large'.
+    'mace-mpa-0-medium', 'mace-omat-0-small', 'mace-omat-0-medium', 'mace-omol-0-extra-large',
+    'mace-les-off-small', 'mace-polar-1-small', 'mace-polar-1-medium', and 'mace-polar-1-large'.
 
     To use a locally trained MACE model, provide the path to the model file. For example:
 
@@ -89,16 +90,20 @@ class MACEPotentialImpl(MLPotentialImpl):
         The path to the locally trained MACE model if ``name`` is 'mace'.
     """
 
-    # (Function name, model name, restrictive license, long-range)
+    # (Function name, model name, restrictive license name or None, long-range)
     KNOWN_MODELS = {
-        'mace-off23-small': ('mace_off', 'small', True, False),
-        'mace-off23-medium': ('mace_off', 'medium', True, False),
-        'mace-off23-large': ('mace_off', 'large', True, False),
-        'mace-off24-medium': ('mace_off', 'https://github.com/ACEsuit/mace-off/blob/main/mace_off24/MACE-OFF24_medium.model?raw=true', True, False),
-        'mace-mpa-0-medium': ('mace_mp', 'medium-mpa-0', False, False),
-        'mace-omat-0-small': ('mace_mp', 'small-omat-0', True, False),
-        'mace-omat-0-medium': ('mace_mp', 'medium-omat-0', True, False),
-        'mace-omol-0-extra-large': ('mace_omol', 'extra_large', True, False),
+        'mace-off23-small': ('mace_off', 'small', 'ASL', False),
+        'mace-off23-medium': ('mace_off', 'medium', 'ASL', False),
+        'mace-off23-large': ('mace_off', 'large', 'ASL', False),
+        'mace-off24-medium': ('mace_off', 'https://github.com/ACEsuit/mace-off/blob/main/mace_off24/MACE-OFF24_medium.model?raw=true', 'ASL', False),
+        'mace-mpa-0-medium': ('mace_mp', 'medium-mpa-0', None, False),
+        'mace-omat-0-small': ('mace_mp', 'small-omat-0', 'ASL', False),
+        'mace-omat-0-medium': ('mace_mp', 'medium-omat-0', 'ASL', False),
+        'mace-omol-0-extra-large': ('mace_omol', 'extra_large', 'ASL', False),
+        'mace-les-off-small': ('mace_off', 'https://github.com/ChengUCB/les_fit/blob/main/MACELES-OFF/MACELES-OFF_small_converted.model?raw=true', 'CC BY-NC 4.0', True),
+        'mace-polar-1-small': ('mace_polar', 'polar-1-s', None, True),
+        'mace-polar-1-medium': ('mace_polar', 'polar-1-m', None, True),
+        'mace-polar-1-large': ('mace_polar', 'polar-1-l', None, True),
     }
 
     def __init__(self, name: str, modelPath) -> None:
@@ -111,7 +116,8 @@ class MACEPotentialImpl(MLPotentialImpl):
             The name of the MACE model.
             Options include 'mace-off23-small', 'mace-off23-medium', 'mace-off23-large',
             'mace-off24-medium', 'mace-mpa-0-medium', 'mace-omat-0-small', 'mace-omat-0-medium',
-            'mace-omol-0-extra-large', and 'mace'.
+            'mace-omol-0-extra-large', 'mace-les-off-small', 'mace-polar-1-small',
+            'mace-polar-1-medium', 'mace-polar-1-large', and 'mace'.
         modelPath : str, optional
             The path to the locally trained MACE model if ``name`` is 'mace'.
         """
@@ -151,7 +157,7 @@ class MACEPotentialImpl(MLPotentialImpl):
         import torch
         try:
             from mace.tools import utils, to_one_hot, atomic_numbers_to_indices
-            from mace.calculators.foundations_models import mace_off, mace_mp, mace_omol
+            from mace.calculators.foundations_models import mace_off, mace_mp, mace_omol, mace_polar
         except ImportError as e:
             raise ImportError(f"Failed to import mace with error: {e}. Install mace with 'pip install mace-torch'.")
         try:
@@ -169,12 +175,13 @@ class MACEPotentialImpl(MLPotentialImpl):
                 'mace_off': mace_off,
                 'mace_mp': mace_mp,
                 'mace_omol': mace_omol,
+                'mace_polar': mace_polar,
             }
-            fnName, name, warn, _ = MACEPotentialImpl.KNOWN_MODELS[self.name]
+            fnName, name, restrictiveLicense, _ = MACEPotentialImpl.KNOWN_MODELS[self.name]
             model = functions[fnName](model=name, device=device, return_raw_model=True).to(device)
-            if warn:
+            if restrictiveLicense is not None:
                 import logging
-                logging.warning(f'The model {self.name} is distributed under the restrictive ASL license.  Commercial use is not permitted.')
+                logging.warning(f'The model {self.name} is distributed under the restrictive {restrictiveLicense} license.  Commercial use is not permitted.')
         elif self.name == "mace":
             if self.modelPath is not None:
                 model = torch.load(self.modelPath, map_location=device).to(device)
@@ -203,6 +210,7 @@ class MACEPotentialImpl(MLPotentialImpl):
             raise ValueError(f"Unsupported precision {precision} for the model. Supported values are 'single' and 'double'.")
         if dtype != modelDefaultDtype:
             print(f"Model dtype is {modelDefaultDtype} and requested dtype is {dtype}. The model will be converted to the requested dtype.")
+            model = model.to(dtype)
 
         # One hot encoding of atomic numbers
 
@@ -211,10 +219,6 @@ class MACEPotentialImpl(MLPotentialImpl):
             torch.tensor(atomic_numbers_to_indices(atomicNumbers, z_table=zTable), dtype=torch.long, device=device).unsqueeze(-1),
             num_classes=len(zTable))
 
-        if atoms is None:
-            indices = None
-        else:
-            indices = np.array(atoms)
         periodic = (topology.getPeriodicBoxVectors() is not None) or system.usesPeriodicBoundaryConditions()
 
         # Create the PythonForce and add it to the System.
@@ -228,11 +232,12 @@ class MACEPotentialImpl(MLPotentialImpl):
                           returnEnergyType=returnEnergyType,
                           charge=torch.tensor([float(args.get('charge', 0))], dtype=dtype, device=device, requires_grad=False),
                           multiplicity=torch.tensor([float(args.get('multiplicity', 1))], dtype=dtype, device=device, requires_grad=False),
-                          indices=indices,
                           periodic=periodic)
         force = openmm.PythonForce(compute)
         force.setForceGroup(forceGroup)
         force.setUsesPeriodicBoundaryConditions(periodic)
+        if atoms is not None:
+            force.setParticles(atoms)
         system.addForce(force)
 
     def getMLLongRange(self) -> bool | None:
@@ -242,15 +247,12 @@ class MACEPotentialImpl(MLPotentialImpl):
         return None
 
 
-def _computeMACE(state, model, ptr, node_attrs, batch, pbc, returnEnergyType, charge, multiplicity, indices, periodic):
+def _computeMACE(state, model, ptr, node_attrs, batch, pbc, returnEnergyType, charge, multiplicity, periodic):
     import torch
     from mace.data.neighborhood import get_neighborhood
     energyScale = 96.4853
     lengthScale = 10.0
     positions = state.getPositions(asNumpy=True).value_in_unit(unit.angstrom)
-    numAtoms = positions.shape[0]
-    if indices is not None:
-        positions = positions[indices]
     if periodic:
         cell = state.getPeriodicBoxVectors(asNumpy=True).value_in_unit(unit.angstrom)
     else:
@@ -258,6 +260,7 @@ def _computeMACE(state, model, ptr, node_attrs, batch, pbc, returnEnergyType, ch
     dtype = node_attrs.dtype
     cutoff = float(model.r_max.detach())
     edgeIndex, shifts, _, _ = get_neighborhood(positions, cutoff, [periodic, periodic, periodic], cell)
+    cellTensor = torch.tensor(cell, dtype=dtype, device=ptr.device)
     inputDict = {
         "ptr": ptr,
         "node_attrs": node_attrs,
@@ -266,15 +269,15 @@ def _computeMACE(state, model, ptr, node_attrs, batch, pbc, returnEnergyType, ch
         "positions": torch.tensor(positions, dtype=dtype, device=ptr.device),
         "edge_index": torch.tensor(edgeIndex, dtype=torch.int64, device=ptr.device),
         "shifts": torch.tensor(shifts, dtype=dtype, device=ptr.device),
-        "cell": torch.tensor(cell, dtype=dtype, device=ptr.device),
+        "cell": cellTensor,
+        "rcell": 2 * torch.pi * torch.linalg.inv(cellTensor.mT),
+        "volume": torch.linalg.det(cellTensor),
         "total_charge": charge,
-        "total_spin": multiplicity
+        "total_spin": multiplicity,
+        "external_field": torch.zeros((1, 3), dtype=dtype, device=ptr.device),
+        "fermi_level": torch.zeros((1,), dtype=dtype, device=ptr.device)
     }
     results = model(inputDict, compute_force=True)
     energy = float(results[returnEnergyType].detach())*energyScale
     forces = (results["forces"]*energyScale*lengthScale).detach().cpu().numpy()
-    if indices is not None:
-        f = np.zeros((numAtoms, 3), dtype=(np.float64 if dtype == torch.float64 else np.float32))
-        f[indices] = forces
-        forces = f
     return energy, forces
