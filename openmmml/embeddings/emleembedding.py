@@ -100,6 +100,8 @@ class EMLEEmbedding(Embedding):
 
         precision = args.get("precision", None)
         alphaMode = args.get("alphaMode", "species")
+        cutoffDistance = args.get("cutoffDistance", 0.75 * unit.nanometer)
+        switchingDistance = args.get("switchingDistance", 0.6 * unit.nanometer)
 
         # Create the new system with ML-ML interactions to be computed by the ML
         # potential removed.
@@ -166,7 +168,12 @@ class EMLEEmbedding(Embedding):
         if not np.isclose(mlChargeRounded, mlCharge):
             raise ValueError(f"Non-integer charge on the ML region {mlCharge} unsupported by EMLE")
 
-        model = EMLE(model=modelPath, method="electrostatic", alpha_mode=alphaMode, device=device, dtype=dtype)
+        emleCutoff = cutoffDistance.value_in_unit(unit.angstrom)
+        emleSwitchWidth = 1 - switchingDistance / cutoffDistance
+        if not 0 < emleSwitchWidth < 1:
+            raise ValueError("Switching distance must be between 0 and cutoff distance")
+
+        model = EMLE(model=modelPath, method="electrostatic", alpha_mode=alphaMode, cutoff=emleCutoff, switch_width=emleSwitchWidth, device=device, dtype=dtype)
         energyScale = (1.0 * unit.hartree / unit.item).value_in_unit(unit.kilojoule_per_mole)
         emleForce = openmm.PythonForce(partial(
             _computeEMLE,
@@ -210,7 +217,7 @@ def _computeEMLE(state, atomicNumbers, mlCharge, mmCharges, mlIndices, mmIndices
     else:
         cellTensor = None
 
-    energy = energyScale * model(atomicNumbers, mmCharges, positionsTensor[mlIndices], positionsTensor[mmIndices], cellTensor, mlCharge)
+    energy = energyScale * model(atomicNumbers, mmCharges, positionsTensor[mlIndices], positionsTensor[mmIndices], cellTensor, mlCharge, preprocess=True, use_switching_function=True)
     energy = energy.sum()
     # For unknown reasons, retain_graph=True appears necessary when calling EMLE
     # even though we are only calling backward() one time.
