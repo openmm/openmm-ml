@@ -57,6 +57,8 @@ class MechanicalEmbedding(Embedding):
     different periodic images.  For some models, this cannot be determined based
     on the information provided to OpenMM-ML, and the mlLongRange option must be
     provided explicitly to control whether or not to include these interactions.
+    When the ML potential can report this itself, mlLongRange may still be passed
+    to override that value.
 
     This implementation assumes that if a model reports using long-range
     interactions, or mlLongRange is True, then the long-range interactions that
@@ -80,14 +82,14 @@ class MechanicalEmbedding(Embedding):
 
         # See if the ML potential uses long-range interactions.  mlLongRange may
         # end up being None, in which case we were unable to determine this.
+        # An explicit mlLongRange argument always wins, so autodetection (e.g.
+        # from a metatomic interaction_range) can be overridden when needed.
 
         potentialMLLongRange = potential.getMLLongRange()
         userMLLongRange = args.get("mlLongRange", None)
-        if potentialMLLongRange is None:
+        if userMLLongRange is not None:
             mlLongRange = userMLLongRange
         else:
-            if userMLLongRange is not None:
-                raise ValueError("This ML model does not support the mlLongRange option.")
             mlLongRange = potentialMLLongRange
 
         # See if the MM force field uses long-range interactions.

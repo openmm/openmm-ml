@@ -352,6 +352,42 @@ When using ASE models, the following extra keyword arguments to `createSystem()`
 | `aseAtoms` | An Atoms object to use for computations. |
 | `info` | Values that should be added to the `info` dict of the Atoms object. |
 
+### Metatomic
+
+The [metatomic](https://docs.metatensor.org/metatomic/) interface runs TorchScript
+models (`.pt` files).
+
+The following model names are supported.
+
+| Name | Model |
+| --- | --- |
+| `metatomic` | Custom models specified with the `model` argument |
+
+When creating metatomic models, the following keyword arguments to the `MLPotential` constructor are supported.
+
+| Argument | Description |
+| --- | --- |
+| `model` | An `AtomisticModel`, or the path to a model file. |
+| `device` | The PyTorch device to perform calculations on, either a `torch.device` object or a string (such as `'cuda'` or `'cpu'`.)  If omitted, a device is chosen from the model's supported devices. |
+| `extensionsDirectory` | Directory containing compiled TorchScript extensions required by the model, if any |
+| `checkConsistency` | If `True`, run metatomic consistency checks during evaluation.  The default is `False`. |
+| `nonConservative` | Controls whether forces come from model outputs rather than autograd on the energy.  `False` (default) is fully conservative.  `True` or `"forces"` reads `non_conservative_force`. |
+| `variants` | Dict mapping output names (`energy`, `energy_uncertainty`, `non_conservative_force`) to a variant string.  Setting `energy` also selects that variant for the other keys unless they are overridden. |
+| `uncertaintyThreshold` | Per-atom energy uncertainty threshold in kJ/mol.  If the model provides `energy_uncertainty` and any atom exceeds this value, a warning is issued.  The default is `10`.  Set to `None` to disable. |
+
+When using metatomic models, the following extra keyword arguments to `createSystem()` and `createMixedSystem()` are supported.
+
+| Argument | Description |
+| --- | --- |
+| `charge` | The total charge of the system.  If omitted, it is assumed to be 0.  Used only if the model requests a charge input. |
+| `multiplicity` | The spin multiplicity of the system.  If omitted, it is assumed to be 1.  Used only if the model requests a spin multiplicity input.  `spinMultiplicity` and `spin_multiplicity` are accepted as aliases. |
+| `atomTypes` | A list of integers giving the metatomic atom type for each atom in the Topology.  If omitted, each atom's element atomic number is used.  Required when any atom lacks an element, or when the model uses types that are not elements (for example separate types for O and Ow). |
+| `pbc` | Length-3 sequence of booleans for periodic boundary conditions along each box vector.  If omitted, all three directions follow the topology / System (all periodic or all non-periodic). |
+
+Mixed ML/MM systems use mechanical embedding. `mlLongRange` is not accepted.
+A model with an infinite `interaction_range` is not supported for a mixed
+system. A pure ML system is allowed, so `createSystem()` still accepts it.
+
 ## Embeddings
 
 For mixed ML/MM systems created with `createMixedSystem()`, the interactions within the ML subset will be computed by
@@ -374,8 +410,8 @@ OpenMM-ML calls these models "long-range".  Other MLIPs may compute only the int
 periodic image.  In this case, the interaction between the ML subset and all of its other periodic images is computed
 using the MM force field when using mechanical embedding.
 
-For the pretrained models supported by OpenMM-ML, this behavior is selected automatically.  However, for custom models
-(*e.g.*, the ASE, DeePMD, and NequIP interfaces, and non-pretrained FeNNix, MACE, and TorchMDNet models) it is necessary
+For the pretrained models supported by OpenMM-ML, this behavior is selected automatically. However, for custom models
+(*e.g.*, the ASE, DeePMD, metatomic, and NequIP interfaces, and non-pretrained FeNNix, MACE, and TorchMDNet models) it is necessary
 to specify which behavior your model uses when doing mechanical embedding in a periodic system.  To do so, pass
 `mlLongRange=False` to `createMixedSystem()` if your model is not long-range, and `mlLongRange=True` if it is.  An error
 will be raised to inform you if this information is needed and not provided; OpenMM-ML will not assume either choice

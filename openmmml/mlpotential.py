@@ -38,6 +38,7 @@ import tempfile
 import typing
 import urllib.request
 import sys
+
 if sys.version_info < (3, 10):
     from importlib_metadata import entry_points
 else:
@@ -76,7 +77,7 @@ class MLPotentialImplFactory(object):
         -------
         a MLPotentialImpl that implements the potential
         """
-        raise NotImplementedError('Subclasses must implement createImpl()')
+        raise NotImplementedError("Subclasses must implement createImpl()")
 
 
 class MLPotentialImpl(object):
@@ -89,12 +90,14 @@ class MLPotentialImpl(object):
     MLPotentialImpl of the appropriate subclass.
     """
 
-    def addForces(self,
-                  topology: openmm.app.Topology,
-                  system: openmm.System,
-                  atoms: Iterable[int] | None,
-                  forceGroup: int,
-                  **args):
+    def addForces(
+        self,
+        topology: openmm.app.Topology,
+        system: openmm.System,
+        atoms: Iterable[int] | None,
+        forceGroup: int,
+        **args,
+    ):
         """Add Force objects to a System to implement the potential function.
 
         This is invoked by MLPotential.createSystem().  Subclasses must implement
@@ -116,17 +119,19 @@ class MLPotentialImpl(object):
             are passed to this method.  This allows subclasses to customize their
             behavior based on extra arguments.
         """
-        raise NotImplementedError('Subclasses must implement addForces()')
+        raise NotImplementedError("Subclasses must implement addForces()")
 
-    def createMixedSystem(self,
-                          topology: openmm.app.Topology,
-                          system: openmm.System,
-                          atoms: list[int],
-                          forceGroup: int,
-                          interpolate: bool,
-                          embedding: str,
-                          returnInfo: bool = False,
-                          **args) -> openmm.System | dict[str, typing.Any]:
+    def createMixedSystem(
+        self,
+        topology: openmm.app.Topology,
+        system: openmm.System,
+        atoms: list[int],
+        forceGroup: int,
+        interpolate: bool,
+        embedding: str,
+        returnInfo: bool = False,
+        **args,
+    ) -> openmm.System | dict[str, typing.Any]:
         """Creates a mixed system using a potential-specific embedding method.
 
         This is invoked by MLPotential.createMixedSystem().  It will only be
@@ -177,7 +182,7 @@ class MLPotentialImpl(object):
         in place; it must copy it first or create a new Topology.
         """
 
-        raise NotImplementedError('Subclasses must implement createMixedSystem()')
+        raise NotImplementedError("Subclasses must implement createMixedSystem()")
 
     def getSupportedEmbeddings(self) -> list[str]:
         """Retrieves a list of names of supported embedding methods (for the
@@ -211,14 +216,15 @@ class MLPotentialImpl(object):
         to use, which can either by specified by the user with the 'device' argument, or chosen automatically based on
         the available hardware."""
         import torch
-        if 'device' in args:
-            device = args['device']
+
+        if "device" in args:
+            device = args["device"]
             if isinstance(device, str):
                 device = torch.device(device)
             return device
         if torch.cuda.is_available():
-            return torch.device('cuda')
-        return torch.device('cpu')
+            return torch.device("cuda")
+        return torch.device("cpu")
 
     def _getCacheDir(self):
         """This is a utility routine returning a cache directory for use by subclasses that need to download their own
@@ -290,7 +296,9 @@ class MLPotential(object):
         """
         self._impl = MLPotential._implFactories[name].createImpl(name, **args)
 
-    def createSystem(self, topology: openmm.app.Topology, removeCMMotion: bool = True, **args) -> openmm.System:
+    def createSystem(
+        self, topology: openmm.app.Topology, removeCMMotion: bool = True, **args
+    ) -> openmm.System:
         """Create a System for running a simulation with this potential function.
 
         Parameters
@@ -321,16 +329,18 @@ class MLPotential(object):
             system.addForce(openmm.CMMotionRemover())
         return system
 
-    def createMixedSystem(self,
-                          topology: openmm.app.Topology,
-                          system: openmm.System,
-                          atoms: Iterable[int],
-                          removeConstraints: bool = True,
-                          forceGroup: int = 0,
-                          interpolate: bool = False,
-                          embedding: str = 'mechanical',
-                          returnInfo: bool = False,
-                          **args) -> openmm.System | dict[str, typing.Any]:
+    def createMixedSystem(
+        self,
+        topology: openmm.app.Topology,
+        system: openmm.System,
+        atoms: Iterable[int],
+        removeConstraints: bool = True,
+        forceGroup: int = 0,
+        interpolate: bool = False,
+        embedding: str = "mechanical",
+        returnInfo: bool = False,
+        **args,
+    ) -> openmm.System | dict[str, typing.Any]:
         """Create a System that is partly modeled with this potential and partly
         with a conventional force field.
 
@@ -399,16 +409,40 @@ class MLPotential(object):
         # See if we are given an embedding name that the potential can handle.
         customEmbeddings = self._impl.getSupportedEmbeddings()
         if embedding in customEmbeddings:
-            systemOrInfo = self._impl.createMixedSystem(topology, system, atomList, forceGroup, interpolate, embedding, returnInfo=returnInfo, **args)
+            systemOrInfo = self._impl.createMixedSystem(
+                topology,
+                system,
+                atomList,
+                forceGroup,
+                interpolate,
+                embedding,
+                returnInfo=returnInfo,
+                **args,
+            )
         else:
             # Fall back on an embedding plugin.
-            embeddingInstance = MLPotential._embeddingFactories[embedding].createEmbedding(embedding)
-            systemOrInfo = embeddingInstance.createMixedSystem(self._impl, topology, system, atomList, forceGroup, interpolate, returnInfo=returnInfo, **args)
+            embeddingInstance = MLPotential._embeddingFactories[
+                embedding
+            ].createEmbedding(embedding)
+            systemOrInfo = embeddingInstance.createMixedSystem(
+                self._impl,
+                topology,
+                system,
+                atomList,
+                forceGroup,
+                interpolate,
+                returnInfo=returnInfo,
+                **args,
+            )
 
         if returnInfo:
             if isinstance(systemOrInfo, openmm.System):
                 # The potential or embedding didn't support returnInfo.
-                info = dict(system=systemOrInfo, topology=topology, oldToNew=list(range(topology.getNumAtoms())))
+                info = dict(
+                    system=systemOrInfo,
+                    topology=topology,
+                    oldToNew=list(range(topology.getNumAtoms())),
+                )
             else:
                 info = systemOrInfo
             system = info["system"]
@@ -434,7 +468,10 @@ class MLPotential(object):
         embedding methods and all of those specific to the potential.
         """
 
-        return sorted(set(MLPotential._embeddingFactories.keys()) | set(self._impl.getSupportedEmbeddings()))
+        return sorted(
+            set(MLPotential._embeddingFactories.keys())
+            | set(self._impl.getSupportedEmbeddings())
+        )
 
     @staticmethod
     def registerImplFactory(name: str, factory: MLPotentialImplFactory):
@@ -494,7 +531,7 @@ class EmbeddingFactory:
         an Embedding instance that implements the embedding
         """
 
-        raise NotImplementedError('Subclasses must implement createEmbedding()')
+        raise NotImplementedError("Subclasses must implement createEmbedding()")
 
 
 class Embedding:
@@ -507,15 +544,17 @@ class Embedding:
     that name and uses it to create an Embedding of the appropriate subclass.
     """
 
-    def createMixedSystem(self,
-                          potential: MLPotentialImpl,
-                          topology: openmm.app.Topology,
-                          system: openmm.System,
-                          atoms: list[int],
-                          forceGroup: int,
-                          interpolate: bool,
-                          returnInfo: bool = False,
-                          **args) -> openmm.System | dict[str, typing.Any]:
+    def createMixedSystem(
+        self,
+        potential: MLPotentialImpl,
+        topology: openmm.app.Topology,
+        system: openmm.System,
+        atoms: list[int],
+        forceGroup: int,
+        interpolate: bool,
+        returnInfo: bool = False,
+        **args,
+    ) -> openmm.System | dict[str, typing.Any]:
         """Creates a mixed system using the embedding method.
 
         This is invoked by MLPotential.createMixedSystem().  It must be
@@ -528,11 +567,12 @@ class Embedding:
         MLPotential.createMixedSystem().
         """
 
-        raise NotImplementedError('Subclasses must implement createMixedSystem()')
+        raise NotImplementedError("Subclasses must implement createMixedSystem()")
+
 
 # Register any potential functions or embeddings defined by entry points.
 
-for potential in entry_points(group='openmmml.potentials'):
+for potential in entry_points(group="openmmml.potentials"):
     MLPotential.registerImplFactory(potential.name, potential.load()())
-for embedding in entry_points(group='openmmml.embeddings'):
+for embedding in entry_points(group="openmmml.embeddings"):
     MLPotential.registerEmbeddingFactory(embedding.name, embedding.load()())
