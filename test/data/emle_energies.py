@@ -1,57 +1,97 @@
-# TODO: This script should ideally compute reference energies for EMLE without
-# using OpenMM-ML or calling the EMLE model directly.
+# This script computes reference energies for EMLE using Sire.
 
-import emle.models
-import numpy as np
+import os
+
 import openmm
 import openmm.app
 import openmm.unit as unit
 import openmmml
 import torch
+from emle.models import EMLE
 
-pdb = openmm.app.PDBFile("alanine-dipeptide/alanine-dipeptide-explicit.pdb")
+import sire as sr
+
+data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "alanine-dipeptide")
+pdb = openmm.app.PDBFile(os.path.join(data_dir, "alanine-dipeptide-explicit.pdb"))
 
 chains = list(pdb.topology.chains())
 ml_atoms = [atom.index for atom in chains[0].atoms()]
-mm_atoms = [atom.index for chain in chains[1:] for atom in chain.atoms()]
-atomic_numbers = np.array([atom.element.atomic_number for atom in chains[0].atoms()], dtype=int)
 
-# Make a mixed system with OpenMM-ML using mechanical embedding.
+cutoff = 7.5
+switch_width = 0.2
+model = EMLE(
+    cutoff=cutoff,
+    switch_width=switch_width,
+    dtype=torch.float32,
+    device=torch.device("cpu"),
+)
 
-mm_system = openmm.app.ForceField("amber19-all.xml", "amber19/tip3pfb.xml").createSystem(pdb.topology, nonbondedMethod=openmm.app.PME)
+for periodic in (True, False):
+    # Make a mixed system with OpenMM-ML using mechanical embedding.
 
-for i_force, force in enumerate(mm_system.getForces()):
-    if isinstance(force, openmm.NonbondedForce):
-        charges_mm = np.array([force.getParticleParameters(i)[0].value_in_unit(unit.elementary_charge) for i in mm_atoms])
-        charge_ml = round(sum(force.getParticleParameters(i)[0].value_in_unit(unit.elementary_charge) for i in ml_atoms))
+    mm_force_field = openmm.app.ForceField("amber19-all.xml", "amber19/tip3pfb.xml")
+    mm_system = mm_force_field.createSystem(
+        pdb.topology,
+        nonbondedMethod=openmm.app.PME if periodic else openmm.app.NoCutoff,
+    )
+    ml_system = openmmml.MLPotential("mace-off23-small").createMixedSystem(
+        pdb.topology, mm_system, ml_atoms
+    )
 
-ml_system = openmmml.MLPotential("mace-off23-small").createMixedSystem(pdb.topology, mm_system, ml_atoms)
+    # Zero out the ML charges and compute the ML/MM energy without the electrosttaics.
 
-# Zero out the ML charges (as is necessary when using SIRE).
+    for i_force, force in enumerate(ml_system.getForces()):
+        if isinstance(force, openmm.NonbondedForce):
+            for i in ml_atoms:
+                _, sigma, epsilon = force.getParticleParameters(i)
+                force.setParticleParameters(i, 0, sigma, epsilon)
 
-for i_force, force in enumerate(ml_system.getForces()):
-    if isinstance(force, openmm.NonbondedForce):
-        for i in ml_atoms:
-            _, sigma, epsilon = force.getParticleParameters(i)
-            force.setParticleParameters(i, 0, sigma, epsilon)
+    context = openmm.Context(
+        ml_system,
+        openmm.VerletIntegrator(0.001),
+        openmm.Platform.getPlatform("Reference"),
+    )
+    context.setPositions(pdb.positions)
+    mechanical_energy = (
+        context.getState(getEnergy=True)
+        .getPotentialEnergy()
+        .value_in_unit(unit.kilojoule_per_mole)
+    )
 
-context = openmm.Context(ml_system, openmm.VerletIntegrator(0.001), openmm.Platform.getPlatform("Reference"))
-context.setPositions(pdb.positions)
-context_energy = context.getState(energy=True).getPotentialEnergy()
+    # Get the EMLE electrostatic embedding energy from a Sire QM/MM engine.
 
-# Get the EMLE energy.
+    mols = sr.load(
+        os.path.join(data_dir, "alanine-dipeptide-explicit.prmtop"),
+        os.path.join(data_dir, "alanine-dipeptide-explicit.inpcrd"),
+    )
 
-xyz = np.array(pdb.positions.value_in_unit(unit.angstrom))
-emle = emle.models.EMLE(cutoff=7.5, dtype=torch.float64, device=torch.device("cpu"))
-emle_energy = emle(
-    torch.tensor(atomic_numbers),
-    torch.tensor(charges_mm, dtype=torch.float64),
-    torch.tensor(xyz[ml_atoms], dtype=torch.float64),
-    torch.tensor(xyz[mm_atoms], dtype=torch.float64),
-    torch.tensor(pdb.topology.getPeriodicBoxVectors().value_in_unit(unit.angstrom), dtype=torch.float64),
-    charge_ml,
-    preprocess=True,
-    use_switching_function=True
-).sum().item() * unit.hartree / unit.item
+    qm_mols, engine = sr.qm.emle(
+        mols,
+        ml_atoms,
+        model,
+        cutoff=f"{cutoff}A",
+        neighbour_list_frequency=0,
+        switch_width=switch_width,
+    )
 
-print((context_energy + emle_energy).value_in_unit(unit.kilojoule_per_mole))
+    d = qm_mols.dynamics(
+        timestep="1fs",
+        constraint="none",
+        platform="cpu",
+        qm_engine=engine,
+        lambda_interpolate=1.0,
+        vacuum=not periodic,
+    )
+    sire_context = d._d._omm_mols
+
+    qm_forces = [
+        f for f in sire_context.getSystem().getForces() if "QMForce" in f.getName()
+    ]
+    assert len(qm_forces) == 1, "Could not find the QM force in the OpenMM system"
+    qm_force = qm_forces[0]
+
+    state = sire_context.getState(getEnergy=True, groups={qm_force.getForceGroup()})
+    embedding_energy = state.getPotentialEnergy().value_in_unit(unit.kilojoule_per_mole)
+
+    label = "periodic" if periodic else "non-periodic"
+    print(f"alanine-dipeptide ({label}): {mechanical_energy + embedding_energy}")

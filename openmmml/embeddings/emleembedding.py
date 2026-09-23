@@ -96,13 +96,6 @@ class EMLEEmbedding(Embedding):
         else:
             raise ValueError(f"Unrecognized embedding name {self.name!r} for EMLE (recognized names are emle, emle-engine)")
 
-        # Extract additional options to pass to EMLE.
-
-        precision = args.get("precision", None)
-        alphaMode = args.get("alphaMode", "species")
-        cutoffDistance = args.get("cutoffDistance", 0.75 * unit.nanometer)
-        switchingDistance = args.get("switchingDistance", 0.6 * unit.nanometer)
-
         # Create the new system with ML-ML interactions to be computed by the ML
         # potential removed.
 
@@ -138,10 +131,11 @@ class EMLEEmbedding(Embedding):
             elif isinstance(force, openmm.CustomNonbondedForce):
                 utilities.makeCustomNonbondedExclusions(force, atoms)
 
-        # Create a PythonForce to compute the EMLE interaction.
+        # Determine the device and precision to use.
 
         device = potential._getTorchDevice(args)
 
+        precision = args.get("precision", None)
         if precision is None:
             # This is the default used by the EMLE library if None is given.
             dtype = torch.get_default_dtype()
@@ -151,6 +145,8 @@ class EMLEEmbedding(Embedding):
             dtype = torch.float64
         else:
             raise ValueError(f"Unsupported precision {precision} for the embedding. Supported values are 'single' and 'double'.")
+
+        # Prepare tensors for input to EMLE.
 
         mlAtomSet = set(atoms)
         mmAtomList = sorted(set(range(numAtoms)) - mlAtomSet)
@@ -168,12 +164,49 @@ class EMLEEmbedding(Embedding):
         if not np.isclose(mlChargeRounded, mlCharge):
             raise ValueError(f"Non-integer charge on the ML region {mlCharge} unsupported by EMLE")
 
+        # Determine the cutoff distance and switching fraction to pass.
+
+        if "cutoffDistance" in args:
+            cutoffDistance = args["cutoffDistance"]
+        elif periodic:
+            cutoffDistances = []
+            for force in newSystem.getForces():
+                if isinstance(force, openmm.NonbondedForce) and force.getNonbondedMethod() != openmm.NonbondedForce.NoCutoff:
+                    cutoffDistances.append(force.getCutoffDistance())
+                elif isinstance(force, openmm.CustomNonbondedForce) and force.getNonbondedMethod() != openmm.CustomNonbondedForce.NoCutoff:
+                    cutoffDistances.append(force.getCutoffDistance())
+            if not cutoffDistances or any(cutoff != cutoffDistances[0] for cutoff in cutoffDistances[1:]):
+                raise ValueError("Cannot automatically identify a cutoff distance for EMLE; provide one as cutoffDistance")
+            cutoffDistance = cutoffDistances[0]
+        else:
+            cutoffDistance = 0.9 * unit.nanometer
         emleCutoff = cutoffDistance.value_in_unit(unit.angstrom)
-        emleSwitchWidth = 1 - switchingDistance / cutoffDistance
+
+        if "switchingDistance" in args:
+            emleSwitchWidth = 1 - args["switchingDistance"] / cutoffDistance
+        else:
+            emleSwitchWidth = 0.2
         if not 0 < emleSwitchWidth < 1:
             raise ValueError("Switching distance must be between 0 and cutoff distance")
 
-        model = EMLE(model=modelPath, method="electrostatic", alpha_mode=alphaMode, cutoff=emleCutoff, switch_width=emleSwitchWidth, device=device, dtype=dtype)
+        # Gather additional arguments to pass to EMLE if specified.
+
+        emleArgs = {}
+        if "method" in args:
+            emleMethod = args["method"]
+            if emleMethod == "mm":
+                # This method requires passing MM charges for ML region to EMLE.
+                # We do not try to support it here since it should be equivalent
+                # to OpenMM-ML's existing mechanical embedding:
+                # https://github.com/openmm/openmm-ml/pull/159#discussion_r4079803715
+                raise ValueError("EMLE method \"mm\" not supported")
+            emleArgs["method"] = emleMethod
+        if "alphaMode" in args:
+            emleArgs["alpha_mode"] = args["alphaMode"]
+
+        # Create the EMLE model and a PythonForce to invoke it.
+
+        model = EMLE(model=modelPath, cutoff=emleCutoff, switch_width=emleSwitchWidth, device=device, dtype=dtype, **emleArgs)
         energyScale = (1.0 * unit.hartree / unit.item).value_in_unit(unit.kilojoule_per_mole)
         emleForce = openmm.PythonForce(partial(
             _computeEMLE,
