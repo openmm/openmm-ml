@@ -60,8 +60,8 @@ class EMLEEmbedding(Embedding):
         Parameters
         ----------
         name : str
-            The name of the EMLE model.  `emle` (the only builtin model) uses
-            the standard EMLE model.  `emle-engine` allows you to use a custom
+            The name of the EMLE model.  `emle-1.0` (the only builtin model)
+            uses the standard EMLE model.  `emle` allows you to use a custom
             model supported by the EMLE library.
         """
 
@@ -86,18 +86,21 @@ class EMLEEmbedding(Embedding):
 
         # Get the model path to pass to EMLE.
 
-        if self.name == "emle":
+        if self.name == "emle-1.0":
             modelPath = None
-        elif self.name == "emle-engine":
+        elif self.name == "emle":
             try:
                 modelPath = args["embeddingModelPath"]
             except KeyError:
-                raise ValueError("For the emle-engine embedding method, an embeddingModelPath must be provided")
+                raise ValueError("For the emle embedding method, an embeddingModelPath must be provided")
         else:
-            raise ValueError(f"Unrecognized embedding name {self.name!r} for EMLE (recognized names are emle, emle-engine)")
+            raise ValueError(f"Unrecognized embedding name {self.name!r} for EMLE (recognized names are emle-1.0, emle)")
 
         # Create the new system with ML-ML interactions to be computed by the ML
         # potential removed.
+
+        if utilities.findLinkBonds(topology, atoms):
+            raise NotImplementedError("Bonds crossing the ML-MM boundary with EMLE embedding not yet supported in OpenMM-ML")
 
         periodic = system.usesPeriodicBoundaryConditions()
         newSystem = utilities.removeBonds(system, topology, atoms, True)

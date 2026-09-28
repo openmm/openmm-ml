@@ -32,7 +32,7 @@ class TestEMLEEmbedding:
             pdb.topology,
             mm_system,
             subset,
-            embedding="emle",
+            embedding="emle-1.0",
             interpolate=interpolate,
             cutoffDistance=0.75 * openmm.unit.nanometer,
             switchingDistance=0.6 * openmm.unit.nanometer,
@@ -72,7 +72,7 @@ class TestEMLEEmbedding:
         mm_force_field = openmm.app.ForceField("amber19-all.xml", "amber19/tip3pfb.xml")
         ml_potential = MLPotential("mace-off23-small")
         mm_system = mm_force_field.createSystem(pdb.topology, nonbondedMethod=openmm.app.PME if periodic else openmm.app.NoCutoff)
-        mixed_system = ml_potential.createMixedSystem(pdb.topology, mm_system, subset, embedding="emle")
+        mixed_system = ml_potential.createMixedSystem(pdb.topology, mm_system, subset, embedding="emle-1.0")
         platform = openmm.Platform.getPlatform(platform_int)
         mixed_context = openmm.Context(mixed_system, openmm.VerletIntegrator(0.001), platform)
         mixed_context.setPositions(pdb.positions)
@@ -87,7 +87,7 @@ class TestEMLEEmbedding:
         mm_force_field = openmm.app.ForceField("amber19-all.xml", "amber19/tip3pfb.xml")
         ml_potential = MLPotential("mace-off23-small")
         mm_system = mm_force_field.createSystem(pdb.topology, nonbondedMethod=openmm.app.PME)
-        mixed_system = ml_potential.createMixedSystem(pdb.topology, mm_system, subset, embedding="emle", method=method, alphaMode=mode)
+        mixed_system = ml_potential.createMixedSystem(pdb.topology, mm_system, subset, embedding="emle-1.0", method=method, alphaMode=mode)
         platform = openmm.Platform.getPlatform(platform_int)
         mixed_context = openmm.Context(mixed_system, openmm.VerletIntegrator(0.001), platform)
         mixed_context.setPositions(pdb.positions)
