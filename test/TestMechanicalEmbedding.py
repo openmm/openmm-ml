@@ -224,7 +224,7 @@ class TestMechanicalEmbedding:
         ml_potential = MLPotential("mace-off23-small")
 
         mm_system_ml_mm = mm_force_field.createSystem(topology_ml_mm, constraints=openmm.app.AllBonds)
-        mixed_system = ml_potential.createMixedSystem(topology_ml_mm, mm_system_ml_mm, subset, removeConstraints=remove, embedding="mechanical")
+        mixed_system = ml_potential.createMixedSystem(topology_ml_mm, mm_system_ml_mm, iter(subset), removeConstraints=remove, embedding="mechanical")
 
         mm_constraints = set()
         for index in range(mm_system_ml_mm.getNumConstraints()):
