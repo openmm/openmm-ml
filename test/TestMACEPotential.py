@@ -18,18 +18,28 @@ class TestMACE:
 
     # Reference energies are calculated with MACECalculator
     refEnergy = {
-        'mace-off23-small': -713468.6327560507,
-        'mace-off23-medium': -713468.0563706581,
-        'mace-off23-large': -713467.7476380612,
-        'mace-off24-medium': -713467.9394350434,
-        'mace-mpa-0-medium': -8839.299589829867,
-        'mace-omat-0-small': -8726.63865431241,
-        'mace-omat-0-medium': -8679.026847088873,
-        'mace-omol-0-extra-large': -712903.4934289698,
-        'mace-les-off-small': -713467.9354591698,
-        'mace-polar-1-small': -712903.1710073923,
-        'mace-polar-1-medium': -712903.4536792638,
-        'mace-polar-1-large': -712903.7834631138,
+        ('toluene', 'mace-off23-small'): -713468.6327560507,
+        ('toluene', 'mace-off23-medium'): -713468.0563706581,
+        ('toluene', 'mace-off23-large'): -713467.7476380612,
+        ('toluene', 'mace-off24-medium'): -713467.9394350434,
+        ('toluene', 'mace-mpa-0-medium'): -8839.299589829867,
+        ('toluene', 'mace-omat-0-small'): -8726.63865431241,
+        ('toluene', 'mace-omat-0-medium'): -8679.026847088873,
+        ('toluene', 'mace-omol-0-extra-large'): -712903.4934289698,
+        ('toluene', 'mace-les-off-small'): -713467.9354591698,
+        ('toluene', 'mace-polar-1-small'): -712903.1710073923,
+        ('toluene', 'mace-polar-1-medium'): -712903.4536792638,
+        ('toluene', 'mace-polar-1-large'): -712903.7834631138,
+        ('water', 'mace-off23-small'): -43380916.59098946,
+        ('water', 'mace-off23-medium'): -43380967.434479,
+        ('water', 'mace-off24-medium'): -43380781.370446146,
+        ('water', 'mace-mpa-0-medium'): -304547.4706910844,
+        ('water', 'mace-omat-0-small'): -303539.62768940086,
+        ('water', 'mace-omat-0-medium'): -304131.2834723455,
+        ('water', 'mace-les-off-small'): -43381222.49001855,
+        ('water', 'mace-polar-1-small'): -43355279.95728109,
+        ('water', 'mace-polar-1-medium'): -43355301.06344749,
+        ('alanine-dipeptide', 'mace-off23-small'): -151723354.26015,
     }
 
     @pytest.mark.parametrize("model", ['mace-off23-small', 'mace-off23-medium', 'mace-off23-large', 'mace-off24-medium',
@@ -47,16 +57,31 @@ class TestMACE:
         context = mm.Context(system, mm.VerletIntegrator(0.001), platform)
         context.setPositions(pdb.getPositions(asNumpy=True))
         energyML = context.getState(energy=True).getPotentialEnergy().value_in_unit(unit.kilojoules_per_mole)
-        assert np.isclose(self.refEnergy[model], energyML, rtol=1e-6)
+        assert np.isclose(self.refEnergy['toluene', model], energyML, rtol=1e-6)
 
-    def testPeriodicSystem(self, platform_int):
-        pdb = app.PDBFile(os.path.join(test_data_dir, "alanine-dipeptide", "alanine-dipeptide-explicit.pdb"))
-        potential = MLPotential("mace-off23-small")
+    @pytest.mark.parametrize(["test", "model"], [
+        ('water', 'mace-off23-small'),
+        ('water', 'mace-off23-medium'),
+        ('water', 'mace-off24-medium'),
+        ('water', 'mace-mpa-0-medium'),
+        ('water', 'mace-omat-0-small'),
+        ('water', 'mace-omat-0-medium'),
+        ('water', 'mace-les-off-small'),
+        ('water', 'mace-polar-1-small'),
+        ('water', 'mace-polar-1-medium'),
+        ('alanine-dipeptide', 'mace-off23-small'),
+    ])
+    def testPeriodicSystem(self, platform_int, test, model):
+        if test == 'water':
+            pdb = app.PDBFile(os.path.join(test_data_dir, "water", "water.pdb"))
+        else:
+            pdb = app.PDBFile(os.path.join(test_data_dir, "alanine-dipeptide", "alanine-dipeptide-explicit.pdb"))
+        potential = MLPotential(model)
         system = potential.createSystem(pdb.topology, returnEnergyType='energy')
         platform = mm.Platform.getPlatform(platform_int)
         context = mm.Context(system, mm.VerletIntegrator(0.001), platform)
         positionsOriginal = pdb.getPositions(asNumpy=True)
-        energyRef = -151723354.26015 # Calculated with MACECalculator
+        energyRef = self.refEnergy[test, model]
         for i in range(3):
             positions = positionsOriginal + i * 0.9 * unit.nanometers # translate molecule to test PBC
             context.setPositions(positions)
@@ -103,5 +128,5 @@ class TestMACE:
         # The energy should be physically meaningful under both precisions
         assert np.isfinite(energyML), \
             "Energy is not finite under precision {}".format(precision)
-        assert np.isclose(energyML, self.refEnergy['mace-off23-small'], rtol=1e-6),\
+        assert np.isclose(energyML, self.refEnergy['toluene', 'mace-off23-small'], rtol=1e-6),\
             "Energy is not close to reference under precision {}".format(precision)
