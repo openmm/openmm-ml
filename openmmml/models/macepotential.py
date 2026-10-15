@@ -271,7 +271,7 @@ def _computeMACE(state, model, ptr, node_attrs, batch, pbc, returnEnergyType, ch
         "shifts": torch.tensor(shifts, dtype=dtype, device=ptr.device),
         "cell": cellTensor,
         "rcell": 2 * torch.pi * torch.linalg.inv(cellTensor.mT),
-        "volume": torch.linalg.det(cellTensor),
+        "volume": torch.linalg.det(cellTensor).reshape(1),
         "total_charge": charge,
         "total_spin": multiplicity,
         "external_field": torch.zeros((1, 3), dtype=dtype, device=ptr.device),
