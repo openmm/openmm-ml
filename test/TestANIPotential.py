@@ -30,6 +30,24 @@ class TestANIPotential:
         positions = context.getState(positions=True).getPositions(asNumpy=True).value_in_unit(unit.nanometer)
         assert np.all(np.isfinite(positions))
 
+    def testForces(self, platform_int):
+        # The forces must be the gradient of the energy, in kJ/mol/nm.
+        pdb = app.PDBFile(os.path.join(test_data_dir, 'toluene', 'toluene.pdb'))
+        potential = MLPotential('ani2x')
+        system = potential.createSystem(pdb.topology)
+        platform = mm.Platform.getPlatform(platform_int)
+        context = mm.Context(system, mm.VerletIntegrator(0.001), platform)
+        context.setPositions(pdb.positions)
+        forces = context.getState(forces=True).getForces(asNumpy=True).value_in_unit(unit.kilojoules_per_mole/unit.nanometer)
+        import torch
+        model = torchani.models.ANI2x(periodic_table_index=True).double()
+        species = torch.tensor([[atom.element.atomic_number for atom in pdb.topology.atoms()]])
+        positions = torch.tensor(pdb.positions.value_in_unit(unit.angstrom), dtype=torch.float64).unsqueeze(0)
+        positions.requires_grad_(True)
+        model((species, positions)).energies.backward()
+        expected = (-positions.grad[0]*torchani.units.hartree2kjoulemol(1)*10).numpy()
+        assert np.allclose(forces, expected, rtol=1e-3, atol=0.1)
+
     def testCreateMixedSystem(self, platform_int):
         pdb = app.PDBFile(os.path.join(test_data_dir, 'alanine-dipeptide', 'alanine-dipeptide-explicit.pdb'))
         ff = app.ForceField('amber14-all.xml', 'amber14/tip3pfb.xml')

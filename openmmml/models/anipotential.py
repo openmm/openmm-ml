@@ -132,5 +132,6 @@ def _computeANI(state, model, species, pbc):
     _, energy = model((species, positions), cell=boxvectors, pbc=pbc)
     energy *= torchani.units.hartree2kjoulemol(1)
     energy.backward()
-    forces = (-positions.grad[0]).detach().cpu().numpy()
+    # The gradient is in kJ/mol/A; OpenMM expects kJ/mol/nm.
+    forces = (-10.0*positions.grad[0]).detach().cpu().numpy()
     return energy, forces
