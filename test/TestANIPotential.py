@@ -18,6 +18,44 @@ test_data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
 
 @pytest.mark.parametrize("platform_int", list(platform_ints))
 class TestANIPotential:
+    # Reference energies and forces are calculated with torchani
+    refEnergyForce = {
+        "ani1ccx": (-712031.1282839536, 300.5402526855469, -1029.3165283203125, 735.8590087890625),
+        "ani2x": (-712776.6753449162, 286.697021484375, -1141.9473876953125, 861.21484375),
+        "alanine-dipeptide": (-151555903.3193362, 216.771484375, 234.1872100830078, 40.271663665771484),
+    }
+
+    @pytest.mark.parametrize("model", ["ani1ccx", "ani2x"])
+    def testEnergyForce(self, platform_int, model):
+        pdb = app.PDBFile(os.path.join(test_data_dir, "toluene", "toluene.pdb"))
+        potential = MLPotential(model)
+        system = potential.createSystem(pdb.topology)
+        platform = mm.Platform.getPlatform(platform_int)
+        context = mm.Context(system, mm.VerletIntegrator(0.001), platform)
+        context.setPositions(pdb.getPositions(asNumpy=True))
+        state = context.getState(energy=True, forces=True)
+        energyML = state.getPotentialEnergy().value_in_unit(unit.kilojoules_per_mole)
+        forceML = state.getForces(asNumpy=True)[0].value_in_unit(unit.kilojoules_per_mole / unit.nanometers)
+        assert np.isclose(energyML, self.refEnergyForce[model][0], rtol=1e-5)
+        assert np.allclose(forceML, self.refEnergyForce[model][1:], rtol=1e-5)
+
+    def testPeriodicSystem(self, platform_int):
+        pdb = app.PDBFile(os.path.join(test_data_dir, "alanine-dipeptide", "alanine-dipeptide-explicit.pdb"))
+        potential = MLPotential("ani2x")
+        system = potential.createSystem(pdb.topology)
+        platform = mm.Platform.getPlatform(platform_int)
+        context = mm.Context(system, mm.VerletIntegrator(0.001), platform)
+        positionsOriginal = pdb.getPositions(asNumpy=True)
+        energyRef, *forceRef = self.refEnergyForce["alanine-dipeptide"]
+        for i in range(3):
+            positions = positionsOriginal + i * 0.9 * unit.nanometers # translate molecule to test PBC
+            context.setPositions(positions)
+            state = context.getState(energy=True, forces=True)
+            energyML = state.getPotentialEnergy().value_in_unit(unit.kilojoules_per_mole)
+            forceML = state.getForces(asNumpy=True)[0].value_in_unit(unit.kilojoules_per_mole / unit.nanometers)
+            assert np.isclose(energyML, energyRef, rtol=1e-5)
+            assert np.allclose(forceML, forceRef, rtol=1e-3)
+
     def testSimulate(self, platform_int):
         pdb = app.PDBFile(os.path.join(test_data_dir, 'toluene', 'toluene.pdb'))
         potential = MLPotential('ani2x')

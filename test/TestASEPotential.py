@@ -25,8 +25,11 @@ class TestASEPotential:
         platform = mm.Platform.getPlatform(platform_int)
         context = mm.Context(system, mm.VerletIntegrator(0.001), platform)
         context.setPositions(pdb.getPositions(asNumpy=True))
-        energyML = context.getState(energy=True).getPotentialEnergy().value_in_unit(unit.kilojoules_per_mole)
-        assert np.isclose(-713468.6327560507, energyML, rtol=1e-6)
+        state = context.getState(energy=True, forces=True)
+        energyML = state.getPotentialEnergy().value_in_unit(unit.kilojoules_per_mole)
+        forceML = state.getForces(asNumpy=True)[0].value_in_unit(unit.kilojoules_per_mole / unit.nanometers)
+        assert np.isclose(energyML, -713468.6327560507, rtol=1e-6)
+        assert np.allclose(forceML, (392.8416697946288, -1080.40146230381, 801.0889295457797), rtol=1e-4)
 
     def testAtoms(self, platform_int):
         from mace.calculators.foundations_models import mace_off
@@ -40,8 +43,11 @@ class TestASEPotential:
         platform = mm.Platform.getPlatform(platform_int)
         context = mm.Context(system, mm.VerletIntegrator(0.001), platform)
         context.setPositions(pdb.getPositions(asNumpy=True))
-        energyML = context.getState(energy=True).getPotentialEnergy().value_in_unit(unit.kilojoules_per_mole)
-        assert np.isclose(-713468.6327560507, energyML, rtol=1e-6)
+        state = context.getState(energy=True, forces=True)
+        energyML = state.getPotentialEnergy().value_in_unit(unit.kilojoules_per_mole)
+        forceML = state.getForces(asNumpy=True)[0].value_in_unit(unit.kilojoules_per_mole / unit.nanometers)
+        assert np.isclose(energyML, -713468.6327560507, rtol=1e-6)
+        assert np.allclose(forceML, (392.8416697946288, -1080.40146230381, 801.0889295457797), rtol=1e-4)
 
     def testPeriodicSystem(self, platform_int):
         from mace.calculators.foundations_models import mace_off
@@ -53,11 +59,15 @@ class TestASEPotential:
         context = mm.Context(system, mm.VerletIntegrator(0.001), platform)
         positionsOriginal = pdb.getPositions(asNumpy=True)
         energyRef = -151723354.26015 # Calculated with MACECalculator
+        forceRef = (64.17566706460377, 311.2795919353534, 4.956503694474798)
         for i in range(3):
             positions = positionsOriginal + i * 0.9 * unit.nanometers # translate molecule to test PBC
             context.setPositions(positions)
-            energyML = context.getState(getEnergy=True).getPotentialEnergy().value_in_unit(unit.kilojoules_per_mole)
-            assert np.isclose(energyRef, energyML, rtol=1e-5)
+            state = context.getState(energy=True, forces=True)
+            energyML = state.getPotentialEnergy().value_in_unit(unit.kilojoules_per_mole)
+            forceML = state.getForces(asNumpy=True)[0].value_in_unit(unit.kilojoules_per_mole / unit.nanometers)
+            assert np.isclose(energyML, energyRef, rtol=1e-5)
+            assert np.allclose(forceML, forceRef, rtol=1e-3, atol=2e-2)
 
     def testCreateMixedSystem(self, platform_int):
         from mace.calculators.foundations_models import mace_off
