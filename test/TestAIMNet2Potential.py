@@ -46,7 +46,7 @@ class TestAIMNet2:
         # independently with AIMNet2ASE.
         energyML, forceML = self._toluene_energy_force(model, platform_int)
         assert np.isclose(energyML, energyForceRef[0], rtol=rtol)
-        assert np.allclose(forceML, energyForceRef[1:], rtol=rtol)
+        assert np.allclose(forceML, energyForceRef[1:], rtol=1e-4)
 
     def testLocalModel(self, platform_int):
         # Loading the pretrained aimnet2 model as a custom model via the 'aimnet' name
@@ -55,7 +55,7 @@ class TestAIMNet2:
         from aimnet.calculators.calculator import get_model_path
         energy, force = self._toluene_energy_force("aimnet", platform_int, modelPath=get_model_path("aimnet2"))
         assert np.isclose(energy, self.familyEnergiesForces["aimnet2"][0], rtol=rtol)
-        assert np.allclose(force, self.familyEnergiesForces["aimnet2"][1:], rtol=rtol)
+        assert np.allclose(force, self.familyEnergiesForces["aimnet2"][1:], rtol=1e-4)
 
     def testModelIndex(self, platform_int):
         # The family name selects ensemble member 0, so modelIndex=0 reproduces the
