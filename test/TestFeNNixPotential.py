@@ -23,11 +23,16 @@ class TestFeNNix:
         platform = mm.Platform.getPlatform(platform_int)
         context = mm.Context(system, mm.VerletIntegrator(0.001), platform)
         context.setPositions(pdb.getPositions(asNumpy=True))
-        energyML = context.getState(energy=True).getPotentialEnergy().value_in_unit(unit.kilojoules_per_mole)
+        state = context.getState(energy=True, forces=True)
+        energyML = state.getPotentialEnergy().value_in_unit(unit.kilojoules_per_mole)
+        forceML = state.getForces(asNumpy=True)[0].value_in_unit(unit.kilojoules_per_mole / unit.nanometers)
         # Reference energies are calculated with FENNIXCalculator
-        refEnergy = {"fennix-bio1-small": -5.200859421605564,
-                     "fennix-bio1-medium": -2.3028696986989523}
-        assert np.isclose(refEnergy[model], energyML, rtol=1e-5)
+        refEnergyForce = {
+            "fennix-bio1-small": (-5.200859421605385, 299.72070579954755, -1076.031725516552, 809.5794246552945),
+            "fennix-bio1-medium": (-2.302869698698856, 295.7830852973222, -1083.4857057173424, 812.9159403689472),
+        }
+        assert np.isclose(refEnergyForce[model][0], energyML, rtol=1e-5)
+        assert np.allclose(refEnergyForce[model][1:], forceML, rtol=1e-5)
 
     @pytest.mark.parametrize("model", ["fennix-bio1-small", "fennix-bio1-medium", "fennix-bio1-small-finetune-ions", "fennix-bio1-medium-finetune-ions"])
     def testChargedSystem(self, platform_int, model):
@@ -37,13 +42,18 @@ class TestFeNNix:
         platform = mm.Platform.getPlatform(platform_int)
         context = mm.Context(system, mm.VerletIntegrator(0.001), platform)
         context.setPositions(pdb.getPositions(asNumpy=True))
-        energyML = context.getState(energy=True).getPotentialEnergy().value_in_unit(unit.kilojoules_per_mole)
+        state = context.getState(energy=True, forces=True)
+        energyML = state.getPotentialEnergy().value_in_unit(unit.kilojoules_per_mole)
+        forceML = state.getForces(asNumpy=True)[0].value_in_unit(unit.kilojoules_per_mole / unit.nanometers)
         # Reference energies are calculated with FENNIXCalculator
-        refEnergy = {"fennix-bio1-small": -599.6015619222414,
-                     "fennix-bio1-medium": -1109.2088074881058,
-                     "fennix-bio1-small-finetune-ions": -560.4959154537397,
-                     "fennix-bio1-medium-finetune-ions": -1068.5316655421075}
-        assert np.isclose(refEnergy[model], energyML, rtol=1e-5)
+        refEnergyForce = {
+            "fennix-bio1-small": (-599.6015619222411, 86.6464241697355, 593.573689946066, -628.1270324646932),
+            "fennix-bio1-medium": (-1109.208807488106, 373.11371113240824, 743.1925118675491, -906.6656704330803),
+            "fennix-bio1-small-finetune-ions": (-560.4959154537403, 191.59096961826992, 591.9506414086745, -684.621698012006),
+            "fennix-bio1-medium-finetune-ions": (-1068.531665542107, 350.80378391292976, 743.0344742389011, -897.2904849616576),
+        }
+        assert np.isclose(refEnergyForce[model][0], energyML, rtol=1e-5)
+        assert np.allclose(refEnergyForce[model][1:], forceML, rtol=1e-5)
 
     def testPeriodicSystem(self, platform_int):
         pdb = app.PDBFile(os.path.join(test_data_dir, "alanine-dipeptide", "alanine-dipeptide-explicit.pdb"))
@@ -53,11 +63,15 @@ class TestFeNNix:
         context = mm.Context(system, mm.VerletIntegrator(0.001), platform)
         positionsOriginal = pdb.getPositions(asNumpy=True)
         energyRef = -68462.99055925063 # Calculated with FENNIXCalculator
+        forceRef = (47.30085923811878, 375.1738740617789, -5.698304842660946)
         for i in range(3):
             positions = positionsOriginal + i * 0.9 * unit.nanometers # translate molecule to test PBC
             context.setPositions(positions)
-            energyML = context.getState(getEnergy=True).getPotentialEnergy().value_in_unit(unit.kilojoules_per_mole)
-            assert np.isclose(energyRef, energyML, rtol=1e-5)
+            state = context.getState(energy=True, forces=True)
+            energyML = state.getPotentialEnergy().value_in_unit(unit.kilojoules_per_mole)
+            forceML = state.getForces(asNumpy=True)[0].value_in_unit(unit.kilojoules_per_mole / unit.nanometers)
+            assert np.isclose(energyML, energyRef, rtol=1e-5)
+            assert np.allclose(forceML, forceRef, rtol=1e-3, atol=1e-2)
 
     def testCreateMixedSystem(self, platform_int):
         prmtop = app.AmberPrmtopFile(os.path.join(test_data_dir, "toluene", "toluene-explicit.prm7"))
