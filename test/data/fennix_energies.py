@@ -1,4 +1,4 @@
-# This script computes reference energies for the FeNNix models.
+# This script computes reference energies and forces for the FeNNix models.
 # You must download them from https://github.com/FeNNol-tools/FeNNol-PMC/tree/main/FENNIX-BIO1
 # (the OpenMM-ML wrapper does this automatically but the FeNNol library used here does not).
 

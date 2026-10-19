@@ -1,4 +1,4 @@
-# This script computes reference energies for the MACE foundation models.
+# This script computes reference energies and forces for the MACE foundation models.
 
 import ase.io
 from mace.calculators.foundations_models import mace_off, mace_mp, mace_omol, mace_polar

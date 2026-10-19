@@ -1,4 +1,4 @@
-# This script computes reference energies for ANI models.
+# This script computes reference energies and forces for ANI models.
 
 import ase.io
 import torchani.models

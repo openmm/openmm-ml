@@ -26,13 +26,13 @@ class TestFeNNix:
         state = context.getState(energy=True, forces=True)
         energyML = state.getPotentialEnergy().value_in_unit(unit.kilojoules_per_mole)
         forceML = state.getForces(asNumpy=True)[0].value_in_unit(unit.kilojoules_per_mole / unit.nanometers)
-        # Reference energies are calculated with FENNIXCalculator
+        # Reference energies and forces are calculated with FENNIXCalculator
         refEnergyForce = {
             "fennix-bio1-small": (-5.200859421605385, 299.72070579954755, -1076.031725516552, 809.5794246552945),
             "fennix-bio1-medium": (-2.302869698698856, 295.7830852973222, -1083.4857057173424, 812.9159403689472),
         }
-        assert np.isclose(refEnergyForce[model][0], energyML, rtol=1e-5)
-        assert np.allclose(refEnergyForce[model][1:], forceML, rtol=1e-5)
+        assert np.isclose(energyML, refEnergyForce[model][0], rtol=1e-5)
+        assert np.allclose(forceML, refEnergyForce[model][1:], rtol=1e-5)
 
     @pytest.mark.parametrize("model", ["fennix-bio1-small", "fennix-bio1-medium", "fennix-bio1-small-finetune-ions", "fennix-bio1-medium-finetune-ions"])
     def testChargedSystem(self, platform_int, model):
@@ -45,15 +45,15 @@ class TestFeNNix:
         state = context.getState(energy=True, forces=True)
         energyML = state.getPotentialEnergy().value_in_unit(unit.kilojoules_per_mole)
         forceML = state.getForces(asNumpy=True)[0].value_in_unit(unit.kilojoules_per_mole / unit.nanometers)
-        # Reference energies are calculated with FENNIXCalculator
+        # Reference energies and forces are calculated with FENNIXCalculator
         refEnergyForce = {
             "fennix-bio1-small": (-599.6015619222411, 86.6464241697355, 593.573689946066, -628.1270324646932),
             "fennix-bio1-medium": (-1109.208807488106, 373.11371113240824, 743.1925118675491, -906.6656704330803),
             "fennix-bio1-small-finetune-ions": (-560.4959154537403, 191.59096961826992, 591.9506414086745, -684.621698012006),
             "fennix-bio1-medium-finetune-ions": (-1068.531665542107, 350.80378391292976, 743.0344742389011, -897.2904849616576),
         }
-        assert np.isclose(refEnergyForce[model][0], energyML, rtol=1e-5)
-        assert np.allclose(refEnergyForce[model][1:], forceML, rtol=1e-5)
+        assert np.isclose(energyML, refEnergyForce[model][0], rtol=1e-5)
+        assert np.allclose(forceML, refEnergyForce[model][1:], rtol=1e-5)
 
     def testPeriodicSystem(self, platform_int):
         pdb = app.PDBFile(os.path.join(test_data_dir, "alanine-dipeptide", "alanine-dipeptide-explicit.pdb"))

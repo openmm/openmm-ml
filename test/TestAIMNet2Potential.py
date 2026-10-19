@@ -42,7 +42,7 @@ class TestAIMNet2:
 
     @pytest.mark.parametrize("model,energyForceRef", list(familyEnergiesForces.items()))
     def testCreateModels(self, platform_int, model, energyForceRef):
-        # Each pretrained family reproduces the reference energy computed
+        # Each pretrained family reproduces the reference energy and force computed
         # independently with AIMNet2ASE.
         energyML, forceML = self._toluene_energy_force(model, platform_int)
         assert np.isclose(energyML, energyForceRef[0], rtol=rtol)
@@ -50,7 +50,7 @@ class TestAIMNet2:
 
     def testLocalModel(self, platform_int):
         # Loading the pretrained aimnet2 model as a custom model via the 'aimnet' name
-        # and an explicit modelPath gives the same energy as loading it by the 'aimnet2'
+        # and an explicit modelPath gives the same energy and force as loading it by the 'aimnet2'
         # name (tested in testCreateModels).
         from aimnet.calculators.calculator import get_model_path
         energy, force = self._toluene_energy_force("aimnet", platform_int, modelPath=get_model_path("aimnet2"))
@@ -102,8 +102,8 @@ class TestAIMNet2:
             state = context.getState(energy=True, forces=True)
             energyML = state.getPotentialEnergy().value_in_unit(unit.kilojoules_per_mole)
             forceML = state.getForces(asNumpy=True)[0].value_in_unit(unit.kilojoules_per_mole / unit.nanometers)
-            assert np.isclose(energyRef, energyML, rtol=rtol)
-            assert np.allclose(forceRef, forceML, rtol=1e-3)
+            assert np.isclose(energyML, energyRef, rtol=rtol)
+            assert np.allclose(forceML, forceRef, rtol=1e-3)
 
     def testCreateMixedSystem(self, platform_int):
         prmtop = app.AmberPrmtopFile(os.path.join(test_data_dir, "toluene", "toluene-explicit.prm7"))

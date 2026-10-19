@@ -59,8 +59,8 @@ class TestMACE:
         state = context.getState(energy=True, forces=True)
         energyML = state.getPotentialEnergy().value_in_unit(unit.kilojoules_per_mole)
         forceML = state.getForces(asNumpy=True)[0].value_in_unit(unit.kilojoules_per_mole / unit.nanometers)
-        assert np.isclose(self.refEnergyForce['toluene', model][0], energyML, rtol=1e-6)
-        assert np.allclose(self.refEnergyForce['toluene', model][1:], forceML, rtol=1e-3, atol=2e-2)
+        assert np.isclose(energyML, self.refEnergyForce['toluene', model][0], rtol=1e-6)
+        assert np.allclose(forceML, self.refEnergyForce['toluene', model][1:], rtol=1e-3, atol=2e-2)
 
     @pytest.mark.parametrize(["test", "model"], [
         ('water', 'mace-off23-small'),
@@ -91,8 +91,8 @@ class TestMACE:
             state = context.getState(energy=True, forces=True)
             energyML = state.getPotentialEnergy().value_in_unit(unit.kilojoules_per_mole)
             forceML = state.getForces(asNumpy=True)[0].value_in_unit(unit.kilojoules_per_mole / unit.nanometers)
-            assert np.isclose(energyRef, energyML, rtol=1e-5)
-            assert np.allclose(forceRef, forceML, rtol=1e-3, atol=2e-2)
+            assert np.isclose(energyML, energyRef, rtol=1e-5)
+            assert np.allclose(forceML, forceRef, rtol=1e-3, atol=2e-2)
 
     def testCreateMixedSystem(self, platform_int):
         prmtop = app.AmberPrmtopFile(os.path.join(test_data_dir, "toluene", "toluene-explicit.prm7"))

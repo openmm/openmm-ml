@@ -1,4 +1,4 @@
-# This script computes reference energies for the AceFF foundation models.
+# This script computes reference energies and forces for the AceFF foundation models.
 
 import ase.io
 from huggingface_hub import hf_hub_download

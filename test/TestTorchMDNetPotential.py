@@ -36,8 +36,8 @@ class TestTorchMDNetPotential:
             'aceff-1.1': (-6976.570722280534, 335.0249328613281, -1081.064697265625, 788.1050415039062),
             'aceff-2.0': (-362.4612980692178, 387.4684753417969, -1090.3306884765625, 799.9639892578125),
         }
-        assert np.isclose(refEnergyForce[model][0], energyML, rtol=1e-4)
-        assert np.allclose(refEnergyForce[model][1:], forceML, rtol=1e-4)
+        assert np.isclose(energyML, refEnergyForce[model][0], rtol=1e-4)
+        assert np.allclose(forceML, refEnergyForce[model][1:], rtol=1e-4)
 
     def testPeriodicSystem(self, platform_int):
         pdb = app.PDBFile(os.path.join(test_data_dir, "alanine-dipeptide", "alanine-dipeptide-explicit.pdb"))
@@ -54,8 +54,8 @@ class TestTorchMDNetPotential:
             state = context.getState(energy=True, forces=True)
             energyML = state.getPotentialEnergy().value_in_unit(unit.kilojoules_per_mole)
             forceML = state.getForces(asNumpy=True)[0].value_in_unit(unit.kilojoules_per_mole / unit.nanometers)
-            assert np.isclose(energyRef, energyML, rtol=1e-4)
-            assert np.allclose(forceRef, forceML, rtol=1e-3)
+            assert np.isclose(energyML, energyRef, rtol=1e-4)
+            assert np.allclose(forceML, forceRef, rtol=1e-3)
 
     def testCreateMixedSystem(self, platform_int):
         prmtop = app.AmberPrmtopFile(os.path.join(test_data_dir, "toluene", "toluene-explicit.prm7"))

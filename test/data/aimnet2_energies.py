@@ -1,4 +1,4 @@
-# This script computes reference energies for AIMNet2.
+# This script computes reference energies and forces for AIMNet2.
 
 import ase.io
 from aimnet.calculators import AIMNet2ASE
