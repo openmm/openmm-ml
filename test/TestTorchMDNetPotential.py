@@ -15,12 +15,12 @@ test_data_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data")
 
 @pytest.mark.parametrize("platform_int", list(platform_ints))
 class TestTorchMDNetPotential:
-    @pytest.mark.parametrize("model", ['aceff-1.0', 'aceff-1.1', 'aceff-2.0'])
+    @pytest.mark.parametrize("model", ['aceff-1.0', 'aceff-1.1', 'aceff-2.0', 'aceff-2-omol'])
     def testCreatePureMLSystem(self, platform_int, model):
         pdb = app.PDBFile(os.path.join(test_data_dir, "toluene", "toluene.pdb"))
         potential = MLPotential(model)
         kwargs = {'returnEnergyType': 'energy'}
-        if model == 'aceff-2.0':
+        if model in ('aceff-2.0', 'aceff-2-omol'):
             kwargs['coulomb_cutoff'] = 1.2
             kwargs['useCoulombCutoff'] = True
         system = potential.createSystem(pdb.topology, **kwargs)
@@ -35,6 +35,7 @@ class TestTorchMDNetPotential:
             'aceff-1.0': (-6974.531656957799, 330.2444763183594, -1078.1910400390625, 784.6386108398438),
             'aceff-1.1': (-6976.570722280534, 335.0249328613281, -1081.064697265625, 788.1050415039062),
             'aceff-2.0': (-362.4612980692178, 387.4684753417969, -1090.3306884765625, 799.9639892578125),
+            'aceff-2-omol': (-112.98626811365253, 325.1884765625, -1086.428955078125, 793.2885131835938),
         }
         assert np.isclose(energyML, refEnergyForce[model][0], rtol=1e-4)
         assert np.allclose(forceML, refEnergyForce[model][1:], rtol=1e-4)
