@@ -14,6 +14,8 @@ atoms.calc = TMDNETCalculator(model_file=hf_hub_download(repo_id='Acellera/AceFF
 results['aceff-1.1'] = (atoms.get_potential_energy(), *atoms.get_forces()[0])
 atoms.calc = TMDNETCalculator(model_file=hf_hub_download(repo_id='Acellera/AceFF-2.0', filename='aceff_v2.0.ckpt'), coulomb_cutoff=12)
 results['aceff-2.0'] = (atoms.get_potential_energy(), *atoms.get_forces()[0])
+atoms.calc = TMDNETCalculator(model_file=hf_hub_download(repo_id='Acellera/AceFF-2-OMOL', filename='aceff_v2_omol.ckpt'), coulomb_cutoff=12)
+results['aceff-2-omol'] = (atoms.get_potential_energy(), *atoms.get_forces()[0])
 atoms = ase.io.read('alanine-dipeptide/alanine-dipeptide-explicit.pdb')
 atoms.info = {'charge':0.0}
 atoms.calc = TMDNETCalculator(model_file=hf_hub_download(repo_id='Acellera/AceFF-2.0', filename='aceff_v2.0.ckpt'), coulomb_cutoff=12)
