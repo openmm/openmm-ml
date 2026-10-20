@@ -409,6 +409,28 @@ To avoid double-counting bonded interactions between the MM force field and ML p
 - All MM angles and torsions contained completely within the ML region, but accounting for the presence of any link
   atoms and bonds leaving the region.
 
+### EMLE
+
+OpenMM-ML supports the EMLE (Electrostatic Machine Learning Embedding) method through an interface with the
+[EMLE-Engine](https://chemle.github.io/emle-engine/) package.  The following embedding names are supported.
+
+| Name | Model |
+| --- | --- |
+| `emle-1.0` | Default pretrained [EMLE](https://github.com/chemle/emle-models) model. |
+| `emle` | Use a custom EMLE-Engine model loaded from a local file. |
+
+The following extra keyword arguments are recognized by the embedding:
+
+| Name | Model |
+| --- | --- |
+| `embeddingModelPath` | Path to a local model, only used (and required) if `emle` is given as the embedding name. |
+| `method` | The desired EMLE embedding method: can be `'electrostatic'` (default), `'mechanical'`, or `'nonpol'`.  See the [EMLE-Engine API documentation](https://chemle.github.io/emle-engine/api/index_models.html#emle.models.EMLE) for more details. |
+| `alphaMode` | The mode for computing atomic polarizabilities: can be `'fixed'` (default) or `'flexible'`.  See the [EMLE-Engine API documentation](https://chemle.github.io/emle-engine/api/index_models.html#emle.models.EMLE) for more details. |
+| `cutoffDistance` | The cutoff distance for EMLE.  Must be an `openmm.unit.Quantity` with distance units.  Beyond this distance from the ML region, MM atoms will not have an effect.  The default value is 0.9 nm for non-periodic systems, and the MM nonbonded cutoff for periodic systems. |
+| `switchingDistance` | The switching distance for EMLE.  Must be an `openmm.unit.Quantity` with distance units.  Between this distance and the cutoff distance from the ML region, the effect of MM atoms will go smoothly to zero.  The default value is 80% of the cutoff distance. |
+| `precision` | `'single'` for single precision or `'double'` for double precision. |
+| `device` | The PyTorch device to perform calculations on, either a `torch.device` object or a string (such as `'cuda'` or `'cpu'`.)  If omitted, a device is chosen automatically. |
+
 ## Other Packages
 
 OpenMM-ML is based on a plugin architecture, allowing other packages to provide their own interfaces to it.  The
