@@ -1,0 +1,3 @@
+pytest
+metatomic-torch >= 0.1.19,<0.2
+git+https://github.com/metatensor/lj-test@a1464af694debe1314ad58881c6c82f2569e22b2
