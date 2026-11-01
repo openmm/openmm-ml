@@ -507,8 +507,9 @@ class MACEPotentialImpl(MLPotentialImpl):
         in reciprocal space.  ``mmFieldMethod='direct'`` (the default) sums over
         the MM charges explicitly, whose memory grows with the box volume times
         the number of MM atoms; ``mmFieldMethod='PME'`` spreads them onto a mesh
-        instead, which keeps large MM environments affordable and requires the
-        torch-pme package.
+        instead, which keeps large MM environments affordable and needs the
+        optional torch-pme package (only for ``mmFieldMethod='PME'``; the
+        default direct sum does not import it).
 
         ``mmChargeWidth`` (Angstrom) sets the Gaussian width of the MM charges
         as the model sees them, both in the field that polarises the ML density
