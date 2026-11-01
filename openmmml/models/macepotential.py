@@ -74,12 +74,16 @@ def _prepareExternalSources(model, data, computeForce: bool):
     return {"positions": positions, "features": features, "batch": batch}
 
 
-def _enablePolarMACEExternalSources(model, mmFieldMethod: str = "direct"):
+def _enablePolarMACEExternalSources(model, mmFieldMethod: str = "direct", mmChargeWidth=None):
     """Wrap PolarMACE with dynamic MM electrostatic sources in eager mode."""
     import torch
 
     if mmFieldMethod not in ("direct", "PME"):
         raise ValueError(f"Unsupported mmFieldMethod '{mmFieldMethod}'; use 'direct' or 'PME'.")
+    if mmChargeWidth is not None:
+        mmChargeWidth = float(mmChargeWidth)
+        if mmChargeWidth < 0.0:
+            raise ValueError("mmChargeWidth must be a non-negative width in Angstrom, or None.")
 
     if getattr(model, "supports_external_electrostatics", False):
         return model
@@ -112,10 +116,11 @@ def _enablePolarMACEExternalSources(model, mmFieldMethod: str = "direct"):
             # physical external potential.
             external_scale=0.5,
             method=mmFieldMethod,
+            source_width=mmChargeWidth,
         )
     )
     model.coulomb_energy = GTOElectrostaticExternalSourceEnergy.from_energy(
-        model.coulomb_energy
+        model.coulomb_energy, external_width=mmChargeWidth
     )
 
     class PolarMACEExternalSources(torch.nn.Module):
@@ -178,11 +183,13 @@ def _enablePolarMACEExternalSources(model, mmFieldMethod: str = "direct"):
                 "external_positions": external["positions"],
                 "external_batch": external["batch"],
             }
-            # PME reads the cell the k-vectors were built from.
+            # PME reads the cell the k-vectors were built from, and the
+            # mmChargeWidth correction needs it for periodic images.
+            cell = data["cell"].view(-1, 3, 3)
             self.model.electric_potential_descriptor.set_external_sources(
-                **externalKwargs, cell=data["cell"].view(-1, 3, 3)
+                **externalKwargs, cell=cell
             )
-            self.model.coulomb_energy.set_external_sources(**externalKwargs)
+            self.model.coulomb_energy.set_external_sources(**externalKwargs, cell=cell)
             try:
                 result = self.model(
                     data,
@@ -348,7 +355,9 @@ class MACEPotentialImpl(MLPotentialImpl):
         else:
             raise ValueError(f"Unsupported MACE model: {self.name}")
         if model.__class__.__name__ == "PolarMACE":
-            model = _enablePolarMACEExternalSources(model, args.get("mmFieldMethod", "direct"))
+            model = _enablePolarMACEExternalSources(
+                model, args.get("mmFieldMethod", "direct"), args.get("mmChargeWidth", None)
+            )
         return model, device
 
     def addForces(
@@ -499,6 +508,15 @@ class MACEPotentialImpl(MLPotentialImpl):
         the number of MM atoms; ``mmFieldMethod='PME'`` spreads them onto a mesh
         instead, which keeps large MM environments affordable and requires the
         torch-pme package.
+
+        ``mmChargeWidth`` (Angstrom) sets the Gaussian width of the MM charges
+        as the model sees them, both in the field that polarises the ML density
+        and in the ML/MM Coulomb energy.  By default (``None``) they carry the
+        model's own density smearing width, exactly like ML atoms; ``0.0``
+        makes them point charges and intermediate values narrower Gaussians.
+        The reciprocal-space evaluation is unchanged; the difference is added
+        as a short-ranged real-space correction over MM atoms near the ML
+        region, including periodic images.
         """
 
         if embedding != "electrostatic":

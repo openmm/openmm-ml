@@ -52,6 +52,30 @@ class TestPolarMACEEmbedding:
         pdb, mixed_system = createSystems(periodic)
         assert np.isclose(computeEnergy(pdb, mixed_system, platform_int), expected_energies[periodic], rtol=0, atol=atol)
 
+    def testChargeWidth(self, platform_int):
+        # The model's own density width reproduces the default; point charges
+        # change the energy; direct and PME agree for point charges too.
+        pdb, default_system = createSystems(True)
+        _, same_system = createSystems(True, mmChargeWidth=1.5)  # mace-polar-1-small density width
+        _, point_system = createSystems(True, mmChargeWidth=0.0)
+        e_default = computeEnergy(pdb, default_system, platform_int)
+        # the correction is skipped entirely at the density width (CPU PME noise ~1e-4)
+        assert np.isclose(computeEnergy(pdb, same_system, platform_int), e_default, rtol=0, atol=1e-3)
+        e_point = computeEnergy(pdb, point_system, platform_int)
+        # point charges shift the ML/MM electrostatic energy by ~4 kJ/mol on this box; the
+        # density response cancels most of it in the total (about -0.2 kJ/mol), still well
+        # above the platform noise
+        assert abs(e_point - e_default) > 0.1
+        if platform_int == 0:
+            pytest.importorskip("torchpme", reason="torch-pme is not installed")
+            _, point_pme = createSystems(True, mmChargeWidth=0.0, mmFieldMethod="PME")
+            assert np.isclose(computeEnergy(pdb, point_pme, platform_int), e_point, rtol=0, atol=atol)
+            forces_direct = computeForces(pdb, point_system, platform_int)
+            forces_pme = computeForces(pdb, point_pme, platform_int)
+            assert np.allclose(forces_pme, forces_direct, rtol=0, atol=force_atol)
+        with pytest.raises(ValueError):
+            createSystems(True, mmChargeWidth=-1.0)
+
     def testPME(self, platform_int):
         # The PME evaluation of the MM field must reproduce the direct sum, in the
         # energy and in the forces on both the ML and the MM atoms.
