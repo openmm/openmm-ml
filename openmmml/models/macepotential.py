@@ -28,6 +28,7 @@ DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
 USE OR OTHER DEALINGS IN THE SOFTWARE.
 """
+import math
 import openmm
 from openmm import unit
 from openmmml.mlpotential import MLPotential, MLPotentialImpl, MLPotentialImplFactory
@@ -82,8 +83,8 @@ def _enablePolarMACEExternalSources(model, mmFieldMethod: str = "direct", mmChar
         raise ValueError(f"Unsupported mmFieldMethod '{mmFieldMethod}'; use 'direct' or 'PME'.")
     if mmChargeWidth is not None:
         mmChargeWidth = float(mmChargeWidth)
-        if mmChargeWidth < 0.0:
-            raise ValueError("mmChargeWidth must be a non-negative width in Angstrom, or None.")
+        if not (math.isfinite(mmChargeWidth) and mmChargeWidth >= 0.0):
+            raise ValueError("mmChargeWidth must be a finite, non-negative width in Angstrom, or None.")
 
     if getattr(model, "supports_external_electrostatics", False):
         return model
@@ -514,9 +515,10 @@ class MACEPotentialImpl(MLPotentialImpl):
         and in the ML/MM Coulomb energy.  By default (``None``) they carry the
         model's own density smearing width, exactly like ML atoms; ``0.0``
         makes them point charges and intermediate values narrower Gaussians.
-        The reciprocal-space evaluation is unchanged; the difference is added
-        as a short-ranged real-space correction over MM atoms near the ML
-        region, including periodic images.
+        For periodic evaluations the reciprocal-space part is unchanged and the
+        difference is added as a short-ranged real-space correction over MM
+        atoms near the ML region, including periodic images; non-periodic
+        evaluations use the requested width directly.
         """
 
         if embedding != "electrostatic":

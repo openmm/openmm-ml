@@ -73,8 +73,9 @@ class TestPolarMACEEmbedding:
             forces_direct = computeForces(pdb, point_system, platform_int)
             forces_pme = computeForces(pdb, point_pme, platform_int)
             assert np.allclose(forces_pme, forces_direct, rtol=0, atol=force_atol)
-        with pytest.raises(ValueError):
-            createSystems(True, mmChargeWidth=-1.0)
+        for bad in (-1.0, float("nan"), float("inf")):
+            with pytest.raises(ValueError):
+                createSystems(True, mmChargeWidth=bad)
 
     def testPME(self, platform_int):
         # The PME evaluation of the MM field must reproduce the direct sum, in the
