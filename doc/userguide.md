@@ -410,6 +410,58 @@ To avoid double-counting bonded interactions between the MM force field and ML p
 - All MM angles and torsions contained completely within the ML region, but accounting for the presence of any link
   atoms and bonds leaving the region.
 
+### Electrostatic Embedding (PolarMACE)
+
+The `mace-polar-1-*` models (and PolarMACE checkpoints trained with the same architecture) support electrostatic
+embedding, selected with `embedding="electrostatic"`.  The MM positions and charges are passed to the model every step:
+the MM field enters PolarMACE's electrostatic descriptor and polarises the ML charge density, the ML/MM electrostatic
+energy is computed by the model, and the back-reaction forces on the MM atoms are returned.  The classical ML/MM
+Coulomb interactions are removed from the `NonbondedForce` (Lennard-Jones and MM/MM terms remain); this requires the
+external-source blocks of `graph_longrange` (branch `external_field`).
+
+```python
+from openmm import unit
+from openmm.app import PDBFile, ForceField, Simulation, PME
+from openmm import LangevinMiddleIntegrator
+from openmmml import MLPotential
+
+pdb = PDBFile("system.pdb")
+ff = ForceField("amber14-all.xml", "amber14/tip3pfb.xml")
+mm = ff.createSystem(pdb.topology, nonbondedMethod=PME)
+
+mlAtoms = list(range(120))                     # the ML (QM) region
+potential = MLPotential("mace-polar-1-small")
+assert "electrostatic" in potential.getSupportedEmbeddings()
+
+mixed = potential.createMixedSystem(
+    pdb.topology, mm, mlAtoms,
+    embedding="electrostatic",
+    charge=0, multiplicity=1,                  # total charge and multiplicity of the ML region
+    mmFieldMethod="direct",                    # or "PME" (needs the optional torch-pme package)
+    mmChargeWidth=None,                        # Angstrom; None = model density width, 0.0 = point charges
+)
+
+sim = Simulation(pdb.topology, mixed,
+                 LangevinMiddleIntegrator(300*unit.kelvin, 1/unit.picosecond, 1*unit.femtosecond))
+sim.context.setPositions(pdb.positions)
+sim.step(1000)
+```
+
+Bonds crossing the ML/MM boundary are capped with hydrogen link atoms placed along the bond each step (pass
+`linkRecords=[(mlAtom, mmAtom, distance), ...]`; `linkChargeScheme="dz1"` removes the MM boundary atom's charge from
+the field seen by the model, which is the default).
+
+Two options control how the MM charges are evaluated:
+
+- `mmFieldMethod` selects how the periodic MM field is summed.  `"direct"` (default) sums over the MM charges explicitly,
+  whose memory grows with the box volume times the number of MM atoms; `"PME"` spreads them onto a mesh, which keeps
+  large MM environments affordable and needs the optional `torch-pme` package.
+- `mmChargeWidth` sets the Gaussian width of the MM charges as the model sees them, in the field and in the ML/MM
+  energy.  By default (`None`) they carry the model's own density smearing width, exactly like ML atoms; `0.0` makes them
+  point charges and intermediate values narrower Gaussians.  The width only changes a short-ranged real-space term near
+  the ML region, so it is cheap; whether a narrower width improves the embedding is a validation question for the model
+  at hand, not a given.
+
 ## Other Packages
 
 OpenMM-ML is based on a plugin architecture, allowing other packages to provide their own interfaces to it.  The
