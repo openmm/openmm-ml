@@ -227,6 +227,7 @@ Pretrained and your own local models are supported.
 | `aceff-1.0` | Pretrained [AceFF-1.0](https://huggingface.co/Acellera/AceFF-1.0) [TensorNet](https://doi.org/10.48550/arXiv.2306.06482) model. |
 | `aceff-1.1` | Pretrained [AceFF-1.1](https://huggingface.co/Acellera/AceFF-1.0) [TensorNet](https://doi.org/10.48550/arXiv.2306.06482) model. |
 | `aceff-2.0` | Pretrained [AceFF-2.0](https://huggingface.co/Acellera/AceFF-2.0) [TensorNet2](https://arxiv.org/abs/2601.00581) model. |
+| `aceff-2-omol` | Pretrained [AceFF-2-OMOL](https://huggingface.co/Acellera/AceFF-2-OMOL) [TensorNet2](https://arxiv.org/abs/2601.00581) model trained on [OMol25](https://arxiv.org/abs/2505.08762). |
 | `torchmdnet` |  Custom TorchMD-Net models specified with the `modelPath` argument. |
 
 When creating TorchMD-Net models, the following keyword arguments to the `MLPotential` constructor are supported.
