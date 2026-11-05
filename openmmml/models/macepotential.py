@@ -303,6 +303,9 @@ class MACEPotentialImpl(MLPotentialImpl):
         # Create the new system with ML-ML interactions to be computed by the ML
         # potential removed.
 
+        if utilities.findLinkBonds(topology, atoms):
+            raise NotImplementedError("Bonds crossing the ML-MM boundary with MACE electrostatic embedding not yet supported in OpenMM-ML")
+
         periodic = system.usesPeriodicBoundaryConditions()
         newSystem = utilities.removeBonds(system, topology, atoms, True)
         numAtoms = newSystem.getNumParticles()
@@ -403,7 +406,6 @@ def _computeMACE(state, model, ptr, node_attrs, batch, pbc, returnEnergyType, ch
         allForces[mlIndices] = forces
         allForces[mmIndices] = mmForces
         forces = allForces
-    print("This is Evan's code")
     return energy, forces
 
 
@@ -415,7 +417,7 @@ class ElectrostaticEmbeddingMACE(torch.nn.Module):
             from graph_longrange.external_source_features import GTOElectrostaticExternalSourceFeatures
             from graph_longrange.external_source_energy import GTOElectrostaticExternalSourceEnergy
         except ImportError as e:
-            raise ImportError(f"Failed to import graph_longrange with error: {e}. Install graph_longrange with 'pip install git+https://github.com/WillBaldwin0/graph_electrostatics.git@v0.4.4'.")
+            raise ImportError(f"Failed to import graph_longrange with error: {e}. Install graph_longrange with 'pip install git+https://github.com/WillBaldwin0/graph_electrostatics.git@external_field'.")
 
         # Wrap parts of the model to prepare to receive external features.
 
