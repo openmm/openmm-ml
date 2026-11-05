@@ -75,6 +75,10 @@ class TestMACE:
         ('alanine-dipeptide', 'mace-off23-small'),
     ])
     def testPeriodicSystem(self, platform_int, test, model):
+        if 'mace-les' in model:
+            pytest.importorskip("les", reason="les is not installed")
+        if 'mace-polar' in model:
+            pytest.importorskip("graph_longrange", reason="graph_electrostatics is not installed")
         if test == 'water':
             pdb = app.PDBFile(os.path.join(test_data_dir, "water", "water.pdb"))
         else:
@@ -136,3 +140,45 @@ class TestMACE:
             "Energy is not finite under precision {}".format(precision)
         assert np.isclose(energyML, self.refEnergyForce['toluene', 'mace-off23-small'][0], rtol=1e-6),\
             "Energy is not close to reference under precision {}".format(precision)
+
+    # TODO: interpolation does not work yet since there is a bug in MACE and/or graph_longrange
+    @pytest.mark.parametrize("interpolate", (False,))
+    @pytest.mark.parametrize("periodic", (False, True))
+    def testElectrostaticEmbedding(self, platform_int, interpolate, periodic):
+        pytest.importorskip("graph_longrange", reason="graph_electrostatics is not installed")
+        
+        pdb = app.PDBFile(os.path.join(test_data_dir, "alanine-dipeptide", "alanine-dipeptide-explicit.pdb"))
+        if not periodic:
+            pdb.topology.setPeriodicBoxVectors(None)
+
+        subset = [atom.index for atom in pdb.topology.atoms() if atom.residue.chain.index == 0]
+
+        mm_force_field = app.ForceField("amber19-all.xml", "amber19/tip3pfb.xml")
+        ml_potential = MLPotential("mace-polar-1-small")
+        mm_system = mm_force_field.createSystem(pdb.topology, nonbondedMethod=app.PME if periodic else app.NoCutoff)
+        mixed_system = ml_potential.createMixedSystem(pdb.topology, mm_system, subset, embedding="electrostatic", precision="double", interpolate=interpolate)
+
+        platform = mm.Platform.getPlatform(platform_int)
+        mm_context = mm.Context(mm_system, mm.VerletIntegrator(0.001), platform)
+        mixed_context = mm.Context(mixed_system, mm.VerletIntegrator(0.001), platform)
+
+        mm_context.setPositions(pdb.positions)
+        mixed_context.setPositions(pdb.positions)
+
+        mm_energy = mm_context.getState(energy=True).getPotentialEnergy().value_in_unit(mm.unit.kilojoule_per_mole)
+
+        # Reference energies are computed with MACE
+        if periodic:
+            expected_energy = -1326502.4336419594
+        else:
+            expected_energy = -1326354.2727021126
+        atol = 0.05
+
+        if interpolate:
+            for lambda_value in (0.0, 0.25, 0.5, 0.75, 1.0):
+                mixed_context.setParameter("lambda_interpolate", lambda_value)
+                mixed_energy = mixed_context.getState(energy=True).getPotentialEnergy().value_in_unit(mm.unit.kilojoule_per_mole)
+                assert np.isclose(mixed_energy, expected_energy * lambda_value + mm_energy * (1 - lambda_value), rtol=0, atol=atol)
+        else:
+            mixed_energy = mixed_context.getState(energy=True).getPotentialEnergy().value_in_unit(unit.kilojoule_per_mole)
+            assert np.isclose(mixed_energy, expected_energy, rtol=0, atol=atol)
