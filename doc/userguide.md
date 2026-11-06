@@ -228,6 +228,7 @@ Pretrained and your own local models are supported.
 | `aceff-1.1` | Pretrained [AceFF-1.1](https://huggingface.co/Acellera/AceFF-1.0) [TensorNet](https://doi.org/10.48550/arXiv.2306.06482) model. |
 | `aceff-2.0` | Pretrained [AceFF-2.0](https://huggingface.co/Acellera/AceFF-2.0) [TensorNet2](https://arxiv.org/abs/2601.00581) model. |
 | `aceff-2-omol` | Pretrained [AceFF-2-OMOL](https://huggingface.co/Acellera/AceFF-2-OMOL) [TensorNet2](https://arxiv.org/abs/2601.00581) model trained on [OMol25](https://arxiv.org/abs/2505.08762). |
+| `aceff-2-resp-1` | Pretrained [AceFF-2-RESP-1](https://huggingface.co/Acellera/AceFF-2-RESP-1) [TensorNet2](https://arxiv.org/abs/2601.00581) model that also predicts RESP partial charges.  Supports the electrostatic embedding (see below). |
 | `torchmdnet` |  Custom TorchMD-Net models specified with the `modelPath` argument. |
 
 When creating TorchMD-Net models, the following keyword arguments to the `MLPotential` constructor are supported.
@@ -260,6 +261,29 @@ You can override this with the `useCoulombCutoff` argument if you know which beh
 ```python
 system = potential.createSystem(topology, useCoulombCutoff=False)
 ```
+
+#### Electrostatic embedding
+
+`aceff-2-resp-1` supports an electrostatic embedding for mixed ML/MM systems
+([Farr and De Fabritiis](https://arxiv.org/abs/2608.13355), following
+[Semelak et al.](https://arxiv.org/abs/2409.17852)):
+
+```python
+system = potential.createMixedSystem(topology, mmSystem, mlAtoms, embedding='electrostatic')
+```
+
+The MM System must contain one `NonbondedForce` using PME, and the ML region must not be bonded to the
+MM region.  The System is built as for the mechanical embedding, and the ML force adds two terms between
+ML atoms and MM atoms within the PME cutoff: a Coulomb correction that replaces the force field charges
+of the ML atoms with the charges predicted by the model (PME direct space only), and the induction
+energy of the ML atoms polarized by the field of the MM charges.  These extra arguments to
+`createMixedSystem()` are supported.
+
+| Argument | Description |
+| --- | --- |
+| `epsilon` | Dielectric constant screening the induction energy.  Default is 2.0. |
+| `polarizabilities` | A dict mapping elements (an `Element`, element symbol, or atomic number) to atomic polarizabilities, either as Quantities with units of volume or as floats in nm^3.  These override the defaults (ANI-MBIS values for H, C, N, O, F, S, and Cl). |
+| `tholeDamping` | If specified, the field is Thole damped with this parameter (e.g. 1.3).  Damping keeps the induction term stable in alchemical transformations such as the Alchemical Transfer Method, and is not needed for normal simulations.  Default is no damping. |
 
 ### FeNNix
 
