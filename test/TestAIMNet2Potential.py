@@ -52,7 +52,7 @@ class TestAIMNet2:
         # Loading the pretrained aimnet2 model as a custom model via the 'aimnet' name
         # and an explicit modelPath gives the same energy and force as loading it by the 'aimnet2'
         # name (tested in testCreateModels).
-        from aimnet.calculators.calculator import get_model_path
+        from aimnet.calculators.model_registry import get_model_path
         energy, force = self._toluene_energy_force("aimnet", platform_int, modelPath=get_model_path("aimnet2"))
         assert np.isclose(energy, self.familyEnergiesForces["aimnet2"][0], rtol=rtol)
         assert np.allclose(force, self.familyEnergiesForces["aimnet2"][1:], rtol=1e-4)
@@ -70,7 +70,7 @@ class TestAIMNet2:
     def testInvalidModelIndex(self, platform_int):
         # An out-of-range member and a non-default modelIndex on a local model both raise
         # ValueError.
-        from aimnet.calculators.calculator import get_model_path
+        from aimnet.calculators.model_registry import get_model_path
         with pytest.raises(ValueError):
             self._toluene_energy_force("aimnet2", platform_int, modelIndex=4)
         with pytest.raises(ValueError):

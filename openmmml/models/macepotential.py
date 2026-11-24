@@ -226,6 +226,7 @@ class MACEPotentialImpl(MLPotentialImpl):
         compute = partial(_computeMACE,
                           model=model,
                           ptr=torch.tensor([0, nodeAttrs.shape[0]], dtype=torch.long, device=device, requires_grad=False),
+                          atomicNumbers=torch.tensor(atomicNumbers, dtype=torch.long, device=device, requires_grad=False),
                           node_attrs=nodeAttrs.to(dtype),
                           batch=torch.zeros(nodeAttrs.shape[0], dtype=torch.long, device=device, requires_grad=False),
                           pbc=torch.tensor([periodic, periodic, periodic], dtype=torch.bool, device=device, requires_grad=False),
@@ -247,7 +248,7 @@ class MACEPotentialImpl(MLPotentialImpl):
         return None
 
 
-def _computeMACE(state, model, ptr, node_attrs, batch, pbc, returnEnergyType, charge, multiplicity, periodic):
+def _computeMACE(state, model, ptr, atomicNumbers, node_attrs, batch, pbc, returnEnergyType, charge, multiplicity, periodic):
     import torch
     from mace.data.neighborhood import get_neighborhood
     energyScale = 96.4853
@@ -263,6 +264,7 @@ def _computeMACE(state, model, ptr, node_attrs, batch, pbc, returnEnergyType, ch
     cellTensor = torch.tensor(cell, dtype=dtype, device=ptr.device)
     inputDict = {
         "ptr": ptr,
+        "atomic_numbers": atomicNumbers,
         "node_attrs": node_attrs,
         "batch": batch,
         "pbc": pbc,

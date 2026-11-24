@@ -40,7 +40,7 @@ extensions = [
     "sphinx.ext.autosummary",
     "sphinx.ext.autodoc",
     "sphinx.ext.napoleon",
-    "m2r2",
+    "myst_parser",
 ]
 
 autosummary_generate = True

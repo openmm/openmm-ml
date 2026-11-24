@@ -75,6 +75,10 @@ class TestMACE:
         ('alanine-dipeptide', 'mace-off23-small'),
     ])
     def testPeriodicSystem(self, platform_int, test, model):
+        if 'mace-les' in model:
+            pytest.importorskip("les", reason="les is not installed")
+        if 'mace-polar' in model:
+            pytest.importorskip("graph_longrange", reason="graph_electrostatics is not installed")
         if test == 'water':
             pdb = app.PDBFile(os.path.join(test_data_dir, "water", "water.pdb"))
         else:

@@ -5,6 +5,9 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    branches:
+      - main
   release:
     types: [published]
 
@@ -49,7 +52,7 @@ jobs:
           make html
 
       - name: Checkout gh-pages
-        if: success()
+        if: success() && (github.event_name == 'push' || github.event_name == 'release')
         uses: actions/checkout@v2
         with:
           ref: gh-pages
@@ -72,7 +75,7 @@ jobs:
           ln -s ${{  github.ref_name }} deploy/latest
 
       - name: Deploy to GitHub Pages
-        if: success()
+        if: success() && (github.event_name == 'push' || github.event_name == 'release')
         uses: crazy-max/ghaction-github-pages@v2
         with:
           target_branch: gh-pages
