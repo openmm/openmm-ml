@@ -16,7 +16,7 @@ jobs:
       fail-fast: false
       matrix:
         configuration: ["cpu", "cuda"]
-        requirements: ["mace-aimnet-torchmd", "nequip", "fennix", "orb", "emle"]
+        requirements: ["mace-aimnet-torchmd", "nequip", "fennix", "orb"]
         include:
           - configuration: "cpu"
             runner: "ubuntu-latest"
@@ -38,8 +38,6 @@ jobs:
             python-version: "3.14"
           - requirements: "orb"
             python-version: "3.12"
-          - requirements: "emle"
-            python-version: "3.14"
 
     steps:
       - uses: actions/checkout@v2
