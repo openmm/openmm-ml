@@ -73,6 +73,7 @@ setup(
             'mace-polar-1-small = openmmml.models.macepotential:MACEPotentialImplFactory',
             'mace-polar-1-medium = openmmml.models.macepotential:MACEPotentialImplFactory',
             'mace-polar-1-large = openmmml.models.macepotential:MACEPotentialImplFactory',
+            'metatomic = openmmml.models.metatomicpotential:MetatomicPotentialImplFactory',
             'nequip = openmmml.models.nequippotential:NequIPPotentialImplFactory',
             'orb-v3-conservative-inf-omat = openmmml.models.orbpotential:OrbPotentialImplFactory',
             'orb-v3-conservative-omol = openmmml.models.orbpotential:OrbPotentialImplFactory',
