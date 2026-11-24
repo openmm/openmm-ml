@@ -75,6 +75,8 @@ class TorchMDNetPotentialImpl(MLPotentialImpl):
 
     Pretained AceFF models can be used directly:
 
+    >>> potential = MLPotential('aceff-2-omol')
+
     >>> potential = MLPotential('aceff-2.0')
 
     >>> potential = MLPotential('aceff-1.1')
@@ -99,6 +101,7 @@ class TorchMDNetPotentialImpl(MLPotentialImpl):
         'aceff-1.0': ('Acellera/AceFF-1.0', 'aceff_v1.0.ckpt', False),
         'aceff-1.1': ('Acellera/AceFF-1.1', 'aceff_v1.1.ckpt', False),
         'aceff-2.0': ('Acellera/AceFF-2.0', 'aceff_v2.0.ckpt', False),
+        'aceff-2-omol': ('Acellera/AceFF-2-OMOL', 'aceff_v2_omol.ckpt', False),
     }
 
     def __init__(self, 
@@ -114,7 +117,7 @@ class TorchMDNetPotentialImpl(MLPotentialImpl):
         ----------
         name : str
             The name of the model.
-            'torchmdnet' for a local model file, or pretrained models are available: 'aceff-1.0' or 'aceff-1.1'. 
+            'torchmdnet' for a local model file, or pretrained models are available: 'aceff-1.0', 'aceff-1.1', 'aceff-2.0' or 'aceff-2-omol'. 
         modelPath : str, optional
             The path to the locally trained torchmdnet model if ``name`` is 'torchmdnet'.
         lengthScale : float
@@ -182,7 +185,6 @@ class TorchMDNetPotentialImpl(MLPotentialImpl):
             max_num_neighbors = min(args.get('max_num_neighbors', 64), numbers.shape[0]),
             coulomb_cutoff = cutoff if use_coulomb_cutoff else None,
             static_shapes = True,
-            check_errors = False
         ).to(device)
         for parameter in model.parameters():
             parameter.requires_grad = False

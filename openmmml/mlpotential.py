@@ -417,7 +417,7 @@ class MLPotential(object):
 
         if removeConstraints:
             # Remove all constraints with both atoms in the ML subset.
-            atomSet = set(atoms)
+            atomSet = set(atomList)
             constraintsToRemove = []
             for constraint in range(system.getNumConstraints()):
                 p1, p2, _ = system.getConstraintParameters(constraint)

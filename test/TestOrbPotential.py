@@ -26,13 +26,16 @@ class TestOrb:
         platform = mm.Platform.getPlatform(platform_int)
         context = mm.Context(system, mm.VerletIntegrator(0.001), platform)
         context.setPositions(pdb.getPositions(asNumpy=True))
-        energyML = context.getState(energy=True).getPotentialEnergy().value_in_unit(unit.kilojoules_per_mole)
-        # Reference energies are calculated with ORBCalculator
-        refEnergy = {
-            "orb-v3-conservative-inf-omat": -8909.64071834225,
-            "orb-v3-conservative-omol": -712903.547903221,
+        state = context.getState(energy=True, forces=True)
+        energyML = state.getPotentialEnergy().value_in_unit(unit.kilojoules_per_mole)
+        forceML = state.getForces(asNumpy=True)[0].value_in_unit(unit.kilojoules_per_mole / unit.nanometers)
+        # Reference energies and forces are calculated with ORBCalculator
+        refEnergyForce = {
+            "orb-v3-conservative-inf-omat": (-8909.641310692567, 355.35455322265625, -923.048095703125, 633.6530151367188),
+            "orb-v3-conservative-omol": (-712903.5334912803, 316.78900146484375, -1087.6705322265625, 792.4768676757812),
         }
-        assert np.isclose(refEnergy[model], energyML, rtol=5e-5)
+        assert np.isclose(energyML, refEnergyForce[model][0], rtol=5e-5)
+        assert np.allclose(forceML, refEnergyForce[model][1:], rtol=5e-5)
 
     def testOverrideChargeSpin(self, platform_int):
         pdb = app.PDBFile(os.path.join(test_data_dir, "toluene", "toluene.pdb"))
@@ -41,9 +44,13 @@ class TestOrb:
         platform = mm.Platform.getPlatform(platform_int)
         context = mm.Context(system, mm.VerletIntegrator(0.001), platform)
         context.setPositions(pdb.getPositions(asNumpy=True))
-        energyML = context.getState(energy=True).getPotentialEnergy().value_in_unit(unit.kilojoules_per_mole)
-        energyRef = -712892.4765882556 # Calculated with ORBCalculator
-        assert np.isclose(energyRef, energyML, rtol=5e-5)
+        state = context.getState(energy=True, forces=True)
+        energyML = state.getPotentialEnergy().value_in_unit(unit.kilojoules_per_mole)
+        forceML = state.getForces(asNumpy=True)[0].value_in_unit(unit.kilojoules_per_mole / unit.nanometers)
+        energyRef = -712892.4688761996 # Calculated with ORBCalculator
+        forceRef = (285.60791015625, -1072.5303955078125, 778.6162109375)
+        assert np.isclose(energyML, energyRef, rtol=5e-5)
+        assert np.allclose(forceML, forceRef, rtol=5e-5)
 
     def testPeriodicSystem(self, platform_int):
         pdb = app.PDBFile(os.path.join(test_data_dir, "alanine-dipeptide", "alanine-dipeptide-explicit.pdb"))
@@ -52,12 +59,16 @@ class TestOrb:
         platform = mm.Platform.getPlatform(platform_int)
         context = mm.Context(system, mm.VerletIntegrator(0.001), platform)
         positionsOriginal = pdb.getPositions(asNumpy=True)
-        energyRef = -151632910.67503712 # Calculated with ORBCalculator
+        energyRef = -151632916.38147554 # Calculated with ORBCalculator
+        forceRef = (115.93722534179688, 279.9417724609375, 19.49188804626465)
         for i in range(3):
             positions = positionsOriginal + i * 0.9 * unit.nanometers # translate molecule to test PBC
             context.setPositions(positions)
-            energyML = context.getState(getEnergy=True).getPotentialEnergy().value_in_unit(unit.kilojoules_per_mole)
-            assert np.isclose(energyRef, energyML, rtol=5e-5)
+            state = context.getState(energy=True, forces=True)
+            energyML = state.getPotentialEnergy().value_in_unit(unit.kilojoules_per_mole)
+            forceML = state.getForces(asNumpy=True)[0].value_in_unit(unit.kilojoules_per_mole / unit.nanometers)
+            assert np.isclose(energyML, energyRef, rtol=5e-5)
+            assert np.allclose(forceML, forceRef, rtol=1e-3, atol=2e-2)
 
     def testCreateMixedSystem(self, platform_int):
         prmtop = app.AmberPrmtopFile(os.path.join(test_data_dir, "toluene", "toluene-explicit.prm7"))
