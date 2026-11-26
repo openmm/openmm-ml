@@ -306,6 +306,34 @@ When using Orb models, the following extra keyword arguments to `createSystem()`
 | `multiplicity` | The spin multiplicity of the system.  If omitted, it is assumed to be 1. |
 | `device` | The PyTorch device to perform calculations on, either a `torch.device` object or a string (such as `'cuda'` or `'cpu'`.)  If omitted, a device is chosen automatically. |
 
+### SO3LR
+
+OpenMM-ML supports the pretrained [SO3LR](https://doi.org/10.1021/jacs.5c09558) and
+[SO3LR Tauri](https://doi.org/10.48550/arXiv.2611.06237) models from the
+[so3lr](https://github.com/general-molecular-simulations/so3lr) package.  The following model names are supported.
+
+| Name | Model |
+| --- | --- |
+| `so3lr-tauri-s-2606`<br>`so3lr-tauri-m-2606`<br>`so3lr-tauri-l-2606` | Pretrained SO3LR Tauri models.  Covers H to At |
+| `so3lr` | Pretrained SO3LR model.  Covers H, C, N, O, F, P, S, Cl |
+
+When creating SO3LR models, the following keyword arguments to the `MLPotential` constructor are supported.
+
+| Argument | Description |
+| --- | --- |
+| `kspace` | The method for long-range electrostatics and dispersion in periodic systems: `'pme'`, `'ewald'`, or `'none'` for real space only.  The default is `'pme'`, except for `so3lr`, which uses `'none'`. |
+| `kspaceSmearing` | The k-space smearing in nanometers.  If omitted, it is 0.2 nm. |
+| `kspaceSpacing` | The k-space mesh spacing in nanometers.  If omitted, it is 0.155 nm. |
+
+When using SO3LR models, the following extra keyword arguments to `createSystem()` and `createMixedSystem()` are supported.
+
+| Argument | Description |
+| --- | --- |
+| `charge` | The total charge of the system.  If omitted, it is assumed to be 0. |
+| `multiplicity` | The spin multiplicity of the system.  If omitted, it is assumed to be 1. |
+| `precision` | The numerical precision: `'mixed'` (the default), `'single'`, or `'double'`. |
+| `lrCutoff` | The real-space cutoff for electrostatics and dispersion in nanometers.  If omitted, it is chosen automatically. |
+
 ### ASE
 
 OpenMM-ML can use an arbitrary [ASE](https://ase-lib.org/) Calculator to perform calculations.  This allows it to use
