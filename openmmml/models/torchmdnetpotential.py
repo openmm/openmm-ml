@@ -33,6 +33,23 @@ from openmm import unit
 from openmmml.mlpotential import MLPotentialImpl, MLPotentialImplFactory
 from typing import Iterable, Optional
 import numpy as np
+try:
+    import torch
+except ImportError:
+    # PyTorch is only needed when a TorchMD-Net potential is used.
+    torch = None
+
+# 1/(4 pi eps0) in kJ/mol nm / e^2, as used by OpenMM.
+ONE_4PI_EPS0 = 138.935456
+
+# Default atomic polarizabilities for the electrostatic embedding's induction term,
+# keyed by atomic number, in bohr^3.  These are the values used with ANI-MBIS in
+# J. A. Semelak et al., arXiv:2409.17852 (https://arxiv.org/abs/2409.17852).
+BOHR3_TO_NM3 = 0.052917721**3
+DEFAULT_POLARIZABILITIES = {1: 3.08, 6: 11.30, 7: 7.40, 8: 5.30, 9: 3.74, 16: 19.40, 17: 14.60}
+
+# Default dielectric constant screening the induction energy.
+DEFAULT_EPSILON = 2.0
 
 class TorchMDNetPotentialImplFactory(MLPotentialImplFactory):
     """This is the factory that creates TorchMDNetPotentialImpl objects."""
@@ -75,6 +92,8 @@ class TorchMDNetPotentialImpl(MLPotentialImpl):
 
     Pretained AceFF models can be used directly:
 
+    >>> potential = MLPotential('aceff-2-resp-1')
+
     >>> potential = MLPotential('aceff-2-omol')
 
     >>> potential = MLPotential('aceff-2.0')
@@ -82,6 +101,49 @@ class TorchMDNetPotentialImpl(MLPotentialImpl):
     >>> potential = MLPotential('aceff-1.1')
 
     >>> potential = MLPotential('aceff-1.0')
+
+    Electrostatic embedding
+    -----------------------
+    'aceff-2-resp-1' also predicts per-atom RESP charges and supports an electrostatic
+    embedding for mixed ML/MM systems:
+
+    >>> system = potential.createMixedSystem(topology, mmSystem, mlAtoms, embedding='electrostatic')
+
+    The MM System must contain one NonbondedForce using PME, and the ML region must not
+    be bonded to the MM region.  The System is built as for the mechanical embedding
+    (the force field computes ML-MM interactions with its fixed charges q_FF), and the ML
+    force adds the following terms over ML atoms i and MM atoms j within the PME cutoff:
+
+    - a Coulomb correction sum_ij (q_ML,i - q_FF,i) q_j erfc(alpha r_ij) / r_ij, where
+      q_ML are the charges predicted by the model and alpha is the PME screening
+      parameter (direct space only);
+    - an induction energy -1/(2 epsilon) sum_i a_i |F_i|^2, where F_i is the
+      erfc-screened electric field of the MM charges at ML atom i and a_i its
+      polarizability.
+
+    These optional arguments to createMixedSystem() control the induction term:
+
+    - ``epsilon`` (default 2.0): dielectric constant screening the induction energy.
+    - ``polarizabilities``: dict mapping elements (Element, symbol, or atomic number) to
+      polarizabilities (Quantities with volume units, or floats in nm^3).  These override
+      the defaults (ANI-MBIS values for H, C, N, O, F, S, Cl).
+    - ``tholeDamping`` (default None): a Thole linear damping parameter (e.g. 1.3).  If
+      given, the field is Thole damped; by default it is not damped.  Farr and De
+      Fabritiis (arXiv:2608.13355) use the damping with 1.3 because it keeps the
+      induction term stable in alchemical transformations such as the Alchemical
+      Transfer Method, where MM charges can come very close to the ML atoms.  It is not
+      needed for normal simulations.
+
+    References
+    ----------
+    - The electrostatic embedding and its use for relative binding free energies with
+      AceFF-2-RESP-1: S. E. Farr and G. De Fabritiis, "Evaluating Electrostatic Embedding
+      MLIP/MM for Relative Binding Free Energy Calculations", arXiv:2608.13355 (2026),
+      https://arxiv.org/abs/2608.13355
+    - The embedding scheme (Coulomb term with ML charges plus a polarization correction)
+      and the default polarizabilities, from ANI-MBIS: J. A. Semelak et al., "ANI Neural
+      Networks Meet Electrostatics: A ML/MM Implementation in Amber", arXiv:2409.17852
+      (2024), https://arxiv.org/abs/2409.17852
 
     Coulomb cutoff behavior
     ------------------------
@@ -102,6 +164,12 @@ class TorchMDNetPotentialImpl(MLPotentialImpl):
         'aceff-1.1': ('Acellera/AceFF-1.1', 'aceff_v1.1.ckpt', False),
         'aceff-2.0': ('Acellera/AceFF-2.0', 'aceff_v2.0.ckpt', False),
         'aceff-2-omol': ('Acellera/AceFF-2-OMOL', 'aceff_v2_omol.ckpt', False),
+        'aceff-2-resp-1': ('Acellera/AceFF-2-RESP-1', 'aceff-2-resp-1.ckpt', False),
+    }
+
+    # Models that predict charges, and the architecture to load their checkpoints with.
+    CHARGE_MODELS = {
+        'aceff-2-resp-1': 'tensornet2_resp',
     }
 
     def __init__(self, 
@@ -178,8 +246,12 @@ class TorchMDNetPotentialImpl(MLPotentialImpl):
 
         periodic = (topology.getPeriodicBoxVectors() is not None) or system.usesPeriodicBoundaryConditions()
         use_coulomb_cutoff = args.get('useCoulombCutoff', periodic)
+        load_args = {}
+        if self.name in TorchMDNetPotentialImpl.CHARGE_MODELS:
+            load_args['model'] = TorchMDNetPotentialImpl.CHARGE_MODELS[self.name]
         model = load_model(
             model_file_path,
+            **load_args,
             derivative=False,
             remove_ref_energy = args.get('remove_ref_energy', True),
             max_num_neighbors = min(args.get('max_num_neighbors', 64), numbers.shape[0]),
@@ -196,17 +268,29 @@ class TorchMDNetPotentialImpl(MLPotentialImpl):
 
         # Create the PythonForce and add it to the System.
 
-        compute = _ComputeTorchMDNet(model=model,
-                                     numbers=numbers,
-                                     charge=charge,
-                                     batch=batch,
-                                     lengthScale=self.lengthScale,
-                                     energyScale=self.energyScale,
-                                     periodic=periodic)
+        electrostatic = args.get('_electrostatic', None)
+        if electrostatic is None:
+            compute = _ComputeTorchMDNet(model=model,
+                                         numbers=numbers,
+                                         charge=charge,
+                                         batch=batch,
+                                         lengthScale=self.lengthScale,
+                                         energyScale=self.energyScale,
+                                         periodic=periodic)
+        else:
+            # The electrostatic embedding needs the positions of all particles.
+            compute = _ComputeTorchMDNetElectrostatic(model=model,
+                                                      numbers=numbers,
+                                                      charge=charge,
+                                                      batch=batch,
+                                                      lengthScale=self.lengthScale,
+                                                      energyScale=self.energyScale,
+                                                      mlIndices=np.array(atoms),
+                                                      **electrostatic)
         force = openmm.PythonForce(compute)
         force.setForceGroup(forceGroup)
         force.setUsesPeriodicBoundaryConditions(periodic)
-        if atoms is not None:
+        if atoms is not None and electrostatic is None:
             force.setParticles(atoms)
         system.addForce(force)
 
@@ -215,6 +299,81 @@ class TorchMDNetPotentialImpl(MLPotentialImpl):
             _, _, longRange = TorchMDNetPotentialImpl.KNOWN_MODELS[self.name]
             return longRange
         return None
+
+    def getSupportedEmbeddings(self) -> list[str]:
+        if self.name in TorchMDNetPotentialImpl.CHARGE_MODELS:
+            return ['electrostatic']
+        return []
+
+    def createMixedSystem(self,
+                          topology: openmm.app.Topology,
+                          system: openmm.System,
+                          atoms: list[int],
+                          forceGroup: int,
+                          interpolate: bool,
+                          embedding: str,
+                          **args) -> openmm.System:
+        if embedding != 'electrostatic':
+            raise ValueError(f'Unsupported embedding: {embedding}')
+        from openmmml.embeddings.mechanicalembedding import MechanicalEmbedding
+
+        # Read the PME settings and the charges of all particles from the MM System.
+
+        nonbonded = [f for f in system.getForces() if isinstance(f, openmm.NonbondedForce)]
+        if len(nonbonded) != 1:
+            raise ValueError('The electrostatic embedding requires the System to contain exactly one NonbondedForce.')
+        nonbonded = nonbonded[0]
+        if nonbonded.getNonbondedMethod() != openmm.NonbondedForce.PME:
+            raise ValueError('The electrostatic embedding requires the NonbondedForce to use PME.')
+        cutoff = nonbonded.getCutoffDistance().value_in_unit(unit.nanometer)
+        alpha = nonbonded.getPMEParameters()[0]
+        if unit.is_quantity(alpha):
+            alpha = alpha.value_in_unit(unit.nanometer**-1)
+        if alpha == 0:
+            # Not set explicitly: use the value OpenMM chooses.
+            alpha = np.sqrt(-np.log(2*nonbonded.getEwaldErrorTolerance()))/cutoff
+        charges = np.array([nonbonded.getParticleParameters(i)[0].value_in_unit(unit.elementary_charge)
+                            for i in range(system.getNumParticles())])
+
+        atomSet = set(atoms)
+        for i in range(nonbonded.getNumExceptions()):
+            p1, p2, _, _, _ = nonbonded.getExceptionParameters(i)
+            if (p1 in atomSet) != (p2 in atomSet):
+                raise ValueError('The electrostatic embedding requires the ML region not to be bonded to the MM region.')
+        mmIndices = np.array([i for i in range(system.getNumParticles()) if i not in atomSet])
+
+        # Polarizabilities (nm^3) of the ML atoms: defaults, overridden by the user.
+
+        table = {z: a*BOHR3_TO_NM3 for z, a in DEFAULT_POLARIZABILITIES.items()}
+        for key, value in args.get('polarizabilities', {}).items():
+            if isinstance(key, openmm.app.Element):
+                key = key.atomic_number
+            elif isinstance(key, str):
+                key = openmm.app.Element.getBySymbol(key).atomic_number
+            if unit.is_quantity(value):
+                value = value.value_in_unit(unit.nanometer**3)
+            table[int(key)] = float(value)
+        allAtoms = list(topology.atoms())
+        polarizabilities = []
+        for i in atoms:
+            element = allAtoms[i].element
+            if element.atomic_number not in table:
+                raise ValueError(f'No polarizability is defined for element {element.symbol}.  Specify it with the polarizabilities argument.')
+            polarizabilities.append(table[element.atomic_number])
+
+        electrostatic = dict(mmIndices=mmIndices,
+                             mlFFCharges=charges[atoms],
+                             mmCharges=charges[mmIndices],
+                             polarizabilities=np.array(polarizabilities),
+                             alpha=float(alpha),
+                             cutoff=float(cutoff),
+                             epsilon=float(args.get('epsilon', DEFAULT_EPSILON)),
+                             tholeDamping=args.get('tholeDamping', None))
+
+        # The rest is the mechanical embedding; addForces() receives the parameters above.
+
+        return MechanicalEmbedding().createMixedSystem(self, topology, system, atoms, forceGroup, interpolate,
+                                                       _electrostatic=electrostatic, **args)
 
 class _ComputeTorchMDNet(object):
     def __init__(self, model, numbers, charge, batch, lengthScale, energyScale, periodic):
@@ -257,3 +416,103 @@ class _ComputeTorchMDNet(object):
         energy.backward()
         forces = (-positions.grad).detach().cpu().numpy()
         return energy, forces
+
+class TorchMDNetElectrostaticEnergy(torch.nn.Module if torch is not None else object):
+    """Wraps a TorchMD-Net model that predicts charges (e.g. AceFF-2-RESP-1).  forward()
+    maps (positions of all particles, box vectors), both in nm, to the ML energy plus the
+    electrostatic embedding terms in kJ/mol (see the TorchMDNetPotentialImpl docstring;
+    Farr and De Fabritiis, arXiv:2608.13355, following Semelak et al., arXiv:2409.17852).
+    Calling backward() on the energy gives the forces on all particles."""
+
+    def __init__(self, model, numbers, charge, batch, lengthScale, energyScale, mlIndices, mmIndices,
+                 mlFFCharges, mmCharges, polarizabilities, alpha, cutoff, epsilon, tholeDamping):
+        super().__init__()
+        device = numbers.device
+        self.model = model
+        self.register_buffer('numbers', numbers)
+        self.register_buffer('charge', charge)
+        self.register_buffer('batch', batch)
+        self.register_buffer('mlIndices', torch.tensor(mlIndices, dtype=torch.long, device=device))
+        self.register_buffer('mmIndices', torch.tensor(mmIndices, dtype=torch.long, device=device))
+        self.register_buffer('mlFFCharges', torch.tensor(mlFFCharges, dtype=torch.float32, device=device))
+        self.register_buffer('mmCharges', torch.tensor(mmCharges, dtype=torch.float32, device=device))
+        self.register_buffer('polarizabilities', torch.tensor(polarizabilities, dtype=torch.float32, device=device))
+        self.lengthScale = float(lengthScale)
+        self.energyScale = float(energyScale)
+        self.alpha = float(alpha)
+        self.cutoff = float(cutoff)
+        self.epsilon = float(epsilon)
+        self.tholeDamping = None if tholeDamping is None else float(tholeDamping)
+
+    def forward(self, positions, box):
+        ml = positions[self.mlIndices]
+        mm = positions[self.mmIndices]
+
+        # ML energy and charges.
+
+        out = self.model(z=self.numbers, pos=ml/self.lengthScale, batch=self.batch, q=self.charge, box=box/self.lengthScale)
+        energy = out[0].sum()*self.energyScale
+        qML = out[2].reshape(-1)
+
+        # Minimum image ML-MM displacements (OpenMM's reduced triclinic box).
+
+        delta = ml.unsqueeze(1) - mm.unsqueeze(0)
+        delta = delta - torch.round(delta[..., 2:3]/box[2, 2])*box[2]
+        delta = delta - torch.round(delta[..., 1:2]/box[1, 1])*box[1]
+        delta = delta - torch.round(delta[..., 0:1]/box[0, 0])*box[0]
+        r = torch.sqrt((delta**2).sum(-1))
+        mask = r < self.cutoff
+        r = torch.where(mask, r, torch.ones_like(r))  # avoids NaN gradients beyond the cutoff
+        screen = torch.erfc(self.alpha*r)
+
+        # Coulomb correction: direct space interaction of the charge difference with the MM charges.
+
+        qq = (qML - self.mlFFCharges).unsqueeze(1)*self.mmCharges.unsqueeze(0)
+        eCoulomb = ONE_4PI_EPS0*torch.where(mask, qq*screen/r, 0).sum()
+
+        # Induction: ML atoms polarized by the erfc-screened field of the MM charges.
+
+        kernel = screen/r**2 + (2*self.alpha/np.sqrt(np.pi))*torch.exp(-(self.alpha*r)**2)/r
+        if self.tholeDamping is not None:
+            s = self.tholeDamping*r/self.polarizabilities.unsqueeze(1)**(1/3)
+            kernel = kernel*(1 - (1 + s + 0.5*s**2)*torch.exp(-s))
+        kernel = torch.where(mask, self.mmCharges.unsqueeze(0)*kernel/r, 0)
+        field = (kernel.unsqueeze(-1)*delta).sum(1)
+        eInduction = -0.5*ONE_4PI_EPS0/self.epsilon*(self.polarizabilities*(field**2).sum(-1)).sum()
+
+        return energy + eCoulomb + eInduction
+
+class _ComputeTorchMDNetElectrostatic(object):
+    """PythonForce callback for the electrostatic embedding.  The whole energy (model and
+    embedding terms) is compiled with torch.compile, as in _ComputeTorchMDNet."""
+
+    def __init__(self, **args):
+        self.module = TorchMDNetElectrostaticEnergy(**args)
+        self.device = args['numbers'].device
+        self.compiled_model = None
+        self.has_recompiled = False
+
+    def __call__(self, state):
+        positions = torch.tensor(state.getPositions(asNumpy=True).value_in_unit(unit.nanometer), dtype=torch.float32, device=self.device)
+        positions.requires_grad_(True)
+        box = torch.tensor(state.getPeriodicBoxVectors(asNumpy=True).value_in_unit(unit.nanometer), dtype=torch.float32, device=self.device)
+        if self.compiled_model is None:
+            # The model can't be compiled until after it has been invoked once.
+            energy = self.module(positions, box)
+            self.compiled_model = torch.compile(self.module, backend="inductor", dynamic=False, fullgraph=True, mode="reduce-overhead")
+        else:
+            try:
+                energy = self.compiled_model(positions, box)
+            except AssertionError:
+                if self.has_recompiled:
+                    raise
+
+                # Workaround for https://github.com/openmm/openmm-ml/issues/128.  Threading bugs in torch.compile can cause it to
+                # incorrectly reuse cached components from earlier models.  The solution is to compile with mode="default".
+
+                self.has_recompiled = True
+                self.compiled_model = torch.compile(self.module, backend="inductor", dynamic=False, fullgraph=True, mode="default")
+                energy = self.compiled_model(positions, box)
+        energy.backward()
+        forces = (-positions.grad).detach().cpu().numpy()
+        return float(energy.detach()), forces
